@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+        <RollingFile name="AppLog" fileName="logs/revshop.log"
+                     filePattern="logs/revshop-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="ErrorLog" fileName="logs/error.log"
+                     filePattern="logs/error-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/>
+            <Filters>
+                <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <Policies><TimeBasedTriggeringPolicy/></Policies>
+        </RollingFile>
+        <RollingFile name="SecurityLog" fileName="logs/security.log"
+                     filePattern="logs/security-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/>
+            <Policies><TimeBasedTriggeringPolicy/></Policies>
+        </RollingFile>
+        <RollingFile name="AdminLog" fileName="logs/admin-actions.log"
+                     filePattern="logs/admin-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/>
+            <Policies><TimeBasedTriggeringPolicy/></Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="com.revshop.security" level="INFO" additivity="false">
+            <AppenderRef ref="SecurityLog"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.revshop.service.AdminService" level="INFO" additivity="false">
+            <AppenderRef ref="AdminLog"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AppLog"/>
+            <AppenderRef ref="ErrorLog"/>
+        </Root>
+    </Loggers>
+</Configuration>

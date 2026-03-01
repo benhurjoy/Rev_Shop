@@ -1,0 +1,22 @@
+# Maven
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Logs
+logs/
+
+# Uploads
+uploads/
+
+# Secrets — NEVER commit these
+.env
+application-local.properties
+
+# OS
+.DS_Store
+Thumbs.db
