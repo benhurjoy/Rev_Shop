@@ -1,13 +1,21 @@
 package com.revshop;
 
+import com.revshop.config.AppConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-public class RevshopApplication {
+@EnableAsync
+@EnableScheduling
+public class RevShopApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(RevshopApplication.class, args);
+	static {
+		AppConfig.loadDotenv();
 	}
 
+	public static void main(String[] args) {
+		SpringApplication.run(RevShopApplication.class, args);
+	}
 }
