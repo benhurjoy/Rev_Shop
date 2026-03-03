@@ -2,6 +2,10 @@ package com.revshop.service;
 
 import com.revshop.entity.Cart;
 import com.revshop.entity.CartItem;
+import com.revshop.entity.Product;
+import com.revshop.entity.User;
+import com.revshop.exception.BadRequestException;
+import com.revshop.exception.ResourceNotFoundException;
 import com.revshop.repository.CartItemRepository;
 import com.revshop.repository.CartRepository;
 import com.revshop.repository.ProductRepository;
@@ -10,9 +14,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CartService {
@@ -31,50 +37,133 @@ public class CartService {
     @Autowired
     private UserRepository userRepository;
 
-    // Day 2 - Skeleton only
-    // Full implementation on Day 3
-
     public Cart getOrCreateCart(String email) {
-        // TODO Day 3
         logger.info("GetOrCreateCart called for: {}", email);
-        return null;
+        User user = getUserByEmail(email);
+        return cartRepository.findByUser(user)
+                .orElseGet(() -> {
+                    Cart newCart = Cart.builder().user(user).build();
+                    logger.info("New cart created for: {}", email);
+                    return cartRepository.save(newCart);
+                });
     }
 
+    @Transactional
     public void addToCart(String email, Long productId, Integer quantity) {
-        // TODO Day 3
-        logger.info("AddToCart called for email: {} productId: {}", email, productId);
+        logger.info("AddToCart called for email: {} productId: {} qty: {}", email, productId, quantity);
+
+        if (quantity <= 0) {
+            logger.warn("Invalid quantity: {} for email: {}", quantity, email);
+            throw new BadRequestException("Quantity must be greater than 0");
+        }
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> {
+                    logger.warn("Product not found: {}", productId);
+                    return new ResourceNotFoundException("Product not found: " + productId);
+                });
+
+        if (product.getStockQuantity() <= 0) {
+            logger.warn("Product out of stock: {}", productId);
+            throw new BadRequestException("Product is out of stock");
+        }
+
+        if (quantity > product.getStockQuantity()) {
+            logger.warn("Requested qty {} exceeds stock {} for product: {}", quantity, product.getStockQuantity(), productId);
+            throw new BadRequestException("Only " + product.getStockQuantity() + " items available");
+        }
+
+        Cart cart = getOrCreateCart(email);
+        Optional<CartItem> existing = cartItemRepository.findByCartAndProduct(cart, product);
+
+        if (existing.isPresent()) {
+            CartItem item = existing.get();
+            item.setQuantity(item.getQuantity() + quantity);
+            cartItemRepository.save(item);
+            logger.info("Cart item quantity updated for productId: {}", productId);
+        } else {
+            CartItem item = CartItem.builder()
+                    .cart(cart)
+                    .product(product)
+                    .quantity(quantity)
+                    .build();
+            cartItemRepository.save(item);
+            logger.info("New cart item added for productId: {}", productId);
+        }
     }
 
+    @Transactional
     public void removeFromCart(String email, Long cartItemId) {
-        // TODO Day 3
         logger.info("RemoveFromCart called for email: {} cartItemId: {}", email, cartItemId);
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> {
+                    logger.warn("CartItem not found: {}", cartItemId);
+                    return new ResourceNotFoundException("Cart item not found: " + cartItemId);
+                });
+        cartItemRepository.delete(item);
+        logger.info("Cart item removed: {}", cartItemId);
     }
 
+    @Transactional
     public void updateQuantity(String email, Long cartItemId, Integer quantity) {
-        // TODO Day 3
-        logger.info("UpdateQuantity called for cartItemId: {} quantity: {}", cartItemId, quantity);
+        logger.info("UpdateQuantity called for cartItemId: {} qty: {}", cartItemId, quantity);
+
+        if (quantity <= 0) {
+            logger.warn("Invalid quantity: {}", quantity);
+            throw new BadRequestException("Quantity must be greater than 0");
+        }
+
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found: " + cartItemId));
+
+        if (quantity > item.getProduct().getStockQuantity()) {
+            throw new BadRequestException("Only " + item.getProduct().getStockQuantity() + " items available");
+        }
+
+        item.setQuantity(quantity);
+        cartItemRepository.save(item);
+        logger.info("Cart item quantity updated to: {} for cartItemId: {}", quantity, cartItemId);
     }
 
     public List<CartItem> getCartItems(String email) {
-        // TODO Day 3
         logger.info("GetCartItems called for: {}", email);
-        return null;
+        Cart cart = getOrCreateCart(email);
+        return cartItemRepository.findByCart(cart);
     }
 
     public BigDecimal calculateTotal(String email) {
-        // TODO Day 3
         logger.info("CalculateTotal called for: {}", email);
-        return BigDecimal.ZERO;
+        List<CartItem> items = getCartItems(email);
+
+        if (items.isEmpty()) {
+            logger.warn("Cart is empty for: {}", email);
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal total = items.stream()
+                .map(item -> item.getProduct().getPrice()
+                        .multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        logger.info("Cart total calculated: {} for: {}", total, email);
+        return total;
     }
 
+    @Transactional
     public void clearCart(String email) {
-        // TODO Day 3
         logger.info("ClearCart called for: {}", email);
+        Cart cart = getOrCreateCart(email);
+        cartItemRepository.deleteByCart(cart);
+        logger.info("Cart cleared for: {}", email);
     }
 
     public int getCartItemCount(String email) {
-        // TODO Day 3
         logger.info("GetCartItemCount called for: {}", email);
-        return 0;
+        return getCartItems(email).size();
+    }
+
+    private User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
     }
 }
