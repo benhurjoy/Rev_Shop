@@ -21,36 +21,62 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long expiration;
 
-    // Day 2 - Skeleton only
-    // Full implementation on Day 3
-
     public String generateToken(String email, String role) {
-        // TODO Day 3: implement token generation
-        return null;
+        try {
+            String token = Jwts.builder()
+                    .setSubject(email)
+                    .claim("role", role)
+                    .setIssuedAt(new Date())
+                    .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                    .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                    .compact();
+            logger.info("JWT token generated for email: {}", email);
+            return token;
+        } catch (Exception e) {
+            logger.error("Error generating JWT token for email: {} - {}", email, e.getMessage());
+            throw new RuntimeException("Token generation failed", e);
+        }
     }
 
     public String extractEmail(String token) {
-        // TODO Day 3: implement email extraction
-        return null;
+        return getClaims(token).getSubject();
     }
 
     public String extractRole(String token) {
-        // TODO Day 3: implement role extraction
-        return null;
+        return getClaims(token).get("role", String.class);
     }
 
     public boolean validateToken(String token) {
-        // TODO Day 3: implement token validation
-        return false;
+        try {
+            getClaims(token);
+            logger.info("JWT token validated successfully");
+            return true;
+        } catch (ExpiredJwtException e) {
+            logger.warn("JWT token expired: {}", e.getMessage());
+            return false;
+        } catch (JwtException e) {
+            logger.warn("Invalid JWT token: {}", e.getMessage());
+            return false;
+        }
     }
 
     public boolean isTokenExpired(String token) {
-        // TODO Day 3: implement expiry check
-        return true;
+        try {
+            return getClaims(token).getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true;
+        }
+    }
+
+    private Claims getClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     private Key getSigningKey() {
-        // TODO Day 3: implement signing key
-        return null;
+        return Keys.hmacShaKeyFor(secret.getBytes());
     }
 }
