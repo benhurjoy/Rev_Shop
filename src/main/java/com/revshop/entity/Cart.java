@@ -1,4 +1,4 @@
-javapackage com.revshop.entity;
+package com.revshop.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

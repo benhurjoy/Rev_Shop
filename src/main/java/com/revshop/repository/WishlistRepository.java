@@ -1,4 +1,4 @@
-javapackage com.revshop.repository;
+package com.revshop.repository;
 
 import com.revshop.entity.User;
 import com.revshop.entity.Wishlist;

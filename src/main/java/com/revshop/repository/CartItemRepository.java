@@ -1,4 +1,4 @@
-javapackage com.revshop.repository;
+package com.revshop.repository;
 
 import com.revshop.entity.Cart;
 import com.revshop.entity.CartItem;
