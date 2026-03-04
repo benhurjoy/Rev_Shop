@@ -167,4 +167,9 @@ public class AuthService {
         userRepository.save(user);
         logger.info("Password reset successful for: {}", email);
     }
+    // Add this method to the existing AuthService.java
+    public String getRoleFromToken(String token) {
+        logger.info("Extracting role from token");
+        return jwtUtil.extractRole(token);
+    }
 }
