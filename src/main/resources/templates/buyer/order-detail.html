@@ -1,10 +1,180 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="UTF-8"/>
+    <title th:text="'Order #' + ${order.id} + ' – RevShop'">Order Detail</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root{--navy:#0A1628;--navy-mid:#112240;--navy-light:#1E3A5F;--orange:#FF6B35;--gold:#FFB347;--text-light:#E8EDF5;--text-muted:#8899AA;--card-bg:#112240;--border:rgba(255,107,53,0.2);}
+        body{background:var(--navy);color:var(--text-light);font-family:'DM Sans',sans-serif;}
+        h1,h2,h3,h4,h5{font-family:'Playfair Display',serif;}
+        .revshop-navbar{background:linear-gradient(135deg,#0A1628,#1E3A5F);border-bottom:2px solid var(--orange);padding:0.75rem 0;position:sticky;top:0;z-index:1000;}
+        .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;}
+        .navbar-brand span{color:var(--orange);}
+        .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s;}
+        .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
+        .info-card{background:var(--card-bg);border:1px solid var(--border);border-radius:18px;padding:1.5rem;margin-bottom:1.2rem;}
+        .info-label{color:var(--text-muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.3rem;}
+        .info-value{color:var(--text-light);font-weight:500;font-size:0.95rem;}
+        .status-pending{background:rgba(255,179,71,0.12);color:var(--gold);border:1px solid rgba(255,179,71,0.3);border-radius:8px;padding:5px 14px;font-size:0.82rem;font-weight:600;}
+        .status-processing{background:rgba(23,162,184,0.12);color:#5bc8d5;border:1px solid rgba(23,162,184,0.3);border-radius:8px;padding:5px 14px;font-size:0.82px;font-weight:600;}
+        .status-shipped{background:rgba(111,66,193,0.12);color:#c084fc;border:1px solid rgba(111,66,193,0.3);border-radius:8px;padding:5px 14px;font-size:0.82rem;font-weight:600;}
+        .status-delivered{background:rgba(40,167,69,0.12);color:#75f5a0;border:1px solid rgba(40,167,69,0.3);border-radius:8px;padding:5px 14px;font-size:0.82rem;font-weight:600;}
+        .status-cancelled{background:rgba(220,53,69,0.12);color:#ff8fa3;border:1px solid rgba(220,53,69,0.3);border-radius:8px;padding:5px 14px;font-size:0.82rem;font-weight:600;}
+        .item-row{display:flex;align-items:center;gap:1rem;padding:1rem 0;border-bottom:1px solid rgba(255,107,53,0.08);}
+        .item-row:last-child{border-bottom:none;}
+        .item-img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--border);}
+        .item-ph{width:64px;height:64px;border-radius:10px;background:var(--navy-light);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem;flex-shrink:0;}
+        .summary-row{display:flex;justify-content:space-between;padding:0.5rem 0;font-size:0.9rem;border-bottom:1px solid rgba(255,107,53,0.06);}
+        .summary-row:last-child{border-bottom:none;}
+        .summary-total{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--orange);}
+        .btn-sm-cancel{background:rgba(220,53,69,0.08);border:1px solid rgba(220,53,69,0.25);color:#ff8fa3;border-radius:8px;padding:7px 18px;font-size:0.85rem;cursor:pointer;transition:all 0.2s;}
+        .btn-sm-cancel:hover{background:rgba(220,53,69,0.15);}
+        .alert-success-rev{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;border-radius:10px;padding:0.8rem 1rem;}
+        .alert-error-rev{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:10px;padding:0.8rem 1rem;}
+    </style>
 </head>
 <body>
+<nav class="revshop-navbar navbar">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/buyer/home}">Rev<span>Shop</span></a>
+        <a class="nav-link ms-auto" th:href="@{/buyer/orders}">
+            <i class="bi bi-arrow-left me-1"></i>All Orders
+        </a>
+    </div>
+</nav>
 
+<div class="container py-5">
+
+    <div th:if="${successMessage}" class="alert-success-rev mb-4">
+        <i class="bi bi-check-circle me-2"></i><span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert-error-rev mb-4">
+        <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
+    </div>
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 style="margin:0;" th:text="'Order #' + ${order.id}"></h2>
+            <p style="color:var(--text-muted);margin:0;font-size:0.85rem;"
+               th:text="${#temporals.format(order.orderedAt,'dd MMMM yyyy, hh:mm a')}"></p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span th:switch="${order.status?.name()}">
+                <span th:case="'PENDING'"    class="status-pending">⏳ Pending</span>
+                <span th:case="'PROCESSING'" class="status-processing">⚙️ Processing</span>
+                <span th:case="'SHIPPED'"    class="status-shipped">🚚 Shipped</span>
+                <span th:case="'DELIVERED'"  class="status-delivered">✅ Delivered</span>
+                <span th:case="'CANCELLED'"  class="status-cancelled">❌ Cancelled</span>
+            </span>
+            <form th:if="${order.status?.name() == 'PENDING'}"
+                  th:action="@{/buyer/orders/cancel/{id}(id=${order.id})}"
+                  method="post"
+                  onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                <button type="submit" class="btn-sm-cancel">
+                    <i class="bi bi-x-circle me-1"></i>Cancel Order
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+
+            <!-- Order Items -->
+            <div class="info-card">
+                <h5 class="mb-3" style="font-size:1rem;color:var(--orange);">
+                    <i class="bi bi-box-seam me-2"></i>Order Items
+                </h5>
+                <div th:each="item : ${order.orderItems}" class="item-row">
+                    <img th:if="${item.productImage != null}"
+                         th:src="${item.productImage}"
+                         class="item-img" th:alt="${item.productName}"/>
+                    <div class="item-ph" th:unless="${item.productImage != null}">
+                        <i class="bi bi-image"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div style="font-weight:600;font-size:0.95rem;"
+                             th:text="${item.productName}"></div>
+                        <div style="color:var(--text-muted);font-size:0.82rem;"
+                             th:text="'Qty: ' + ${item.quantity} + '  ×  ₹' + ${item.price}"></div>
+                        <div style="color:var(--text-muted);font-size:0.78rem;"
+                             th:if="${item.discountPercent > 0}"
+                             th:text="${item.discountPercent} + '% discount applied'"></div>
+                    </div>
+                    <div style="color:var(--orange);font-weight:700;"
+                         th:text="'₹' + ${item.subtotal}"></div>
+                </div>
+            </div>
+
+            <!-- Shipping Address -->
+            <div class="info-card">
+                <h5 class="mb-3" style="font-size:1rem;color:var(--orange);">
+                    <i class="bi bi-geo-alt me-2"></i>Delivery Address
+                </h5>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="info-label">Street Address</div>
+                        <div class="info-value" th:text="${order.shippingAddress}"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-label">City</div>
+                        <div class="info-value" th:text="${order.city}"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-label">State</div>
+                        <div class="info-value" th:text="${order.state}"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-label">Pincode</div>
+                        <div class="info-value" th:text="${order.pincode}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Summary & Payment -->
+        <div class="col-lg-4">
+            <div class="info-card">
+                <h5 class="mb-3" style="font-size:1rem;color:var(--orange);">
+                    <i class="bi bi-receipt me-2"></i>Price Details
+                </h5>
+                <div class="summary-row">
+                    <span style="color:var(--text-muted);">Subtotal</span>
+                    <span th:text="'₹' + ${order.totalAmount}"></span>
+                </div>
+                <div class="summary-row">
+                    <span style="color:var(--text-muted);">Shipping</span>
+                    <span style="color:#75f5a0;">FREE</span>
+                </div>
+                <div class="summary-row">
+                    <span style="font-weight:700;">Total Paid</span>
+                    <span class="summary-total" th:text="'₹' + ${order.totalAmount}"></span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h5 class="mb-3" style="font-size:1rem;color:var(--orange);">
+                    <i class="bi bi-credit-card me-2"></i>Payment
+                </h5>
+                <div class="summary-row">
+                    <span style="color:var(--text-muted);">Method</span>
+                    <span th:text="${order.paymentMethod ?: 'N/A'}"></span>
+                </div>
+                <div class="summary-row">
+                    <span style="color:var(--text-muted);">Status</span>
+                    <span th:text="${order.paymentStatus ?: 'N/A'}"
+                          th:style="${order.paymentStatus == 'SUCCESS'} ? 'color:#75f5a0;font-weight:600;' :
+                                    (${order.paymentStatus == 'PENDING'} ? 'color:var(--gold);font-weight:600;' :
+                                     'color:#ff8fa3;font-weight:600;')"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
