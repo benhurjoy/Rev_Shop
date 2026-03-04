@@ -1,10 +1,199 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="UTF-8"/>
+    <title>Add Product – RevShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root{--navy:#0A1628;--navy-mid:#112240;--navy-light:#1E3A5F;--orange:#FF6B35;--gold:#FFB347;--text-light:#E8EDF5;--text-muted:#8899AA;--card-bg:#112240;--border:rgba(255,107,53,0.2);}
+        body{background:var(--navy);color:var(--text-light);font-family:'DM Sans',sans-serif;}
+        h1,h2,h3,h4,h5{font-family:'Playfair Display',serif;}
+        .revshop-navbar{background:linear-gradient(135deg,#0A1628,#1E3A5F);border-bottom:2px solid var(--orange);padding:0.75rem 0;position:sticky;top:0;z-index:1000;}
+        .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;}
+        .navbar-brand span{color:var(--orange);}
+        .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s;}
+        .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
+        .sidebar{background:var(--card-bg);border-right:1px solid var(--border);min-height:calc(100vh - 66px);padding:1.5rem 0;width:230px;position:fixed;top:66px;left:0;}
+        .sidebar-link{display:flex;align-items:center;gap:10px;padding:0.75rem 1.5rem;color:var(--text-muted);text-decoration:none;font-weight:500;font-size:0.9rem;border-left:3px solid transparent;transition:all 0.3s;}
+        .sidebar-link:hover,.sidebar-link.active{color:var(--orange);background:rgba(255,107,53,0.08);border-left-color:var(--orange);}
+        .main{margin-left:230px;padding:2rem;}
+        .form-card{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:2rem;}
+        .form-label{color:var(--text-muted);font-size:0.83rem;font-weight:500;margin-bottom:0.4rem;}
+        .form-control,.form-select{background:rgba(255,255,255,0.05)!important;border:1.5px solid rgba(255,107,53,0.2)!important;border-radius:12px!important;color:var(--text-light)!important;padding:0.75rem 1rem!important;font-family:'DM Sans',sans-serif;transition:all 0.3s;}
+        .form-control:focus,.form-select:focus{border-color:var(--orange)!important;box-shadow:0 0 0 3px rgba(255,107,53,0.15)!important;background:rgba(255,255,255,0.08)!important;}
+        .form-control::placeholder{color:var(--text-muted)!important;}
+        .form-select option{background:var(--navy-mid);}
+        textarea.form-control{resize:vertical;min-height:100px;}
+        .btn-submit{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:12px;padding:0.85rem 2rem;font-weight:700;font-size:1rem;transition:all 0.3s;box-shadow:0 6px 20px rgba(255,107,53,0.35);}
+        .btn-submit:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,107,53,0.5);color:white;}
+        .btn-cancel{background:var(--navy-light);color:var(--text-light);border:1px solid var(--border);border-radius:12px;padding:0.85rem 2rem;font-weight:600;font-size:1rem;transition:all 0.3s;text-decoration:none;}
+        .btn-cancel:hover{background:rgba(255,107,53,0.1);border-color:var(--orange);color:var(--orange);}
+        .text-danger{color:#ff8fa3!important;font-size:0.8rem;}
+        /* Image Upload */
+        .upload-area{border:2px dashed rgba(255,107,53,0.3);border-radius:16px;padding:2rem;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;}
+        .upload-area:hover{border-color:var(--orange);background:rgba(255,107,53,0.05);}
+        .upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+        .upload-area i{font-size:2.5rem;color:var(--orange);opacity:0.6;margin-bottom:0.5rem;display:block;}
+        #imagePreview{width:100%;height:180px;object-fit:cover;border-radius:12px;display:none;margin-top:1rem;border:1px solid var(--border);}
+        .alert-error-rev{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:10px;padding:0.8rem 1rem;}
+        @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;padding:1rem;}}
+    </style>
 </head>
 <body>
 
+<!-- Navbar -->
+<nav class="revshop-navbar navbar">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/}">Rev<span>Shop</span></a>
+        <div class="ms-auto d-flex gap-2">
+            <a th:href="@{/seller/products}" class="nav-link">
+                <i class="bi bi-arrow-left me-1"></i>Back to Products
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <a th:href="@{/seller/dashboard}" class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a th:href="@{/seller/products}" class="sidebar-link"><i class="bi bi-box-seam"></i> My Products</a>
+    <a th:href="@{/seller/products/add}" class="sidebar-link active"><i class="bi bi-plus-circle"></i> Add Product</a>
+    <a th:href="@{/seller/low-stock}" class="sidebar-link"><i class="bi bi-exclamation-triangle"></i> Low Stock</a>
+    <a th:href="@{/seller/notifications}" class="sidebar-link"><i class="bi bi-bell"></i> Notifications</a>
+</div>
+
+<div class="main">
+    <div style="margin-bottom:2rem;">
+        <h2>Add New Product</h2>
+        <p style="color:var(--text-muted);margin:0;font-size:0.9rem;">Fill in the details to list your product on RevShop</p>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert-error-rev mb-4">
+        <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
+    </div>
+
+    <form th:action="@{/seller/products/add}" th:object="${productDTO}"
+          method="post" enctype="multipart/form-data">
+        <div class="row g-4">
+
+            <!-- Left Column -->
+            <div class="col-lg-8">
+                <div class="form-card">
+                    <h5 class="mb-4">Product Information</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">Product Name *</label>
+                        <input type="text" class="form-control" th:field="*{name}"
+                               placeholder="e.g. Premium Wireless Headphones"/>
+                        <div class="text-danger" th:if="${#fields.hasErrors('name')}"
+                             th:errors="*{name}"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" th:field="*{description}" rows="4"
+                                  placeholder="Describe your product in detail..."></textarea>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Selling Price (₹) *</label>
+                            <input type="number" class="form-control" th:field="*{price}"
+                                   placeholder="0.00" step="0.01"/>
+                            <div class="text-danger" th:if="${#fields.hasErrors('price')}"
+                                 th:errors="*{price}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">MRP (₹) *</label>
+                            <input type="number" class="form-control" th:field="*{mrp}"
+                                   placeholder="0.00" step="0.01"/>
+                            <div class="text-danger" th:if="${#fields.hasErrors('mrp')}"
+                                 th:errors="*{mrp}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Discount (%)</label>
+                            <input type="number" class="form-control" th:field="*{discountPercent}"
+                                   placeholder="0" min="0" max="100"/>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label">Stock Quantity *</label>
+                            <input type="number" class="form-control" th:field="*{stockQuantity}"
+                                   placeholder="0" min="0"/>
+                            <div class="text-danger" th:if="${#fields.hasErrors('stockQuantity')}"
+                                 th:errors="*{stockQuantity}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Category *</label>
+                            <select class="form-select" th:field="*{categoryId}">
+                                <option value="">-- Select Category --</option>
+                                <option th:each="cat : ${categories}"
+                                        th:value="${cat.id}"
+                                        th:text="${cat.name}"></option>
+                            </select>
+                            <div class="text-danger" th:if="${#fields.hasErrors('categoryId')}"
+                                 th:errors="*{categoryId}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Image -->
+            <div class="col-lg-4">
+                <div class="form-card">
+                    <h5 class="mb-4">Product Image</h5>
+                    <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+                        <input type="file" id="imageInput" name="image"
+                               accept="image/*" onchange="previewImage(event)"/>
+                        <i class="bi bi-cloud-upload"></i>
+                        <p style="color:var(--text-muted);margin:0;font-size:0.88rem;">
+                            Click to upload image<br/>
+                            <span style="font-size:0.78rem;">PNG, JPG, WEBP up to 10MB</span>
+                        </p>
+                        <img id="imagePreview" alt="Preview"/>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="col-12">
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn-submit">
+                        <i class="bi bi-plus-circle me-2"></i>List Product
+                    </button>
+                    <a th:href="@{/seller/products}" class="btn-cancel">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const preview = document.getElementById('imagePreview');
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+    }
+    // Auto-calculate discount
+    const priceInput = document.querySelector('[name="price"]');
+    const mrpInput   = document.querySelector('[name="mrp"]');
+    const discInput  = document.querySelector('[name="discountPercent"]');
+    function calcDiscount() {
+        const price = parseFloat(priceInput.value);
+        const mrp   = parseFloat(mrpInput.value);
+        if (price && mrp && mrp > price) {
+            discInput.value = Math.round((mrp - price) / mrp * 100);
+        }
+    }
+    priceInput?.addEventListener('input', calcDiscount);
+    mrpInput?.addEventListener('input', calcDiscount);
+</script>
 </body>
 </html>
