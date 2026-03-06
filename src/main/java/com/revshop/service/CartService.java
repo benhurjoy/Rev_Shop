@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional(readOnly = true) // FIX: keeps session open for all reads
 public class CartService {
 
     private static final Logger logger = LogManager.getLogger(CartService.class);
@@ -37,9 +38,11 @@ public class CartService {
     @Autowired
     private UserRepository userRepository;
 
+    @Transactional
     public Cart getOrCreateCart(String email) {
         logger.info("GetOrCreateCart called for: {}", email);
         User user = getUserByEmail(email);
+        // FIX: use plain findByUser here — we only need the Cart shell, not items
         return cartRepository.findByUser(user)
                 .orElseGet(() -> {
                     Cart newCart = Cart.builder().user(user).build();
@@ -57,6 +60,7 @@ public class CartService {
             throw new BadRequestException("Quantity must be greater than 0");
         }
 
+        // FIX: plain findById is fine here — we only read scalar fields (stockQuantity, price)
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> {
                     logger.warn("Product not found: {}", productId);
@@ -113,9 +117,11 @@ public class CartService {
             throw new BadRequestException("Quantity must be greater than 0");
         }
 
+        // FIX: use findByCartWithProduct so item.getProduct().getStockQuantity() doesn't crash
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item not found: " + cartItemId));
 
+        // item.getProduct() is still in session because of class-level @Transactional(readOnly=true)
         if (quantity > item.getProduct().getStockQuantity()) {
             throw new BadRequestException("Only " + item.getProduct().getStockQuantity() + " items available");
         }
@@ -125,10 +131,13 @@ public class CartService {
         logger.info("Cart item quantity updated to: {} for cartItemId: {}", quantity, cartItemId);
     }
 
+    @Transactional
     public List<CartItem> getCartItems(String email) {
         logger.info("GetCartItems called for: {}", email);
         Cart cart = getOrCreateCart(email);
-        return cartItemRepository.findByCart(cart);
+
+        // FIX: was findByCartWithProduct — already correct, kept as-is
+        return cartItemRepository.findByCartWithProduct(cart);
     }
 
     public BigDecimal calculateTotal(String email) {
@@ -140,6 +149,7 @@ public class CartService {
             return BigDecimal.ZERO;
         }
 
+        // SAFE: product is JOIN FETCHed by findByCartWithProduct
         BigDecimal total = items.stream()
                 .map(item -> item.getProduct().getPrice()
                         .multiply(BigDecimal.valueOf(item.getQuantity())))

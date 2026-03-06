@@ -13,6 +13,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 @Controller
 @RequestMapping("/buyer")
 @PreAuthorize("hasRole('BUYER')")
@@ -50,24 +53,18 @@ public class BuyerController {
         logger.info("Buyer home accessed by: {}", email);
 
         if (keyword != null && !keyword.isBlank()) {
-            model.addAttribute("products",
-                    productService.searchProducts(keyword));
+            model.addAttribute("products", productService.searchProducts(keyword));
             model.addAttribute("keyword", keyword);
         } else if (categoryId != null) {
-            model.addAttribute("products",
-                    productService.filterByCategory(categoryId));
+            model.addAttribute("products", productService.filterByCategory(categoryId));
             model.addAttribute("selectedCategory", categoryId);
         } else {
-            model.addAttribute("products",
-                    productService.getAllActiveProducts());
+            model.addAttribute("products", productService.getAllActiveProducts());
         }
 
-        model.addAttribute("categories",
-                categoryService.getAllCategories());
-        model.addAttribute("cartCount",
-                cartService.getCartItemCount(email));
-        model.addAttribute("unreadCount",
-                notificationService.getUnreadCount(email));
+        model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("cartCount", cartService.getCartItemCount(email));
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
         return "buyer/home";
     }
 
@@ -81,20 +78,13 @@ public class BuyerController {
         String email = userDetails.getUsername();
         logger.info("Buyer viewing product: {} by: {}", productId, email);
 
-        model.addAttribute("product",
-                productService.getProductById(productId));
-        model.addAttribute("reviews",
-                reviewService.getReviewsByProduct(productId));
-        model.addAttribute("averageRating",
-                reviewService.getAverageRating(productId));
-        model.addAttribute("hasReviewed",
-                reviewService.hasAlreadyReviewed(email, productId));
-        model.addAttribute("isInWishlist",
-                wishlistService.isInWishlist(email, productId));
-        model.addAttribute("cartCount",
-                cartService.getCartItemCount(email));
-        model.addAttribute("unreadCount",
-                notificationService.getUnreadCount(email));
+        model.addAttribute("product", productService.getProductById(productId));
+        model.addAttribute("reviews", reviewService.getReviewsByProduct(productId));
+        model.addAttribute("averageRating", reviewService.getAverageRating(productId));
+        model.addAttribute("hasReviewed", reviewService.hasAlreadyReviewed(email, productId));
+        model.addAttribute("isInWishlist", wishlistService.isInWishlist(email, productId));
+        model.addAttribute("cartCount", cartService.getCartItemCount(email));
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
         return "buyer/product-detail";
     }
 
@@ -107,11 +97,21 @@ public class BuyerController {
         String email = userDetails.getUsername();
         logger.info("Buyer viewing cart: {}", email);
 
+        BigDecimal total = cartService.calculateTotal(email);
+
+        // FIX: Thymeleaf 3.1 blocks `new java.math.BigDecimal(...)` in templates for security.
+        // Pre-compute gst and grandTotal here in Java and pass as model attributes.
+        BigDecimal gst = total.multiply(new BigDecimal("0.18"))
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal grandTotal = total.add(gst)
+                .setScale(2, RoundingMode.HALF_UP);
+
         model.addAttribute("cartItems", cartService.getCartItems(email));
-        model.addAttribute("total", cartService.calculateTotal(email));
+        model.addAttribute("total", total);
+        model.addAttribute("gst", gst);                 // use ${gst} in template
+        model.addAttribute("grandTotal", grandTotal);   // use ${grandTotal} in template
         model.addAttribute("cartCount", cartService.getCartItemCount(email));
-        model.addAttribute("unreadCount",
-                notificationService.getUnreadCount(email));
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
         return "buyer/cart";
     }
 
@@ -123,12 +123,10 @@ public class BuyerController {
             RedirectAttributes redirectAttributes) {
 
         String email = userDetails.getUsername();
-        logger.info("AddToCart by: {} productId: {} qty: {}",
-                email, productId, quantity);
+        logger.info("AddToCart by: {} productId: {} qty: {}", email, productId, quantity);
         try {
             cartService.addToCart(email, productId, quantity);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "Product added to cart!");
+            redirectAttributes.addFlashAttribute("successMessage", "Product added to cart!");
         } catch (Exception e) {
             logger.error("AddToCart failed: {}", e.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -146,8 +144,7 @@ public class BuyerController {
         logger.info("RemoveFromCart by: {} cartItemId: {}", email, cartItemId);
         try {
             cartService.removeFromCart(email, cartItemId);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "Item removed from cart.");
+            redirectAttributes.addFlashAttribute("successMessage", "Item removed from cart.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -162,8 +159,7 @@ public class BuyerController {
             RedirectAttributes redirectAttributes) {
 
         String email = userDetails.getUsername();
-        logger.info("UpdateCart by: {} cartItemId: {} qty: {}",
-                email, cartItemId, quantity);
+        logger.info("UpdateCart by: {} cartItemId: {} qty: {}", email, cartItemId, quantity);
         try {
             cartService.updateQuantity(email, cartItemId, quantity);
         } catch (Exception e) {
@@ -181,12 +177,9 @@ public class BuyerController {
         String email = userDetails.getUsername();
         logger.info("Buyer viewing wishlist: {}", email);
 
-        model.addAttribute("wishlist",
-                wishlistService.getOrCreateWishlist(email));
-        model.addAttribute("cartCount",
-                cartService.getCartItemCount(email));
-        model.addAttribute("unreadCount",
-                notificationService.getUnreadCount(email));
+        model.addAttribute("wishlist", wishlistService.getOrCreateWishlist(email));
+        model.addAttribute("cartCount", cartService.getCartItemCount(email));
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
         return "buyer/wishlist";
     }
 
@@ -200,8 +193,7 @@ public class BuyerController {
         logger.info("AddToWishlist by: {} productId: {}", email, productId);
         try {
             wishlistService.addToWishlist(email, productId);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "Added to wishlist!");
+            redirectAttributes.addFlashAttribute("successMessage", "Added to wishlist!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -217,8 +209,7 @@ public class BuyerController {
         String email = userDetails.getUsername();
         logger.info("RemoveFromWishlist by: {} productId: {}", email, productId);
         wishlistService.removeFromWishlist(email, productId);
-        redirectAttributes.addFlashAttribute("successMessage",
-                "Removed from wishlist.");
+        redirectAttributes.addFlashAttribute("successMessage", "Removed from wishlist.");
         return "redirect:/buyer/wishlist";
     }
 
@@ -232,8 +223,7 @@ public class BuyerController {
         logger.info("MoveToCart by: {} productId: {}", email, productId);
         try {
             wishlistService.moveToCart(email, productId);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "Moved to cart!");
+            redirectAttributes.addFlashAttribute("successMessage", "Moved to cart!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -257,8 +247,7 @@ public class BuyerController {
             reviewDTO.setRating(rating);
             reviewDTO.setComment(comment);
             reviewService.addReview(email, reviewDTO);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "Review submitted successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", "Review submitted successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -274,12 +263,9 @@ public class BuyerController {
         String email = userDetails.getUsername();
         logger.info("Buyer viewing notifications: {}", email);
 
-        model.addAttribute("notifications",
-                notificationService.getNotifications(email));
-        model.addAttribute("unreadCount",
-                notificationService.getUnreadCount(email));
-        model.addAttribute("cartCount",
-                cartService.getCartItemCount(email));
+        model.addAttribute("notifications", notificationService.getNotifications(email));
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
+        model.addAttribute("cartCount", cartService.getCartItemCount(email));
         return "buyer/notifications";
     }
 
@@ -291,9 +277,7 @@ public class BuyerController {
     }
 
     @PostMapping("/notifications/read-all")
-    public String markAllRead(
-            @AuthenticationPrincipal UserDetails userDetails) {
-
+    public String markAllRead(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         notificationService.markAllAsRead(email);
         return "redirect:/buyer/notifications";

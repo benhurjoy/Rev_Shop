@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true) // FIX: keeps session open for all reads
 public class WishlistService {
 
     private static final Logger logger = LogManager.getLogger(WishlistService.class);
@@ -31,9 +32,13 @@ public class WishlistService {
     @Autowired
     private CartService cartService;
 
+    @Transactional
     public Wishlist getOrCreateWishlist(String email) {
         logger.info("GetOrCreateWishlist called for: {}", email);
         User user = getUserByEmail(email);
+
+        // FIX: wishlistRepository.findByUser() now uses JOIN FETCH (products + category + seller)
+        // so wishlist.getProducts() is always initialized — no need for manual .size() trick
         return wishlistRepository.findByUser(user)
                 .orElseGet(() -> {
                     Wishlist w = Wishlist.builder().user(user).build();
@@ -79,6 +84,8 @@ public class WishlistService {
     public boolean isInWishlist(String email, Long productId) {
         logger.info("IsInWishlist called for email: {} productId: {}", email, productId);
         Wishlist wishlist = getOrCreateWishlist(email);
+
+        // SAFE: products list is JOIN FETCHed by findByUser
         return wishlist.getProducts().stream()
                 .anyMatch(p -> p.getId().equals(productId));
     }
