@@ -15,23 +15,27 @@ public class WebConfig implements WebMvcConfigurer {
 
     private static final Logger logger = LogManager.getLogger(WebConfig.class);
 
+    // uploadDir = "uploads/products"
     @Value("${file.upload-dir}")
     private String uploadDir;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
-        // Serve uploaded product images
-        Path uploadPath = Paths.get(uploadDir);
-        String uploadAbsolutePath = uploadPath.toFile().getAbsolutePath();
+        // FIX: uploadDir is "uploads/products", so its parent is "uploads/".
+        // We map /uploads/** → the "uploads/" folder root so that
+        // /uploads/products/filename.jpg correctly resolves to uploads/products/filename.jpg
+        // Without this fix, the path was being doubled: uploads/products/products/filename.jpg
+        Path uploadsRoot = Paths.get(uploadDir).getParent(); // → "uploads"
+        String absolutePath = uploadsRoot.toFile().getAbsolutePath();
 
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadAbsolutePath + "/");
+                .addResourceLocations("file:" + absolutePath + "/");
 
-        // Serve static assets (CSS, JS, images)
+        // Serve static assets (CSS, JS, images from classpath)
         registry.addResourceHandler("/static/**")
                 .addResourceLocations("classpath:/static/");
 
-        logger.info("WebConfig: Serving uploads from {}", uploadAbsolutePath);
+        logger.info("WebConfig: Serving uploads from absolute path: {}", absolutePath);
     }
 }

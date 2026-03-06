@@ -9,7 +9,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.revshop.dto.CategoryDTO;
 
 @Controller
 @RequestMapping("/admin")
@@ -94,18 +96,31 @@ public class AdminController {
     @GetMapping("/categories")
     public String categories(Model model) {
         logger.info("Admin viewing categories");
-        model.addAttribute("categories", categoryService.getAllCategories());
+        var categories = categoryService.getAllCategories();
+        model.addAttribute("categories", categories);
+        model.addAttribute("totalProductsAcrossCategories",
+                categories.stream().mapToLong(c -> c.getProducts() != null ? c.getProducts().size() : 0L).sum());
+        // FIX: categoryDTO must be in model so th:object="${categoryDTO}" in the form doesn't throw NPE
+        model.addAttribute("categoryDTO", new CategoryDTO());
         return "admin/categories";
     }
 
     @PostMapping("/categories/add")
     public String addCategory(
-            @RequestParam String name,
-            @RequestParam(required = false) String description,
-            RedirectAttributes redirectAttributes) {
-        logger.info("Admin adding category: {}", name);
+            @ModelAttribute("categoryDTO") CategoryDTO categoryDTO,
+            BindingResult result,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+        logger.info("Admin adding category: {}", categoryDTO.getName());
+        if (result.hasErrors()) {
+            var categories = categoryService.getAllCategories();
+            model.addAttribute("categories", categories);
+            model.addAttribute("totalProductsAcrossCategories",
+                    categories.stream().mapToLong(c -> c.getProducts() != null ? c.getProducts().size() : 0L).sum());
+            return "admin/categories";
+        }
         try {
-            categoryService.addCategory(name, description);
+            categoryService.addCategory(categoryDTO.getName(), categoryDTO.getDescription());
             redirectAttributes.addFlashAttribute("successMessage",
                     "Category added successfully.");
         } catch (Exception e) {
