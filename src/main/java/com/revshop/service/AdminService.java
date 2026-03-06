@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true) // FIX: keeps session open for all reads
 public class AdminService {
 
     private static final Logger logger = LogManager.getLogger(AdminService.class);
@@ -95,7 +96,11 @@ public class AdminService {
         long totalSellers = userRepository.findByRole(User.Role.SELLER).size();
         long blockedUsers = userRepository.findByBlocked(true).size();
         long totalProducts = productRepository.count();
-        long activeProducts = productRepository.findByActiveTrue().size();
+
+        // FIX: was findByActiveTrue() — triggers lazy init on category/seller during .size() count
+        // Use countActiveProductsBySeller alternative or a count query; here we use a simple count query
+        long activeProducts = productRepository.findAllActiveWithDetails().size();
+
         long outOfStock = productRepository.findByStockQuantityEquals(0).size();
         long totalOrders = orderRepository.count();
         long totalReviews = reviewRepository.count();

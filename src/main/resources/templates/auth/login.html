@@ -18,12 +18,13 @@
             font-family: 'DM Sans', sans-serif;
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start;       /* changed from center so page can scroll */
             justify-content: center;
             position: relative;
-            overflow: hidden;
+            overflow-y: auto;              /* scrollable */
+            overflow-x: hidden;
+            padding: 2rem 1rem;            /* breathing room top/bottom */
         }
-        /* Animated background orbs */
         body::before {
             content: '';
             position: fixed;
@@ -32,6 +33,7 @@
             background: radial-gradient(circle, rgba(255,107,53,0.12) 0%, transparent 70%);
             border-radius: 50%;
             animation: pulse 6s ease-in-out infinite;
+            pointer-events: none;
         }
         body::after {
             content: '';
@@ -41,6 +43,7 @@
             background: radial-gradient(circle, rgba(30,58,95,0.6) 0%, transparent 70%);
             border-radius: 50%;
             animation: pulse 8s ease-in-out infinite reverse;
+            pointer-events: none;
         }
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
@@ -49,10 +52,11 @@
         .auth-container {
             width: 100%;
             max-width: 440px;
-            padding: 1rem;
             position: relative;
             z-index: 10;
             animation: fadeInUp 0.6s ease;
+            /* vertically center when content is shorter than viewport */
+            margin: auto;
         }
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
@@ -101,6 +105,8 @@
             background: rgba(255,255,255,0.08) !important;
         }
         .form-control::placeholder { color: var(--text-muted) !important; }
+
+        /* Input group – icon prefix */
         .input-group-text {
             background: rgba(255,107,53,0.1) !important;
             border: 1.5px solid rgba(255,107,53,0.2) !important;
@@ -110,8 +116,25 @@
         }
         .input-group .form-control {
             border-left: none !important;
-            border-radius: 0 12px 12px 0 !important;
+            border-radius: 0 !important;         /* middle segment */
         }
+
+        /* Show-password toggle button (right side of input group) */
+        .btn-eye {
+            background: rgba(255,107,53,0.1) !important;
+            border: 1.5px solid rgba(255,107,53,0.2) !important;
+            border-left: none !important;
+            border-radius: 0 12px 12px 0 !important;
+            color: var(--text-muted) !important;
+            padding: 0 0.85rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .btn-eye:hover { color: var(--orange) !important; }
+        .btn-eye:focus { outline: none; box-shadow: none !important; }
+
         .btn-login {
             background: linear-gradient(135deg, var(--orange), #e85d2b);
             color: white;
@@ -142,10 +165,7 @@
             height: 1px;
             background: rgba(255,107,53,0.15);
         }
-        .divider span {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-        }
+        .divider span { color: var(--text-muted); font-size: 0.8rem; }
         .auth-link {
             color: var(--orange);
             text-decoration: none;
@@ -153,6 +173,8 @@
             transition: color 0.2s;
         }
         .auth-link:hover { color: var(--gold); }
+
+        /* Alerts */
         .alert-success-rev {
             background: rgba(40,167,69,0.12);
             border: 1px solid rgba(40,167,69,0.3);
@@ -169,6 +191,30 @@
             padding: 0.8rem 1rem;
             font-size: 0.9rem;
         }
+
+        /* Remember me – fully visible */
+        .form-check-input {
+            background-color: rgba(255,255,255,0.08) !important;
+            border: 1.5px solid rgba(255,107,53,0.4) !important;
+            border-radius: 4px !important;
+            width: 1.1em;
+            height: 1.1em;
+            cursor: pointer;
+        }
+        .form-check-input:checked {
+            background-color: var(--orange) !important;
+            border-color: var(--orange) !important;
+        }
+        .form-check-input:focus {
+            box-shadow: 0 0 0 3px rgba(255,107,53,0.2) !important;
+        }
+        .form-check-label {
+            color: var(--text-light) !important;   /* bright so it's visible */
+            font-size: 0.88rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
         .role-badge {
             display: inline-flex;
             align-items: center;
@@ -204,6 +250,7 @@
         <!-- Login Form -->
         <form th:action="@{/auth/login}" th:object="${loginDTO}" method="post">
 
+            <!-- Email -->
             <div class="mb-3">
                 <label class="form-label">Email Address</label>
                 <div class="input-group">
@@ -217,6 +264,7 @@
                      th:errors="*{email}"></div>
             </div>
 
+            <!-- Password with show/hide toggle -->
             <div class="mb-3">
                 <label class="form-label">Password</label>
                 <div class="input-group">
@@ -224,18 +272,22 @@
                     <input type="password" class="form-control"
                            th:field="*{password}"
                            placeholder="••••••••" id="passwordField"/>
+                    <button type="button" class="btn-eye" id="togglePassword"
+                            onclick="togglePasswordVisibility('passwordField','togglePasswordIcon')"
+                            aria-label="Show / hide password">
+                        <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                    </button>
                 </div>
                 <div class="text-danger small mt-1"
                      th:if="${#fields.hasErrors('password')}"
                      th:errors="*{password}"></div>
             </div>
 
+            <!-- Remember me + Forgot password -->
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="remember"/>
-                    <label class="form-check-label text-muted small" for="remember">
-                        Remember me
-                    </label>
+                <div class="form-check d-flex align-items-center gap-2 m-0">
+                    <input class="form-check-input mt-0" type="checkbox" id="remember" name="remember"/>
+                    <label class="form-check-label" for="remember">Remember me</label>
                 </div>
                 <a th:href="@{/auth/forgot-password}" class="auth-link" style="font-size:0.85rem;">
                     Forgot password?
@@ -264,6 +316,20 @@
         </div>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function togglePasswordVisibility(fieldId, iconId) {
+        const field = document.getElementById(fieldId);
+        const icon  = document.getElementById(iconId);
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.classList.replace('bi-eye', 'bi-eye-slash');
+        } else {
+            field.type = 'password';
+            icon.classList.replace('bi-eye-slash', 'bi-eye');
+        }
+    }
+</script>
 </body>
 </html>
