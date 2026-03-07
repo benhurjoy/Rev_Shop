@@ -11,10 +11,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -35,11 +36,10 @@ class DataInitializerTest {
 
     @Test
     void run_AdminNotExist_ShouldCreateAdmin() throws Exception {
-        when(userRepository.findByEmail("admin@revshop.com")).thenReturn(Optional.empty());
+        when(userRepository.existsByEmail("admin@revshop.com")).thenReturn(false);
         when(passwordEncoder.encode("admin123")).thenReturn("encodedAdmin123");
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
-        when(categoryRepository.existsByName(anyString())).thenReturn(false);
-        when(categoryRepository.save(any(Category.class))).thenAnswer(i -> i.getArgument(0));
+        when(categoryRepository.count()).thenReturn(6L); // categories already exist
 
         dataInitializer.run();
 
@@ -53,15 +53,8 @@ class DataInitializerTest {
 
     @Test
     void run_AdminAlreadyExists_ShouldNotCreateDuplicate() throws Exception {
-        User existingAdmin = User.builder()
-                .email("admin@revshop.com")
-                .role(User.Role.ADMIN)
-                .enabled(true)
-                .build();
-
-        when(userRepository.findByEmail("admin@revshop.com"))
-                .thenReturn(Optional.of(existingAdmin));
-        when(categoryRepository.existsByName(anyString())).thenReturn(true);
+        when(userRepository.existsByEmail("admin@revshop.com")).thenReturn(true);
+        when(categoryRepository.count()).thenReturn(6L); // categories already exist
 
         dataInitializer.run();
 
@@ -70,26 +63,23 @@ class DataInitializerTest {
 
     @Test
     void run_CategoriesNotExist_ShouldCreateSixCategories() throws Exception {
-        when(userRepository.findByEmail("admin@revshop.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(anyString())).thenReturn("encoded");
-        when(userRepository.save(any())).thenAnswer(i -> i.getArgument(0));
-        when(categoryRepository.existsByName(anyString())).thenReturn(false);
-        when(categoryRepository.save(any(Category.class))).thenAnswer(i -> i.getArgument(0));
+        when(userRepository.existsByEmail("admin@revshop.com")).thenReturn(true);
+        when(categoryRepository.count()).thenReturn(0L);
+        when(categoryRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
         dataInitializer.run();
 
-        verify(categoryRepository, times(6)).save(any(Category.class));
+        verify(categoryRepository).saveAll(argThat((List<Category> list) -> list.size() == 6));
     }
 
     @Test
     void run_CategoriesAlreadyExist_ShouldNotDuplicate() throws Exception {
-        when(userRepository.findByEmail("admin@revshop.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(anyString())).thenReturn("encoded");
-        when(userRepository.save(any())).thenAnswer(i -> i.getArgument(0));
-        when(categoryRepository.existsByName(anyString())).thenReturn(true);
+        when(userRepository.existsByEmail("admin@revshop.com")).thenReturn(true);
+        when(categoryRepository.count()).thenReturn(6L);
 
         dataInitializer.run();
 
-        verify(categoryRepository, never()).save(any(Category.class));
+        verify(categoryRepository, never()).saveAll(any());
+        verify(categoryRepository, never()).save(any());
     }
 }
