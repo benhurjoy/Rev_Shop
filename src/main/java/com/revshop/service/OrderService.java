@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional(readOnly = true) // FIX: keeps session open for all reads
+@Transactional(readOnly = true)
 public class OrderService {
 
     private static final Logger logger = LogManager.getLogger(OrderService.class);
@@ -105,7 +105,21 @@ public class OrderService {
         paymentRepository.save(payment);
 
         cartService.clearCart(email);
+
+        // Notify buyer
         notificationService.sendOrderNotification(email, "PLACED", savedOrder.getId());
+
+        // Notify each seller whose product was ordered
+        savedOrder.getOrderItems().forEach(item -> {
+            String sellerEmail = item.getProduct().getSeller().getEmail();
+            notificationService.sendNotification(
+                    sellerEmail,
+                    "New Order Received",
+                    "You received a new order #" + savedOrder.getId() +
+                            " for \"" + item.getProduct().getName() + "\" (Qty: " + item.getQuantity() + ")",
+                    Notification.NotificationType.ORDER_PLACED
+            );
+        });
 
         logger.info("Order placed successfully: {} for: {}", savedOrder.getId(), email);
         return savedOrder;
@@ -116,7 +130,6 @@ public class OrderService {
         User buyer = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
 
-        // FIX: was findByBuyerOrderByOrderedAtDesc() — no JOIN FETCH → buyer/orderItems/product crash in mapToDTO
         return orderRepository.findByBuyerWithItems(buyer)
                 .stream()
                 .map(this::mapToDTO)
@@ -126,7 +139,6 @@ public class OrderService {
     public OrderDTO getOrderById(Long orderId, String email) {
         logger.info("GetOrderById called for orderId: {} by: {}", orderId, email);
 
-        // FIX: was findById() — buyer.getFirstName(), orderItems, item.getProduct() all lazy → crash
         Order order = orderRepository.findByIdWithDetails(orderId)
                 .orElseThrow(() -> {
                     logger.warn("Order not found: {}", orderId);
@@ -140,7 +152,6 @@ public class OrderService {
     public void cancelOrder(Long orderId, String email) {
         logger.info("CancelOrder called for orderId: {} by: {}", orderId, email);
 
-        // FIX: was findById() — order.getOrderItems() and item.getProduct() are lazy → crash below
         Order order = orderRepository.findByIdWithDetails(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
@@ -152,14 +163,27 @@ public class OrderService {
         order.setStatus(Order.OrderStatus.CANCELLED);
         orderRepository.save(order);
 
-        // SAFE: orderItems and product already fetched by findByIdWithDetails
+        // Restore stock
         order.getOrderItems().forEach(item -> {
             Product product = item.getProduct();
             product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
             productRepository.save(product);
         });
 
+        // Notify buyer
         notificationService.sendOrderNotification(email, "CANCELLED", orderId);
+
+        // Notify each seller
+        order.getOrderItems().forEach(item -> {
+            String sellerEmail = item.getProduct().getSeller().getEmail();
+            notificationService.sendNotification(
+                    sellerEmail,
+                    "Order Cancelled",
+                    "Order #" + orderId + " for \"" + item.getProduct().getName() + "\" was cancelled by the buyer.",
+                    Notification.NotificationType.ORDER_STATUS_UPDATED
+            );
+        });
+
         logger.info("Order cancelled successfully: {}", orderId);
     }
 
@@ -167,14 +191,13 @@ public class OrderService {
     public void updateOrderStatus(Long orderId, Order.OrderStatus status) {
         logger.info("UpdateOrderStatus called for orderId: {} status: {}", orderId, status);
 
-        // FIX: was findById() — order.getBuyer().getEmail() is lazy → crash
         Order order = orderRepository.findByIdWithDetails(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
         order.setStatus(status);
         orderRepository.save(order);
 
-        // SAFE: buyer already fetched
+        // Notify buyer
         notificationService.sendOrderNotification(order.getBuyer().getEmail(), status.name(), orderId);
         logger.info("Order status updated to: {} for orderId: {}", status, orderId);
     }
@@ -182,7 +205,6 @@ public class OrderService {
     public List<OrderDTO> getAllOrders() {
         logger.info("GetAllOrders called");
 
-        // FIX: was findAllByOrderByOrderedAtDesc() — no JOIN FETCH → crash in mapToDTO
         return orderRepository.findAllWithDetails()
                 .stream()
                 .map(this::mapToDTO)
@@ -192,7 +214,6 @@ public class OrderService {
     public OrderDTO mapToDTO(Order order) {
         OrderDTO dto = new OrderDTO();
 
-        // SAFE: buyer is always JOIN FETCHed by the new query methods
         dto.setId(order.getId());
         dto.setBuyerId(order.getBuyer().getId());
         dto.setBuyerName(order.getBuyer().getFirstName() + " " + order.getBuyer().getLastName());
@@ -205,7 +226,6 @@ public class OrderService {
         dto.setPincode(order.getPincode());
         dto.setOrderedAt(order.getOrderedAt());
 
-        // SAFE: orderItems and product are always JOIN FETCHed
         List<OrderItemDTO> itemDTOs = order.getOrderItems().stream()
                 .map(item -> {
                     OrderItemDTO itemDTO = new OrderItemDTO();
