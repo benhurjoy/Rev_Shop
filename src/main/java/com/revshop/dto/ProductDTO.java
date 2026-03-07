@@ -38,6 +38,7 @@ public class ProductDTO {
     private String categoryName;
     private Long sellerId;
     private String sellerName;
+    private String sellerEmail;      // ← THIS WAS MISSING
     private Double averageRating;
     private Long totalReviews;
 }
