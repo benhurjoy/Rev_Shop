@@ -124,9 +124,8 @@ class CartServiceTest {
 
     @Test
     void addToCart_OutOfStock_ShouldThrowException() {
+        // Service checks quantity > 0, then findById, then stock — throws before getUserByEmail
         mockProduct.setStockQuantity(0);
-        when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
-        when(cartRepository.findByUser(mockBuyer)).thenReturn(Optional.of(mockCart));
         when(productRepository.findById(1L)).thenReturn(Optional.of(mockProduct));
 
         assertThrows(Exception.class,
@@ -138,6 +137,7 @@ class CartServiceTest {
         mockCart.getCartItems().add(mockCartItem);
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
         when(cartRepository.findByUser(mockBuyer)).thenReturn(Optional.of(mockCart));
+        when(cartItemRepository.findByCartWithProduct(mockCart)).thenReturn(List.of(mockCartItem));
 
         BigDecimal total = cartService.calculateTotal("buyer@test.com");
 
@@ -149,6 +149,7 @@ class CartServiceTest {
     void getCartItemCount_EmptyCart_ShouldReturnZero() {
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
         when(cartRepository.findByUser(mockBuyer)).thenReturn(Optional.of(mockCart));
+        when(cartItemRepository.findByCartWithProduct(mockCart)).thenReturn(new ArrayList<>());
 
         int count = cartService.getCartItemCount("buyer@test.com");
 
