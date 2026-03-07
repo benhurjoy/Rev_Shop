@@ -6,6 +6,7 @@ import com.revshop.entity.Product;
 import com.revshop.entity.User;
 import com.revshop.repository.CategoryRepository;
 import com.revshop.repository.ProductRepository;
+import com.revshop.repository.ReviewRepository;
 import com.revshop.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ class ProductServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private ReviewRepository reviewRepository;  // needed by mapToDTO
+
     @InjectMocks
     private ProductService productService;
 
@@ -47,6 +51,8 @@ class ProductServiceTest {
     void setUp() {
         mockSeller = User.builder()
                 .id(1L)
+                .firstName("Jane")
+                .lastName("Smith")
                 .email("seller@test.com")
                 .role(User.Role.SELLER)
                 .enabled(true)
@@ -112,8 +118,9 @@ class ProductServiceTest {
 
     @Test
     void getAllActiveProducts_ShouldReturnList() {
-        when(productRepository.findByActiveTrueOrderByCreatedAtDesc())
-                .thenReturn(List.of(mockProduct));
+        when(productRepository.findAllActiveWithDetails()).thenReturn(List.of(mockProduct));
+        when(reviewRepository.findAverageRatingByProduct(mockProduct)).thenReturn(4.0);
+        when(reviewRepository.countByProduct(mockProduct)).thenReturn(5L);
 
         List<ProductDTO> result = productService.getAllActiveProducts();
 
@@ -123,7 +130,9 @@ class ProductServiceTest {
 
     @Test
     void getProductById_ValidId_ShouldReturnProduct() {
-        when(productRepository.findById(1L)).thenReturn(Optional.of(mockProduct));
+        when(productRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(mockProduct));
+        when(reviewRepository.findAverageRatingByProduct(mockProduct)).thenReturn(4.0);
+        when(reviewRepository.countByProduct(mockProduct)).thenReturn(5L);
 
         ProductDTO result = productService.getProductById(1L);
 
@@ -133,7 +142,7 @@ class ProductServiceTest {
 
     @Test
     void getProductById_InvalidId_ShouldThrowException() {
-        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+        when(productRepository.findByIdWithDetails(99L)).thenReturn(Optional.empty());
 
         assertThrows(Exception.class, () -> productService.getProductById(99L));
     }
@@ -141,7 +150,6 @@ class ProductServiceTest {
     @Test
     void deleteProduct_OwnProduct_ShouldDeactivate() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(mockProduct));
-        when(userRepository.findByEmail("seller@test.com")).thenReturn(Optional.of(mockSeller));
         when(productRepository.save(any())).thenReturn(mockProduct);
 
         assertDoesNotThrow(() -> productService.deleteProduct(1L, "seller@test.com"));
@@ -151,8 +159,10 @@ class ProductServiceTest {
 
     @Test
     void searchProducts_MatchingKeyword_ShouldReturnResults() {
-        when(productRepository.findByNameContainingIgnoreCaseAndActiveTrue("Phone"))
+        when(productRepository.findByNameContainingIgnoreCaseAndActiveTrueWithDetails("Phone"))
                 .thenReturn(List.of(mockProduct));
+        when(reviewRepository.findAverageRatingByProduct(mockProduct)).thenReturn(4.0);
+        when(reviewRepository.countByProduct(mockProduct)).thenReturn(5L);
 
         List<ProductDTO> results = productService.searchProducts("Phone");
 
