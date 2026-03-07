@@ -16,12 +16,14 @@
 
         /* Navbar */
         .revshop-navbar{background:linear-gradient(135deg,#0A1628 0%,#1E3A5F 100%);border-bottom:2px solid var(--orange);padding:0.75rem 0;box-shadow:0 4px 20px rgba(0,0,0,0.4);position:sticky;top:0;z-index:1000;}
-        .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;}
+        .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;text-decoration:none;}
         .navbar-brand span{color:var(--orange);}
-        .nav-link{color:var(--text-muted)!important;font-weight:500;font-size:0.9rem;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s ease;}
+        .nav-link{color:var(--text-muted)!important;font-weight:500;font-size:0.9rem;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s ease;position:relative;}
         .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
-        .btn-orange{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:10px;padding:0.6rem 1.5rem;font-weight:600;transition:all 0.3s ease;box-shadow:0 4px 15px rgba(255,107,53,0.3);}
+        .btn-orange{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:10px;padding:0.6rem 1.5rem;font-weight:600;transition:all 0.3s ease;box-shadow:0 4px 15px rgba(255,107,53,0.3);text-decoration:none;}
         .btn-orange:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,107,53,0.5);color:white;}
+        .nav-badge{background:var(--orange);color:white;border-radius:50%;font-size:0.6rem;font-weight:700;padding:2px 5px;position:absolute;top:4px;right:4px;min-width:16px;text-align:center;line-height:1.4;}
+        .nav-divider{width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 0.25rem;}
 
         /* Hero */
         .hero{background:linear-gradient(135deg,#0A1628 0%,#1E3A5F 50%,#0A1628 100%);padding:5rem 0 4rem;position:relative;overflow:hidden;}
@@ -90,24 +92,95 @@
 <!-- Navbar -->
 <nav class="revshop-navbar navbar navbar-expand-lg">
     <div class="container-fluid px-4">
-        <a class="navbar-brand" th:href="@{/}">Rev<span>Shop</span></a>
+
+        <!-- Brand: role-based home link -->
+        <a class="navbar-brand" th:href="@{/}"                 sec:authorize="isAnonymous()">Rev<span>Shop</span></a>
+        <a class="navbar-brand" th:href="@{/buyer/home}"       sec:authorize="hasRole('BUYER')">Rev<span>Shop</span></a>
+        <a class="navbar-brand" th:href="@{/seller/dashboard}" sec:authorize="hasRole('SELLER')">Rev<span>Shop</span></a>
+        <a class="navbar-brand" th:href="@{/admin/dashboard}"  sec:authorize="hasRole('ADMIN')">Rev<span>Shop</span></a>
+
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
             <i class="bi bi-list text-light fs-4"></i>
         </button>
+
         <div class="collapse navbar-collapse" id="navMenu">
-            <ul class="navbar-nav ms-auto align-items-center gap-2">
+            <ul class="navbar-nav ms-auto align-items-center gap-1">
+
+                <!-- ── Anonymous ── -->
                 <li class="nav-item" sec:authorize="isAnonymous()">
-                    <a class="nav-link" th:href="@{/auth/login}"><i class="bi bi-person me-1"></i>Login</a>
+                    <a class="nav-link" th:href="@{/auth/login}">
+                        <i class="bi bi-person me-1"></i>Login
+                    </a>
                 </li>
                 <li class="nav-item" sec:authorize="isAnonymous()">
                     <a class="btn btn-orange" th:href="@{/auth/register}">Register</a>
                 </li>
-                <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <a class="nav-link" th:href="@{/buyer/home}"><i class="bi bi-shop me-1"></i>My Shop</a>
+
+                <!-- ── Buyer: Shop, Orders, Wishlist, Cart, Notifications ── -->
+                <li class="nav-item" sec:authorize="hasRole('BUYER')">
+                    <a class="nav-link" th:href="@{/buyer/home}">
+                        <i class="bi bi-shop me-1"></i>Shop
+                    </a>
                 </li>
-                <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <a class="nav-link" th:href="@{/auth/logout}"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
+                <li class="nav-item" sec:authorize="hasRole('BUYER')">
+                    <a class="nav-link" th:href="@{/buyer/orders}">
+                        <i class="bi bi-bag me-1"></i>Orders
+                    </a>
                 </li>
+                <li class="nav-item" sec:authorize="hasRole('BUYER')">
+                    <a class="nav-link" th:href="@{/buyer/wishlist}">
+                        <i class="bi bi-heart me-1"></i>Wishlist
+                    </a>
+                </li>
+                <li class="nav-item position-relative" sec:authorize="hasRole('BUYER')">
+                    <a class="nav-link" th:href="@{/buyer/cart}">
+                        <i class="bi bi-cart3 fs-5"></i>
+                        <span class="nav-badge"
+                              th:if="${cartCount != null and cartCount > 0}"
+                              th:text="${cartCount}"></span>
+                    </a>
+                </li>
+                <li class="nav-item position-relative" sec:authorize="hasRole('BUYER')">
+                    <a class="nav-link" th:href="@{/buyer/notifications}">
+                        <i class="bi bi-bell fs-5"></i>
+                        <span class="nav-badge"
+                              th:if="${unreadCount != null and unreadCount > 0}"
+                              th:text="${unreadCount}"></span>
+                    </a>
+                </li>
+
+                <!-- ── Seller: Dashboard, My Products, Notifications ── -->
+                <li class="nav-item" sec:authorize="hasRole('SELLER')">
+                    <a class="nav-link" th:href="@{/seller/dashboard}">
+                        <i class="bi bi-grid me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('SELLER')">
+                    <a class="nav-link" th:href="@{/seller/products}">
+                        <i class="bi bi-box-seam me-1"></i>My Products
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('SELLER')">
+                    <a class="nav-link" th:href="@{/seller/notifications}">
+                        <i class="bi bi-bell me-1"></i>Notifications
+                    </a>
+                </li>
+
+                <!-- ── Admin ── -->
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/dashboard}">
+                        <i class="bi bi-shield me-1"></i>Admin Panel
+                    </a>
+                </li>
+
+                <!-- ── Divider + Logout ── -->
+                <li class="nav-divider d-none d-lg-flex align-items-center" sec:authorize="isAuthenticated()"></li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/auth/logout}">
+                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </a>
+                </li>
+
             </ul>
         </div>
     </div>
@@ -164,7 +237,8 @@
 <section class="py-4" style="border-bottom:1px solid var(--border);">
     <div class="container">
         <div class="d-flex gap-2 flex-wrap align-items-center">
-            <a th:href="@{/}" class="category-chip" th:classappend="${categoryId == null and keyword == null} ? 'active' : ''">
+            <a th:href="@{/}" class="category-chip"
+               th:classappend="${categoryId == null and keyword == null} ? 'active' : ''">
                 <i class="bi bi-grid-fill"></i> All
             </a>
             <a th:each="cat : ${categories}"
@@ -181,11 +255,14 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-end mb-4">
             <div>
-                <h2 class="section-title" th:text="${keyword != null} ? 'Search: ' + ${keyword} : 'Featured Products'">Products</h2>
-                <p class="section-subtitle" th:text="${products != null} ? ${products.size()} + ' products found' : ''"></p>
+                <h2 class="section-title"
+                    th:text="${keyword != null} ? 'Search: ' + ${keyword} : 'Featured Products'">Products</h2>
+                <p class="section-subtitle"
+                   th:text="${products != null} ? ${products.size()} + ' products found' : ''"></p>
             </div>
             <div th:if="${keyword != null}">
-                <a th:href="@{/}" class="btn-orange" style="font-size:0.85rem;padding:0.5rem 1rem;border-radius:8px;text-decoration:none;">
+                <a th:href="@{/}" class="btn-orange"
+                   style="font-size:0.85rem;padding:0.5rem 1rem;border-radius:8px;text-decoration:none;">
                     <i class="bi bi-x me-1"></i>Clear
                 </a>
             </div>
@@ -208,7 +285,8 @@
                     <div class="product-img-wrap">
                         <img th:if="${product.imageUrl != null}"
                              th:src="${product.imageUrl}"
-                             th:alt="${product.name}"/>
+                             th:alt="${product.name}"
+                             loading="lazy"/>
                         <div class="product-img-placeholder" th:unless="${product.imageUrl != null}">
                             <i class="bi bi-image"></i>
                         </div>
