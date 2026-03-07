@@ -64,7 +64,7 @@
 <div class="container py-5">
     <h2 class="mb-4">My Orders
         <span style="color:var(--text-muted);font-size:1rem;font-family:'DM Sans',sans-serif;"
-              th:text="'(' + (orders?.size() ?: 0) + ')'"></span>
+              th:text="${'(' + (orders != null ? orders.size() : 0) + ')'}"></span>
     </h2>
 
     <div th:if="${successMessage}" class="alert-success-rev mb-4">
@@ -137,17 +137,12 @@
                  class="timeline-step">
                 <div class="timeline-line"
                      th:classappend="${order.status?.name() != 'CANCELLED' and
-                        (s == 'PENDING' and #lists.contains({'PROCESSING','SHIPPED','DELIVERED'}, order.status?.name())) or
+                        ((s == 'PENDING' and #lists.contains({'PROCESSING','SHIPPED','DELIVERED'}, order.status?.name())) or
                         (s == 'PROCESSING' and #lists.contains({'SHIPPED','DELIVERED'}, order.status?.name())) or
-                        (s == 'SHIPPED' and order.status?.name() == 'DELIVERED')} ? ' done' : ''">
+                        (s == 'SHIPPED' and order.status?.name() == 'DELIVERED'))} ? ' done' : ''">
                 </div>
                 <div class="timeline-dot"
-                     th:classappend="${order.status?.name() == s} ? ' active' :
-                        (${order.status?.name() != 'CANCELLED' and
-                        ((s == 'PENDING') or
-                        (s == 'PROCESSING' and #lists.contains({'PROCESSING','SHIPPED','DELIVERED'}, order.status?.name())) or
-                        (s == 'SHIPPED' and #lists.contains({'SHIPPED','DELIVERED'}, order.status?.name())) or
-                        (s == 'DELIVERED' and order.status?.name() == 'DELIVERED'))}) ? ' done' : ''">
+                     th:classappend="${order.status?.name() == s ? ' active' : (order.status?.name() != 'CANCELLED' and (s == 'PENDING' or (s == 'PROCESSING' and #lists.contains({'PROCESSING','SHIPPED','DELIVERED'}, order.status?.name())) or (s == 'SHIPPED' and #lists.contains({'SHIPPED','DELIVERED'}, order.status?.name())) or (s == 'DELIVERED' and order.status?.name() == 'DELIVERED'))) ? ' done' : ''}">
                     <i class="bi bi-check"></i>
                 </div>
                 <div class="timeline-label" th:text="${s}"></div>
