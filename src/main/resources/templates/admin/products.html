@@ -125,18 +125,17 @@
         </div>
         <div style="background:var(--card-bg);border:1px solid rgba(40,167,69,0.3);border-radius:12px;padding:0.6rem 1.2rem;font-size:0.85rem;">
             <span style="color:var(--text-muted);">Active </span>
-            <strong style="color:#75f5a0;"
-                    th:text="${products?.stream()?.filter(p -> p.active)?.count() ?: 0}">0</strong>
+            <!-- FIX: Thymeleaf 3.1 blocks Java lambda expressions (p -> p.active).
+                 Pass activeCount, lowStockCount, outOfStockCount from the controller instead. -->
+            <strong style="color:#75f5a0;" th:text="${activeCount ?: 0}">0</strong>
         </div>
         <div style="background:var(--card-bg);border:1px solid rgba(255,179,71,0.3);border-radius:12px;padding:0.6rem 1.2rem;font-size:0.85rem;">
             <span style="color:var(--text-muted);">Low Stock </span>
-            <strong style="color:var(--gold);"
-                    th:text="${products?.stream()?.filter(p -> p.stockQuantity > 0 and p.stockQuantity < 5)?.count() ?: 0}">0</strong>
+            <strong style="color:var(--gold);" th:text="${lowStockCount ?: 0}">0</strong>
         </div>
         <div style="background:var(--card-bg);border:1px solid rgba(220,53,69,0.3);border-radius:12px;padding:0.6rem 1.2rem;font-size:0.85rem;">
             <span style="color:var(--text-muted);">Out of Stock </span>
-            <strong style="color:#ff8fa3;"
-                    th:text="${products?.stream()?.filter(p -> p.stockQuantity == 0)?.count() ?: 0}">0</strong>
+            <strong style="color:#ff8fa3;" th:text="${outOfStockCount ?: 0}">0</strong>
         </div>
     </div>
 

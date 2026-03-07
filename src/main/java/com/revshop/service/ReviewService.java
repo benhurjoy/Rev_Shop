@@ -1,5 +1,6 @@
 package com.revshop.service;
 
+
 import com.revshop.dto.ReviewDTO;
 import com.revshop.entity.Product;
 import com.revshop.entity.Review;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true) // FIX: keeps session open for all reads
 public class ReviewService {
 
     private static final Logger logger = LogManager.getLogger(ReviewService.class);
@@ -65,9 +67,12 @@ public class ReviewService {
 
     public List<ReviewDTO> getReviewsByProduct(Long productId) {
         logger.info("GetReviewsByProduct called for productId: {}", productId);
+
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
-        return reviewRepository.findByProductOrderByCreatedAtDesc(product)
+
+        // FIX: was findByProductOrderByCreatedAtDesc() — review.getBuyer() is lazy → crash in mapToDTO
+        return reviewRepository.findByProductWithBuyer(product)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -104,15 +109,15 @@ public class ReviewService {
     private ReviewDTO mapToDTO(Review review) {
         ReviewDTO dto = new ReviewDTO();
         dto.setId(review.getId());
+
+        // SAFE: product and buyer are JOIN FETCHed by findByProductWithBuyer
         dto.setProductId(review.getProduct().getId());
         dto.setProductName(review.getProduct().getName());
         dto.setBuyerId(review.getBuyer().getId());
-        dto.setBuyerName(review.getBuyer().getFirstName()
-                + " " + review.getBuyer().getLastName());
+        dto.setBuyerName(review.getBuyer().getFirstName() + " " + review.getBuyer().getLastName());
         dto.setRating(review.getRating());
         dto.setComment(review.getComment());
         dto.setCreatedAt(review.getCreatedAt());
         return dto;
     }
 }
-

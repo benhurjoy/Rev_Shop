@@ -1,5 +1,6 @@
 package com.revshop.controller;
 
+
 import com.revshop.dto.ProductDTO;
 import com.revshop.service.CategoryService;
 import com.revshop.service.NotificationService;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Controller
@@ -41,6 +43,7 @@ public class SellerController {
     @Autowired
     private NotificationService notificationService;
 
+    // uploadDir = "uploads/products" (from application.properties)
     @Value("${file.upload-dir}")
     private String uploadDir;
 
@@ -254,13 +257,29 @@ public class SellerController {
 
     // ── Helper: Save Image ────────────────────────────────────
     private String saveImage(MultipartFile image) throws IOException {
+        // uploadDir = "uploads/products" — this is where files are physically saved
         Path uploadPath = Paths.get(uploadDir);
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
-        String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
-        Files.copy(image.getInputStream(), uploadPath.resolve(fileName));
-        logger.info("Image saved: {}", fileName);
-        return "/" + uploadDir + "/" + fileName;
+
+        // Sanitize filename and make it unique
+        String originalName = image.getOriginalFilename() != null
+                ? image.getOriginalFilename().replaceAll("[^a-zA-Z0-9._-]", "_")
+                : "image";
+        String fileName = UUID.randomUUID() + "_" + originalName;
+
+        // FIX: use REPLACE_EXISTING to avoid FileAlreadyExistsException on retries
+        Files.copy(image.getInputStream(),
+                uploadPath.resolve(fileName),
+                StandardCopyOption.REPLACE_EXISTING);
+
+        // FIX: return the web-accessible URL path.
+        // WebConfig maps /uploads/** → the "uploads/" folder root.
+        // So /uploads/products/filename.jpg → uploads/products/filename.jpg on disk. ✓
+        String webPath = "/uploads/products/" + fileName;
+        logger.info("Image saved to disk: {} | Web path: {}", uploadPath.resolve(fileName), webPath);
+        return webPath;
     }
 }
+
