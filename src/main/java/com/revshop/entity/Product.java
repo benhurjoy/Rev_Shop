@@ -66,4 +66,9 @@ public class Product {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    // Helper method so templates can use product.categoryName safely
+    public String getCategoryName() {
+        return category != null ? category.getName() : "";
+    }
 }
