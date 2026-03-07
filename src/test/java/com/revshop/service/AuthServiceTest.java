@@ -78,6 +78,7 @@ class AuthServiceTest {
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
+        when(otpVerificationRepository.save(any())).thenReturn(null);
 
         assertDoesNotThrow(() -> authService.register(registerDTO));
 
@@ -116,9 +117,9 @@ class AuthServiceTest {
 
     @Test
     void login_BlockedUser_ShouldThrowException() {
+        // Service checks isBlocked() BEFORE passwordEncoder.matches() — don't stub matcher
         mockUser.setBlocked(true);
         when(userRepository.findByEmail("john@test.com")).thenReturn(Optional.of(mockUser));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
 
         assertThrows(Exception.class, () -> authService.login(loginDTO));
     }
@@ -133,7 +134,7 @@ class AuthServiceTest {
 
     @Test
     void sendOtp_ValidEmail_ShouldSaveOtpAndSendEmail() {
-        when(userRepository.existsByEmail("john@test.com")).thenReturn(true);
+        // sendOtp() does NOT check existsByEmail — it just saves OTP and sends email directly
         when(otpVerificationRepository.save(any())).thenReturn(null);
 
         assertDoesNotThrow(() -> authService.sendOtp("john@test.com"));
