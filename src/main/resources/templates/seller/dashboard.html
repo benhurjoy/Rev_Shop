@@ -136,7 +136,7 @@
             <div class="stat-card green">
                 <div class="stat-icon si-green"><i class="bi bi-check-circle"></i></div>
                 <div class="stat-num"
-                     th:text="${products?.stream()?.filter(p -> p.active)?.count() ?: 0}">0</div>
+                     th:text="${#lists.size(products) > 0 ? #lists.size(products.?[active == true]) : 0}">0</div>
                 <div class="stat-label">Active Products</div>
             </div>
         </div>
@@ -144,7 +144,7 @@
             <div class="stat-card red">
                 <div class="stat-icon si-red"><i class="bi bi-exclamation-triangle"></i></div>
                 <div class="stat-num"
-                     th:text="${products?.stream()?.filter(p -> p.stockQuantity < 5)?.count() ?: 0}">0</div>
+                     th:text="${products != null ? #lists.size(products.?[stockQuantity < 5]) : 0}">0</div>
                 <div class="stat-label">Low Stock</div>
             </div>
         </div>

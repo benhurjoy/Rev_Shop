@@ -282,4 +282,3 @@ public class SellerController {
         return webPath;
     }
 }
-

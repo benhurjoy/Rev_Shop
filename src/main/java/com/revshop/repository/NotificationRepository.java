@@ -39,4 +39,3 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
         """)
     List<Notification> findUnreadByUser(@Param("user") User user);
 }
-
