@@ -120,7 +120,7 @@ public class ProductService {
 
         User seller = getUserByEmail(sellerEmail);
 
-        return productRepository.findBySellerWithDetails(seller)
+        return productRepository.findBySellerActiveTrueWithDetails(seller)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
