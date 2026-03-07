@@ -79,12 +79,8 @@
 
         <!-- Icon based on type -->
         <div class="notif-icon"
-             th:classappend="${notif.type?.name()?.contains('ORDER')} ? ' ni-order' :
-                              (${notif.type?.name() == 'LOW_STOCK'} ? ' ni-stock' :
-                               (${notif.type?.name() == 'ACCOUNT_BLOCKED'} ? ' ni-account' : ' ni-general'))">
-            <i th:class="${notif.type?.name()?.contains('ORDER')} ? 'bi bi-bag-check' :
-                          (${notif.type?.name() == 'LOW_STOCK'} ? 'bi bi-exclamation-triangle' :
-                           (${notif.type?.name() == 'ACCOUNT_BLOCKED'} ? 'bi bi-person-x' : 'bi bi-bell'))">
+             th:classappend="${notif.type?.name()?.contains('ORDER') ? ' ni-order' : (notif.type?.name() == 'LOW_STOCK' ? ' ni-stock' : (notif.type?.name() == 'ACCOUNT_BLOCKED' ? ' ni-account' : ' ni-general'))}">
+            <i th:class="${notif.type?.name()?.contains('ORDER') ? 'bi bi-bag-check' : (notif.type?.name() == 'LOW_STOCK' ? 'bi bi-exclamation-triangle' : (notif.type?.name() == 'ACCOUNT_BLOCKED' ? 'bi bi-person-x' : 'bi bi-bell'))}">
             </i>
         </div>
 

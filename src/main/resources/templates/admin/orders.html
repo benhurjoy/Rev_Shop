@@ -69,7 +69,7 @@
         <div class="section-hdr">
             <h5 style="margin:0;font-size:1.1rem;">All Orders</h5>
             <span style="color:var(--text-muted);font-size:0.82rem;"
-                  th:text="${orders?.size() ?: 0} + ' orders total'"></span>
+                  th:text="${(orders != null ? orders.size() : 0)} + ' orders total'"></span>
         </div>
         <div class="table-responsive">
             <table class="table rev-table mb-0">
@@ -95,27 +95,32 @@
                              th:text="${order.buyerEmail}"></div>
                     </td>
                     <td style="color:var(--orange);font-weight:700;"
-                        th:text="'₹' + ${order.totalAmount}"></td>
+                        th:text="'₹' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}"></td>
                     <td style="font-size:0.85rem;" th:text="${order.paymentMethod ?: '—'}"></td>
                     <td>
-                            <span th:switch="${order.status?.name()}">
-                                <span th:case="'PENDING'"    class="status-pending">Pending</span>
-                                <span th:case="'PROCESSING'" class="status-processing">Processing</span>
-                                <span th:case="'SHIPPED'"    class="status-shipped">Shipped</span>
-                                <span th:case="'DELIVERED'"  class="status-delivered">Delivered</span>
-                                <span th:case="'CANCELLED'"  class="status-cancelled">Cancelled</span>
-                            </span>
+                        <!-- FIX: th:switch on enum .name() is reliable; no nested ${} needed -->
+                        <span th:switch="${order.status?.name()}">
+                            <span th:case="'PENDING'"    class="status-pending">Pending</span>
+                            <span th:case="'PROCESSING'" class="status-processing">Processing</span>
+                            <span th:case="'SHIPPED'"    class="status-shipped">Shipped</span>
+                            <span th:case="'DELIVERED'"  class="status-delivered">Delivered</span>
+                            <span th:case="'CANCELLED'"  class="status-cancelled">Cancelled</span>
+                        </span>
                     </td>
                     <td style="color:var(--text-muted);font-size:0.82rem;"
-                        th:text="${#temporals.format(order.orderedAt,'dd MMM yyyy')}"></td>
+                        th:text="${order.orderedAt != null ? #temporals.format(order.orderedAt,'dd MMM yyyy') : '—'}"></td>
                     <td>
                         <form th:action="@{/admin/orders/status/{id}(id=${order.id})}"
                               method="post" class="d-flex gap-2 align-items-center">
-                            <select name="status" class="status-select"
-                                    th:value="${order.status}">
-                                <option th:each="s : ${orderStatuses}"
-                                        th:value="${s}"
-                                        th:text="${s}"
+                            <!--
+                                FIX: th:value on <select> does NOT work in Thymeleaf — it is silently ignored.
+                                The correct way to pre-select an option is th:selected on each <option>.
+                                We compare the enum value directly (s == order.status) instead of .name() strings.
+                            -->
+                            <select name="status" class="status-select">
+                                <option th:each="s : ${T(com.revshop.entity.Order.OrderStatus).values()}"
+                                        th:value="${s.name()}"
+                                        th:text="${s.name()}"
                                         th:selected="${s == order.status}"></option>
                             </select>
                             <button type="submit" class="btn-update">
