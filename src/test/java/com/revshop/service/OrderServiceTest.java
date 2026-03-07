@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +39,9 @@ class OrderServiceTest {
     @Mock
     private CartService cartService;
 
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -50,6 +54,8 @@ class OrderServiceTest {
     void setUp() {
         mockBuyer = User.builder()
                 .id(1L)
+                .firstName("John")
+                .lastName("Doe")
                 .email("buyer@test.com")
                 .role(User.Role.BUYER)
                 .enabled(true)
@@ -63,6 +69,7 @@ class OrderServiceTest {
                 .discountPercent(17)
                 .stockQuantity(10)
                 .active(true)
+                .seller(mockBuyer) // seller email needed for notifications
                 .build();
 
         mockOrder = Order.builder()
@@ -91,14 +98,14 @@ class OrderServiceTest {
                 .product(mockProduct)
                 .quantity(1)
                 .build();
-        Cart cart = Cart.builder()
-                .cartItems(List.of(cartItem))
-                .build();
 
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
-        when(cartService.getOrCreateCart("buyer@test.com")).thenReturn(cart);
+        when(cartService.getCartItems("buyer@test.com")).thenReturn(List.of(cartItem));
+        when(cartService.calculateTotal("buyer@test.com")).thenReturn(new BigDecimal("15000"));
         when(orderRepository.save(any(Order.class))).thenReturn(mockOrder);
-        when(productRepository.save(any(Product.class))).thenReturn(mockProduct);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(null);
+        // mockOrder has empty orderItems so seller notification loop never runs — no sendNotification stub needed
+        doNothing().when(notificationService).sendOrderNotification(anyString(), anyString(), any());
 
         Order result = orderService.placeOrder("buyer@test.com", checkoutDTO);
 
@@ -109,9 +116,8 @@ class OrderServiceTest {
 
     @Test
     void placeOrder_EmptyCart_ShouldThrowException() {
-        Cart emptyCart = Cart.builder().cartItems(new ArrayList<>()).build();
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
-        when(cartService.getOrCreateCart("buyer@test.com")).thenReturn(emptyCart);
+        when(cartService.getCartItems("buyer@test.com")).thenReturn(new ArrayList<>());
 
         assertThrows(Exception.class,
                 () -> orderService.placeOrder("buyer@test.com", checkoutDTO));
@@ -120,8 +126,8 @@ class OrderServiceTest {
     @Test
     void getOrderHistory_ValidBuyer_ShouldReturnList() {
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
-        when(orderRepository.findByBuyerOrderByOrderedAtDesc(mockBuyer))
-                .thenReturn(List.of(mockOrder));
+        when(orderRepository.findByBuyerWithItems(mockBuyer)).thenReturn(List.of(mockOrder));
+        when(paymentRepository.findByOrder(any())).thenReturn(Optional.empty());
 
         List<OrderDTO> result = orderService.getOrderHistory("buyer@test.com");
 
@@ -131,9 +137,14 @@ class OrderServiceTest {
 
     @Test
     void cancelOrder_PendingOrder_ShouldCancel() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(mockOrder));
-        when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
+        mockOrder.setOrderItems(List.of(
+                OrderItem.builder().product(mockProduct).quantity(1).build()
+        ));
+        when(orderRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(mockOrder));
         when(orderRepository.save(any())).thenReturn(mockOrder);
+        when(productRepository.save(any(Product.class))).thenReturn(mockProduct);
+        doNothing().when(notificationService).sendOrderNotification(anyString(), anyString(), any());
+        doNothing().when(notificationService).sendNotification(anyString(), anyString(), anyString(), any());
 
         assertDoesNotThrow(() -> orderService.cancelOrder(1L, "buyer@test.com"));
 
@@ -143,8 +154,7 @@ class OrderServiceTest {
     @Test
     void cancelOrder_DeliveredOrder_ShouldThrowException() {
         mockOrder.setStatus(Order.OrderStatus.DELIVERED);
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(mockOrder));
-        when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
+        when(orderRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(mockOrder));
 
         assertThrows(Exception.class,
                 () -> orderService.cancelOrder(1L, "buyer@test.com"));
@@ -152,8 +162,9 @@ class OrderServiceTest {
 
     @Test
     void updateOrderStatus_ValidOrder_ShouldUpdateStatus() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(mockOrder));
+        when(orderRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(mockOrder));
         when(orderRepository.save(any())).thenReturn(mockOrder);
+        doNothing().when(notificationService).sendOrderNotification(anyString(), anyString(), any());
 
         assertDoesNotThrow(() ->
                 orderService.updateOrderStatus(1L, Order.OrderStatus.SHIPPED));
@@ -163,7 +174,8 @@ class OrderServiceTest {
 
     @Test
     void getAllOrders_ShouldReturnAllOrders() {
-        when(orderRepository.findAllByOrderByOrderedAtDesc()).thenReturn(List.of(mockOrder));
+        when(orderRepository.findAllWithDetails()).thenReturn(List.of(mockOrder));
+        when(paymentRepository.findByOrder(any())).thenReturn(Optional.empty());
 
         List<OrderDTO> result = orderService.getAllOrders();
 
