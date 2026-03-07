@@ -81,8 +81,7 @@
              class="notif-card"
              th:classappend="${!notif.read} ? ' unread' : ''">
             <div class="notif-icon"
-                 th:classappend="${notif.type?.name()?.contains('ORDER')} ? ' ni-order' :
-                                  (${notif.type?.name() == 'LOW_STOCK'} ? ' ni-stock' : ' ni-general')">
+                 th:classappend="${notif.type?.name()?.contains('ORDER') ? ' ni-order' : (notif.type?.name() == 'LOW_STOCK' ? ' ni-stock' : ' ni-general')}">
                 <i th:class="${notif.type?.name() == 'LOW_STOCK'} ? 'bi bi-exclamation-triangle' : 'bi bi-bell'"></i>
             </div>
             <div class="flex-grow-1">

@@ -179,8 +179,10 @@
                 <div style="display:flex;justify-content:space-between;
                             padding:0.5rem 0;font-size:0.88rem;">
                     <span style="color:var(--text-muted);">Total Products</span>
+                    <!-- FIX: Thymeleaf 3.1 blocks Java lambda expressions (c -> c.productCount).
+                         Pass totalProductsAcrossCategories from the controller instead. -->
                     <strong style="color:var(--text-light);"
-                            th:text="${categories?.stream()?.mapToLong(c -> c.productCount ?: 0)?.sum() ?: 0}">0</strong>
+                            th:text="${totalProductsAcrossCategories ?: 0}">0</strong>
                 </div>
             </div>
         </div>
@@ -253,24 +255,21 @@
                             <!-- Product Count -->
                             <td>
                                     <span class="product-count"
-                                          th:text="${cat.productCount ?: 0} + ' products'"></span>
+                                          th:text="${cat.products.size()} + ' products'"></span>
                             </td>
 
                             <!-- Created Date -->
-                            <td style="color:var(--text-muted);font-size:0.82rem;"
-                                th:text="${cat.createdAt != null} ?
-                                              ${#temporals.format(cat.createdAt,'dd MMM yyyy')} : '—'">
-                            </td>
+                            <td style="color:var(--text-muted);font-size:0.82rem;">—</td>
 
                             <!-- Delete Action -->
                             <td>
                                 <form th:action="@{/admin/categories/delete/{id}(id=${cat.id})}"
                                       method="post"
-                                      onsubmit="return confirmDelete(this, [[${cat.name}]], [[${cat.productCount ?: 0}]])">
+                                      onsubmit="return confirmDelete(this, [[${cat.name}]], [[${cat.products.size()}]])">
                                     <button type="submit" class="btn-sm-danger"
-                                            th:disabled="${cat.productCount > 0}"
-                                            th:title="${cat.productCount > 0} ?
-                                                           'Cannot delete: has ' + ${cat.productCount} + ' products' :
+                                            th:disabled="${cat.products.size() > 0}"
+                                            th:title="${cat.products.size() > 0} ?
+                                                           'Cannot delete: has ' + ${cat.products.size()} + ' products' :
                                                            'Delete category'">
                                         <i class="bi bi-trash me-1"></i>Delete
                                     </button>

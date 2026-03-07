@@ -21,6 +21,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 @Controller
 @RequestMapping("/buyer")
 @PreAuthorize("hasRole('BUYER')")
@@ -56,12 +59,20 @@ public class PaymentController {
             return "redirect:/buyer/cart";
         }
 
+        BigDecimal total = cartService.calculateTotal(email);
+
+        // FIX: pre-compute gst and grandTotal here so the template can use
+        // ${gst} and ${grandTotal} instead of blocked new java.math.BigDecimal() expressions
+        BigDecimal gst = total.multiply(new BigDecimal("0.18")).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal grandTotal = total.add(gst).setScale(2, RoundingMode.HALF_UP);
+
         model.addAttribute("checkoutDTO", new CheckoutDTO());
         model.addAttribute("cartItems", cartService.getCartItems(email));
-        model.addAttribute("total", cartService.calculateTotal(email));
+        model.addAttribute("total", total);
+        model.addAttribute("gst", gst);
+        model.addAttribute("grandTotal", grandTotal);
         model.addAttribute("cartCount", cartService.getCartItemCount(email));
-        model.addAttribute("unreadCount",
-                notificationService.getUnreadCount(email));
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
         return "buyer/checkout";
     }
 
@@ -77,8 +88,14 @@ public class PaymentController {
         String email = userDetails.getUsername();
 
         if (result.hasErrors()) {
+            // FIX: also add gst/grandTotal when re-rendering on validation error
+            BigDecimal total = cartService.calculateTotal(email);
+            BigDecimal gst = total.multiply(new BigDecimal("0.18")).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal grandTotal = total.add(gst).setScale(2, RoundingMode.HALF_UP);
             model.addAttribute("cartItems", cartService.getCartItems(email));
-            model.addAttribute("total", cartService.calculateTotal(email));
+            model.addAttribute("total", total);
+            model.addAttribute("gst", gst);
+            model.addAttribute("grandTotal", grandTotal);
             return "buyer/checkout";
         }
 
@@ -106,9 +123,16 @@ public class PaymentController {
 
         } catch (Exception e) {
             logger.error("Order placement failed for: {} - {}", email, e.getMessage());
+
+            // FIX: also add gst/grandTotal when re-rendering on order failure
+            BigDecimal total = cartService.calculateTotal(email);
+            BigDecimal gst = total.multiply(new BigDecimal("0.18")).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal grandTotal = total.add(gst).setScale(2, RoundingMode.HALF_UP);
             model.addAttribute("errorMessage", e.getMessage());
             model.addAttribute("cartItems", cartService.getCartItems(email));
-            model.addAttribute("total", cartService.calculateTotal(email));
+            model.addAttribute("total", total);
+            model.addAttribute("gst", gst);
+            model.addAttribute("grandTotal", grandTotal);
             return "buyer/checkout";
         }
     }
@@ -150,8 +174,7 @@ public class PaymentController {
 
         model.addAttribute("orders", orderService.getOrderHistory(email));
         model.addAttribute("cartCount", cartService.getCartItemCount(email));
-        model.addAttribute("unreadCount",
-                notificationService.getUnreadCount(email));
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
         return "buyer/orders";
     }
 
@@ -163,15 +186,11 @@ public class PaymentController {
             Model model) {
 
         String email = userDetails.getUsername();
-        logger.info("Buyer viewing order detail - orderId: {} by: {}",
-                orderId, email);
+        logger.info("Buyer viewing order detail - orderId: {} by: {}", orderId, email);
 
-        model.addAttribute("order",
-                orderService.getOrderById(orderId, email));
-        model.addAttribute("cartCount",
-                cartService.getCartItemCount(email));
-        model.addAttribute("unreadCount",
-                notificationService.getUnreadCount(email));
+        model.addAttribute("order", orderService.getOrderById(orderId, email));
+        model.addAttribute("cartCount", cartService.getCartItemCount(email));
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
         return "buyer/order-detail";
     }
 

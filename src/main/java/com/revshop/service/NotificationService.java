@@ -8,13 +8,16 @@ import com.revshop.repository.UserRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class NotificationService {
 
     private static final Logger logger = LogManager.getLogger(NotificationService.class);
@@ -25,8 +28,14 @@ public class NotificationService {
     @Autowired
     private UserRepository userRepository;
 
+    // Self-injection to ensure Spring proxy is used for internal calls,
+    // so @Transactional on sendNotification is respected.
+    @Autowired
+    @Lazy
+    private NotificationService self;
+
     @Async
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void sendNotification(String email, String title,
                                  String message, Notification.NotificationType type) {
         logger.info("SendNotification called for: {} type: {}", email, type);
@@ -53,10 +62,10 @@ public class NotificationService {
         logger.info("GetNotifications called for: {}", email);
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
-        return notificationRepository.findByUserOrderByCreatedAtDesc(user);
+        return notificationRepository.findByUserWithDetails(user);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void markAsRead(Long notificationId) {
         logger.info("MarkAsRead called for notificationId: {}", notificationId);
         Notification notification = notificationRepository.findById(notificationId)
@@ -66,7 +75,7 @@ public class NotificationService {
         logger.info("Notification marked as read: {}", notificationId);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void markAllAsRead(String email) {
         logger.info("MarkAllAsRead called for: {}", email);
         User user = userRepository.findByEmail(email)
@@ -110,7 +119,8 @@ public class NotificationService {
                 message = "Your order #" + orderId + " status updated to: " + orderStatus;
         }
 
-        sendNotification(email, title, message, type);
+        // Use self-proxy so @Transactional(REQUIRES_NEW) on sendNotification is applied
+        self.sendNotification(email, title, message, type);
     }
 
     @Async
@@ -119,6 +129,7 @@ public class NotificationService {
         String title = "Low Stock Alert";
         String message = "Your product \"" + productName
                 + "\" is running low. Only " + remaining + " items left in stock!";
-        sendNotification(sellerEmail, title, message, Notification.NotificationType.LOW_STOCK);
+        // Use self-proxy so @Transactional(REQUIRES_NEW) on sendNotification is applied
+        self.sendNotification(sellerEmail, title, message, Notification.NotificationType.LOW_STOCK);
     }
 }

@@ -168,7 +168,7 @@
                     <span style="color:var(--text-muted);">Status</span>
                     <span th:text="${order.paymentStatus ?: 'N/A'}"
                           th:style="${order.paymentStatus == 'SUCCESS'} ? 'color:#75f5a0;font-weight:600;' :
-                                    (${order.paymentStatus == 'PENDING'} ? 'color:var(--gold);font-weight:600;' :
+                                    (order.paymentStatus == 'PENDING' ? 'color:var(--gold);font-weight:600;' :
                                      'color:#ff8fa3;font-weight:600;')"></span>
                 </div>
             </div>
