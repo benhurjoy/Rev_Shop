@@ -121,7 +121,7 @@
                     </td>
                     <td>
                             <span th:if="${p.stockQuantity > 5}"
-                                  style="color:var(--text-light);" th:text="${p.stockQuantity}"></span>
+                                  style="color:black;" th:text="${p.stockQuantity}"></span>
                         <span class="badge-low"
                               th:if="${p.stockQuantity > 0 and p.stockQuantity <= 5}"
                               th:text="${p.stockQuantity} + ' left'"></span>
