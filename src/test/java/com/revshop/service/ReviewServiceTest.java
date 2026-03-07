@@ -110,7 +110,7 @@ class ReviewServiceTest {
     @Test
     void getReviewsByProduct_ValidProduct_ShouldReturnList() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(mockProduct));
-        when(reviewRepository.findByProductOrderByCreatedAtDesc(mockProduct))
+        when(reviewRepository.findByProductWithBuyer(mockProduct))
                 .thenReturn(List.of(mockReview));
 
         List<ReviewDTO> result = reviewService.getReviewsByProduct(1L);
@@ -158,4 +158,3 @@ class ReviewServiceTest {
         verify(reviewRepository).deleteById(1L);
     }
 }
-
