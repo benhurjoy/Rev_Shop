@@ -1,11 +1,13 @@
 package com.revshop.service;
 
 import com.revshop.entity.Category;
+import com.revshop.exception.ResourceNotFoundException;
 import com.revshop.repository.CategoryRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,29 +19,44 @@ public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    // Day 2 - Skeleton only
-    // Full implementation on Day 3
-
+    @Transactional
     public Category addCategory(String name, String description) {
-        // TODO Day 3
         logger.info("AddCategory called for: {}", name);
-        return null;
+        if (categoryRepository.existsByName(name)) {
+            logger.warn("Category already exists: {}", name);
+            throw new RuntimeException("Category already exists: " + name);
+        }
+        Category category = Category.builder()
+                .name(name)
+                .description(description)
+                .build();
+        Category saved = categoryRepository.save(category);
+        logger.info("Category added successfully: {}", saved.getId());
+        return saved;
     }
 
     public List<Category> getAllCategories() {
-        // TODO Day 3
         logger.info("GetAllCategories called");
-        return null;
+        return categoryRepository.findAll();
     }
 
     public Category getCategoryById(Long id) {
-        // TODO Day 3
         logger.info("GetCategoryById called for id: {}", id);
-        return null;
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.warn("Category not found: {}", id);
+                    return new ResourceNotFoundException("Category not found: " + id);
+                });
     }
 
+    @Transactional
     public void deleteCategory(Long id) {
-        // TODO Day 3
         logger.info("DeleteCategory called for id: {}", id);
+        if (!categoryRepository.existsById(id)) {
+            logger.warn("Category not found for delete: {}", id);
+            throw new ResourceNotFoundException("Category not found: " + id);
+        }
+        categoryRepository.deleteById(id);
+        logger.info("Category deleted: {}", id);
     }
 }

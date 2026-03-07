@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Payment – RevShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root{--navy:#0A1628;--navy-mid:#112240;--orange:#FF6B35;--gold:#FFB347;--text-light:#E8EDF5;--text-muted:#8899AA;--card-bg:#112240;--border:rgba(255,107,53,0.2);}
+        body{background:var(--navy);color:var(--text-light);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+        h1,h2,h3{font-family:'Playfair Display',serif;}
+        .payment-card{background:var(--card-bg);border:1px solid var(--border);border-radius:24px;padding:2.5rem;max-width:480px;width:100%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,0.5);}
+        .brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light);}
+        .brand span{color:var(--orange);}
+        .pay-icon-circle{width:80px;height:80px;border-radius:50%;background:rgba(23,162,184,0.12);border:2px solid rgba(23,162,184,0.3);display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:#5bc8d5;margin:1rem auto;}
+        .amount{font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:800;color:var(--orange);}
+        .order-info{background:rgba(255,107,53,0.06);border:1px solid var(--border);border-radius:12px;padding:1rem;margin:1.2rem 0;text-align:left;}
+        .info-row{display:flex;justify-content:space-between;padding:0.4rem 0;font-size:0.88rem;}
+        .info-row span:first-child{color:var(--text-muted);}
+        .btn-pay{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white;border:none;border-radius:14px;padding:1rem 2rem;font-weight:700;font-size:1rem;width:100%;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 20px rgba(14,165,233,0.35);}
+        .btn-pay:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(14,165,233,0.5);}
+        .btn-back{background:transparent;border:1.5px solid var(--border);color:var(--text-muted);border-radius:12px;padding:0.7rem 1.5rem;cursor:pointer;transition:all 0.3s;margin-top:0.8rem;width:100%;}
+        .btn-back:hover{border-color:var(--orange);color:var(--orange);}
+        .security{color:var(--text-muted);font-size:0.78rem;margin-top:1rem;}
+        .loading{display:none;color:var(--text-muted);font-size:0.9rem;margin-top:1rem;}
+    </style>
+</head>
+<body>
+<div class="px-3" style="width:100%;">
+    <div class="payment-card">
+        <div class="brand">Rev<span>Shop</span></div>
+
+        <div class="pay-icon-circle">
+            <i class="bi bi-credit-card-2-front"></i>
+        </div>
+
+        <h4 style="color:var(--text-light);">Complete Your Payment</h4>
+
+        <div class="amount" th:text="'₹' + ${total}">₹0.00</div>
+
+        <div class="order-info">
+            <div class="info-row">
+                <span>Order ID</span>
+                <span style="color:var(--text-light);font-weight:600;"
+                      th:text="'#' + ${order.id}"></span>
+            </div>
+            <div class="info-row">
+                <span>Payment via</span>
+                <span style="color:#5bc8d5;font-weight:600;">Razorpay</span>
+            </div>
+            <div class="info-row">
+                <span>Amount</span>
+                <span style="color:var(--orange);font-weight:700;" th:text="'₹' + ${total}"></span>
+            </div>
+        </div>
+
+        <button class="btn-pay" id="payBtn" onclick="openRazorpay()">
+            <i class="bi bi-lock me-2"></i>Pay Now
+        </button>
+
+        <div class="loading" id="loadingMsg">
+            <i class="bi bi-arrow-repeat me-2"></i>Processing payment...
+        </div>
+
+        <button class="btn-back" onclick="history.back()">
+            <i class="bi bi-arrow-left me-2"></i>Go Back
+        </button>
+
+        <div class="security">
+            <i class="bi bi-shield-lock me-1" style="color:var(--orange);"></i>
+            Payments powered by Razorpay. 256-bit SSL secured.
+        </div>
+    </div>
+</div>
+
+<!-- Razorpay Callback Form (auto-submitted) -->
+<form id="callbackForm" th:action="@{/buyer/payment/callback}" method="post" style="display:none;">
+    <input type="hidden" name="razorpay_order_id" id="rzpOrderId"/>
+    <input type="hidden" name="razorpay_payment_id" id="rzpPaymentId"/>
+    <input type="hidden" name="razorpay_signature" id="rzpSignature"/>
+</form>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script th:inline="javascript">
+    const rzpOrderId  = /*[[${razorpayOrderId}]]*/ '';
+    const rzpKeyId    = /*[[${razorpayKeyId}]]*/ '';
+    const totalAmount = /*[[${total}]]*/ 0;
+    const userEmail   = /*[[${email}]]*/ '';
+
+    function openRazorpay() {
+        document.getElementById('payBtn').disabled = true;
+        document.getElementById('loadingMsg').style.display = 'block';
+
+        const options = {
+            key: rzpKeyId,
+            amount: Math.round(parseFloat(totalAmount) * 100),
+            currency: 'INR',
+            name: 'RevShop',
+            description: 'Order Payment',
+            order_id: rzpOrderId,
+            prefill: { email: userEmail },
+            theme: { color: '#FF6B35' },
+            handler: function(response) {
+                document.getElementById('rzpOrderId').value   = response.razorpay_order_id;
+                document.getElementById('rzpPaymentId').value = response.razorpay_payment_id;
+                document.getElementById('rzpSignature').value = response.razorpay_signature;
+                document.getElementById('callbackForm').submit();
+            },
+            modal: {
+                ondismiss: function() {
+                    document.getElementById('payBtn').disabled = false;
+                    document.getElementById('loadingMsg').style.display = 'none';
+                }
+            }
+        };
+        new Razorpay(options).open();
+    }
+</script>
+</body>
+</html>

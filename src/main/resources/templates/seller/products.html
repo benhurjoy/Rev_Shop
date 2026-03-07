@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>My Products – RevShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root{--navy:#0A1628;--navy-mid:#112240;--navy-light:#1E3A5F;--orange:#FF6B35;--gold:#FFB347;--text-light:#E8EDF5;--text-muted:#8899AA;--card-bg:#112240;--border:rgba(255,107,53,0.2);}
+        body{background:var(--navy);color:var(--text-light);font-family:'DM Sans',sans-serif;}
+        h1,h2,h3,h4,h5{font-family:'Playfair Display',serif;}
+        .revshop-navbar{background:linear-gradient(135deg,#0A1628,#1E3A5F);border-bottom:2px solid var(--orange);padding:0.75rem 0;position:sticky;top:0;z-index:1000;}
+        .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;}
+        .navbar-brand span{color:var(--orange);}
+        .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s;}
+        .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
+        .sidebar{background:var(--card-bg);border-right:1px solid var(--border);min-height:calc(100vh - 66px);padding:1.5rem 0;width:230px;position:fixed;top:66px;left:0;}
+        .sidebar-link{display:flex;align-items:center;gap:10px;padding:0.75rem 1.5rem;color:var(--text-muted);text-decoration:none;font-weight:500;font-size:0.9rem;border-left:3px solid transparent;transition:all 0.3s;}
+        .sidebar-link:hover,.sidebar-link.active{color:var(--orange);background:rgba(255,107,53,0.08);border-left-color:var(--orange);}
+        .main{margin-left:230px;padding:2rem;}
+        .rev-table{color:var(--text-light);}
+        .rev-table thead th{background:var(--navy-light);color:var(--orange);font-weight:600;font-size:0.82rem;text-transform:uppercase;letter-spacing:0.5px;border:none;padding:1rem;}
+        .rev-table tbody tr{border-bottom:1px solid rgba(255,107,53,0.06);transition:background 0.2s;}
+        .rev-table tbody tr:hover{background:rgba(255,107,53,0.04);}
+        .rev-table tbody td{padding:0.9rem 1rem;vertical-align:middle;border:none;}
+        .section-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+        .section-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+        .btn-sm-orange{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:0.8rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+        .btn-sm-orange:hover{transform:translateY(-1px);color:white;}
+        .btn-sm-danger{background:rgba(220,53,69,0.1);color:#ff8fa3;border:1px solid rgba(220,53,69,0.3);border-radius:8px;padding:5px 12px;font-size:0.8rem;cursor:pointer;transition:all 0.2s;}
+        .btn-sm-danger:hover{background:rgba(220,53,69,0.2);}
+        .btn-sm-muted{background:rgba(255,107,53,0.08);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:5px 10px;font-size:0.8rem;cursor:pointer;transition:all 0.2s;}
+        .btn-sm-muted:hover{border-color:var(--orange);color:var(--orange);}
+        .badge-active{background:rgba(40,167,69,0.12);color:#75f5a0;border:1px solid rgba(40,167,69,0.3);border-radius:8px;padding:3px 10px;font-size:0.75rem;}
+        .badge-inactive{background:rgba(220,53,69,0.12);color:#ff8fa3;border:1px solid rgba(220,53,69,0.3);border-radius:8px;padding:3px 10px;font-size:0.75rem;}
+        .badge-low{background:rgba(255,179,71,0.12);color:var(--gold);border:1px solid rgba(255,179,71,0.3);border-radius:8px;padding:3px 10px;font-size:0.75rem;}
+        .product-thumb{width:42px;height:42px;border-radius:8px;object-fit:cover;}
+        .product-thumb-ph{width:42px;height:42px;border-radius:8px;background:var(--navy-light);display:flex;align-items:center;justify-content:center;color:var(--text-muted);}
+        .alert-success-rev{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;border-radius:10px;padding:0.8rem 1rem;}
+        .alert-error-rev{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:10px;padding:0.8rem 1rem;}
+        .empty-state{text-align:center;padding:3rem;color:var(--text-muted);}
+        @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;padding:1rem;}}
+    </style>
+</head>
+<body>
+<nav class="revshop-navbar navbar">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/}">Rev<span>Shop</span></a>
+        <div class="ms-auto d-flex gap-2">
+            <a th:href="@{/seller/notifications}" class="nav-link"><i class="bi bi-bell"></i></a>
+            <a th:href="@{/auth/logout}" class="nav-link"><i class="bi bi-box-arrow-right"></i></a>
+        </div>
+    </div>
+</nav>
+
+<div class="sidebar">
+    <a th:href="@{/seller/dashboard}" class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a th:href="@{/seller/products}" class="sidebar-link active"><i class="bi bi-box-seam"></i> My Products</a>
+    <a th:href="@{/seller/products/add}" class="sidebar-link"><i class="bi bi-plus-circle"></i> Add Product</a>
+    <a th:href="@{/seller/low-stock}" class="sidebar-link"><i class="bi bi-exclamation-triangle"></i> Low Stock</a>
+    <a th:href="@{/seller/notifications}" class="sidebar-link"><i class="bi bi-bell"></i> Notifications</a>
+</div>
+
+<div class="main">
+    <div th:if="${successMessage}" class="alert-success-rev mb-4">
+        <i class="bi bi-check-circle me-2"></i><span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert-error-rev mb-4">
+        <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <div>
+                <h5 style="margin:0;font-size:1.1rem;">My Products</h5>
+                <span style="color:var(--text-muted);font-size:0.82rem;"
+                      th:text="${products?.size() ?: 0} + ' products'"></span>
+            </div>
+            <a th:href="@{/seller/products/add}" class="btn-sm-orange">
+                <i class="bi bi-plus me-1"></i>Add Product
+            </a>
+        </div>
+
+        <div th:if="${products == null or products.isEmpty()}" class="empty-state">
+            <i class="bi bi-box-seam" style="font-size:3rem;opacity:0.2;display:block;margin-bottom:1rem;"></i>
+            <p>No products yet.</p>
+            <a th:href="@{/seller/products/add}" class="btn-sm-orange">Add Your First Product</a>
+        </div>
+
+        <div class="table-responsive" th:if="${products != null and !products.isEmpty()}">
+            <table class="table rev-table mb-0">
+                <thead>
+                <tr>
+                    <th>Product</th><th>Category</th><th>Price</th>
+                    <th>Stock</th><th>Status</th><th>Rating</th><th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${products}">
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <img th:if="${p.imageUrl != null}" th:src="${p.imageUrl}"
+                                 class="product-thumb" th:alt="${p.name}"/>
+                            <div class="product-thumb-ph" th:unless="${p.imageUrl != null}">
+                                <i class="bi bi-image"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:500;font-size:0.9rem;" th:text="${p.name}"></div>
+                                <div style="color:var(--text-muted);font-size:0.75rem;"
+                                     th:text="'MRP: ₹' + ${p.mrp}"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="color:var(--text-muted);font-size:0.85rem;" th:text="${p.categoryName}"></td>
+                    <td>
+                        <div style="color:var(--orange);font-weight:700;" th:text="'₹' + ${p.price}"></div>
+                        <div style="color:var(--text-muted);font-size:0.75rem;"
+                             th:if="${p.discountPercent > 0}"
+                             th:text="${p.discountPercent} + '% off'"></div>
+                    </td>
+                    <td>
+                            <span th:if="${p.stockQuantity > 5}"
+                                  style="color:var(--text-light);" th:text="${p.stockQuantity}"></span>
+                        <span class="badge-low"
+                              th:if="${p.stockQuantity > 0 and p.stockQuantity <= 5}"
+                              th:text="${p.stockQuantity} + ' left'"></span>
+                        <span class="badge-inactive" th:if="${p.stockQuantity == 0}">Out</span>
+                    </td>
+                    <td>
+                            <span th:if="${p.active}" class="badge-active">
+                                <i class="bi bi-eye me-1"></i>Active
+                            </span>
+                        <span th:unless="${p.active}" class="badge-inactive">
+                                <i class="bi bi-eye-slash me-1"></i>Hidden
+                            </span>
+                    </td>
+                    <td>
+                        <span style="color:var(--gold);">★</span>
+                        <span style="font-size:0.85rem;" th:text="${p.averageRating ?: '—'}"></span>
+                        <span style="color:var(--text-muted);font-size:0.75rem;"
+                              th:text="'(' + (p.totalReviews ?: 0) + ')'"></span>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a th:href="@{/seller/products/edit/{id}(id=${p.id})}"
+                               class="btn-sm-orange"><i class="bi bi-pencil"></i></a>
+                            <form th:action="@{/seller/products/toggle/{id}(id=${p.id})}"
+                                  method="post" style="display:inline;">
+                                <button type="submit" class="btn-sm-muted"
+                                        th:title="${p.active} ? 'Hide' : 'Show'">
+                                    <i th:class="${p.active} ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                                </button>
+                            </form>
+                            <form th:action="@{/seller/products/delete/{id}(id=${p.id})}"
+                                  method="post" style="display:inline;"
+                                  onsubmit="return confirm('Delete this product?')">
+                                <button type="submit" class="btn-sm-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

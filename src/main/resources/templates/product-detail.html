@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${product.name} + ' – RevShop'">Product – RevShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root{--navy:#0A1628;--navy-mid:#112240;--navy-light:#1E3A5F;--orange:#FF6B35;--gold:#FFB347;--text-light:#E8EDF5;--text-muted:#8899AA;--card-bg:#112240;--border:rgba(255,107,53,0.2);}
+        body{background:var(--navy);color:var(--text-light);font-family:'DM Sans',sans-serif;}
+        h1,h2,h3{font-family:'Playfair Display',serif;}
+        .revshop-navbar{background:linear-gradient(135deg,#0A1628 0%,#1E3A5F 100%);border-bottom:2px solid var(--orange);padding:0.75rem 0;position:sticky;top:0;z-index:1000;}
+        .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;}
+        .navbar-brand span{color:var(--orange);}
+        .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s;}
+        .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
+
+        /* Product Detail */
+        .product-image-main{width:100%;height:420px;object-fit:cover;border-radius:20px;border:1px solid var(--border);}
+        .product-image-placeholder{width:100%;height:420px;border-radius:20px;background:linear-gradient(135deg,var(--navy-light),var(--card-bg));display:flex;align-items:center;justify-content:center;font-size:5rem;color:var(--text-muted);border:1px solid var(--border);}
+        .product-info-card{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:2rem;}
+        .product-category-tag{background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.25);border-radius:20px;padding:4px 14px;font-size:0.78rem;color:var(--orange);font-weight:600;display:inline-block;margin-bottom:1rem;}
+        .product-title{font-size:1.8rem;font-weight:700;color:var(--text-light);margin-bottom:0.5rem;}
+        .stars{color:var(--gold);}
+        .price-main{font-size:2rem;font-weight:700;color:var(--orange);}
+        .price-mrp{font-size:1rem;color:var(--text-muted);text-decoration:line-through;}
+        .discount-chip{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;font-size:0.78rem;font-weight:700;padding:4px 12px;border-radius:8px;}
+        .stock-badge-ok{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;border-radius:8px;padding:4px 12px;font-size:0.82rem;}
+        .stock-badge-low{background:rgba(255,179,71,0.12);border:1px solid rgba(255,179,71,0.3);color:var(--gold);border-radius:8px;padding:4px 12px;font-size:0.82rem;}
+        .stock-badge-out{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:8px;padding:4px 12px;font-size:0.82rem;}
+        .btn-cart{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:12px;padding:0.9rem 2rem;font-weight:700;font-size:1rem;transition:all 0.3s ease;box-shadow:0 6px 20px rgba(255,107,53,0.35);}
+        .btn-cart:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,107,53,0.5);color:white;}
+        .btn-wish{background:transparent;color:var(--orange);border:1.5px solid var(--orange);border-radius:12px;padding:0.9rem 1.5rem;font-weight:600;transition:all 0.3s ease;}
+        .btn-wish:hover{background:rgba(255,107,53,0.1);}
+        .qty-control{display:flex;align-items:center;gap:0;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;}
+        .qty-btn{background:var(--navy-light);border:none;color:var(--text-light);width:40px;height:44px;font-size:1.1rem;cursor:pointer;transition:all 0.2s;}
+        .qty-btn:hover{background:var(--orange);color:white;}
+        .qty-input{background:transparent;border:none;color:var(--text-light);text-align:center;width:50px;font-size:1rem;font-weight:600;}
+        .qty-input:focus{outline:none;}
+
+        /* Reviews */
+        .review-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:1.2rem;margin-bottom:1rem;}
+        .reviewer-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#e85d2b);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;color:white;}
+        .review-text{color:var(--text-muted);font-size:0.9rem;margin-top:0.5rem;}
+
+        /* Alert */
+        .alert-success-rev{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;border-radius:10px;padding:0.8rem 1rem;}
+        .alert-error-rev{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:10px;padding:0.8rem 1rem;}
+        .rev-footer{background:var(--navy-mid);border-top:1px solid var(--border);padding:2rem 0;margin-top:4rem;text-align:center;color:var(--text-muted);font-size:0.85rem;}
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="revshop-navbar navbar navbar-expand-lg">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/}">Rev<span>Shop</span></a>
+        <div class="d-flex gap-2 ms-auto">
+            <a class="nav-link" th:href="@{/}"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            <a class="nav-link" sec:authorize="hasRole('BUYER')" th:href="@{/buyer/cart}">
+                <i class="bi bi-cart3 me-1"></i>Cart
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-5">
+    <!-- Alerts -->
+    <div th:if="${successMessage}" class="alert-success-rev mb-4">
+        <i class="bi bi-check-circle me-2"></i><span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert-error-rev mb-4">
+        <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
+    </div>
+
+    <div class="row g-5">
+        <!-- Product Image -->
+        <div class="col-lg-5">
+            <img th:if="${product.imageUrl != null}"
+                 th:src="${product.imageUrl}"
+                 th:alt="${product.name}"
+                 class="product-image-main"/>
+            <div class="product-image-placeholder" th:unless="${product.imageUrl != null}">
+                <i class="bi bi-image"></i>
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-lg-7">
+            <div class="product-info-card">
+                <span class="product-category-tag" th:text="${product.categoryName}">Category</span>
+                <h1 class="product-title" th:text="${product.name}">Product Name</h1>
+
+                <!-- Rating -->
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="stars">
+                        <i th:each="i : ${#numbers.sequence(1,5)}"
+                           th:class="${i <= (averageRating ?: 0)} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
+                    </span>
+                    <span style="color:var(--gold);font-weight:600;" th:text="${averageRating ?: '0.0'}"></span>
+                    <span style="color:var(--text-muted);font-size:0.85rem;"
+                          th:text="'(' + ${product.totalReviews ?: 0} + ' reviews)'"></span>
+                </div>
+
+                <!-- Price -->
+                <div class="d-flex align-items-baseline gap-3 mb-3">
+                    <span class="price-main" th:text="'₹' + ${product.price}"></span>
+                    <span class="price-mrp" th:if="${product.mrp != null}"
+                          th:text="'₹' + ${product.mrp}"></span>
+                    <span class="discount-chip"
+                          th:if="${product.discountPercent != null and product.discountPercent > 0}"
+                          th:text="${product.discountPercent} + '% OFF'"></span>
+                </div>
+
+                <!-- Stock -->
+                <div class="mb-3">
+                    <span class="stock-badge-ok"
+                          th:if="${product.stockQuantity > 5}">
+                        <i class="bi bi-check-circle me-1"></i>In Stock
+                        (<span th:text="${product.stockQuantity}"></span> available)
+                    </span>
+                    <span class="stock-badge-low"
+                          th:if="${product.stockQuantity > 0 and product.stockQuantity <= 5}">
+                        <i class="bi bi-exclamation-circle me-1"></i>Only
+                        <span th:text="${product.stockQuantity}"></span> left!
+                    </span>
+                    <span class="stock-badge-out" th:if="${product.stockQuantity == 0}">
+                        <i class="bi bi-x-circle me-1"></i>Out of Stock
+                    </span>
+                </div>
+
+                <!-- Description -->
+                <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.7;margin-bottom:1.5rem;"
+                   th:text="${product.description}"></p>
+
+                <!-- Seller -->
+                <div style="background:rgba(255,107,53,0.06);border:1px solid var(--border);border-radius:10px;padding:0.8rem 1rem;margin-bottom:1.5rem;">
+                    <span style="color:var(--text-muted);font-size:0.85rem;">
+                        <i class="bi bi-shop me-2" style="color:var(--orange);"></i>
+                        Sold by <strong style="color:var(--text-light);" th:text="${product.sellerName}">Seller</strong>
+                    </span>
+                </div>
+
+                <!-- Add to Cart (Buyer Only) -->
+                <div sec:authorize="hasRole('BUYER')" th:if="${product.stockQuantity > 0}">
+                    <form th:action="@{/buyer/cart/add}" method="post">
+                        <input type="hidden" name="productId" th:value="${product.id}"/>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <label style="color:var(--text-muted);font-size:0.85rem;">Quantity:</label>
+                            <div class="qty-control">
+                                <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+                                <input type="number" name="quantity" id="qtyInput"
+                                       class="qty-input" value="1" min="1"
+                                       th:max="${product.stockQuantity}"/>
+                                <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn-cart">
+                                <i class="bi bi-cart-plus me-2"></i>Add to Cart
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Wishlist -->
+                    <form th:if="${!isInWishlist}"
+                          th:action="@{/buyer/wishlist/add/{id}(id=${product.id})}"
+                          method="post" class="mt-2">
+                        <button type="submit" class="btn-wish w-100">
+                            <i class="bi bi-heart me-2"></i>Add to Wishlist
+                        </button>
+                    </form>
+                    <div th:if="${isInWishlist}" class="mt-2"
+                         style="color:var(--orange);font-size:0.9rem;text-align:center;">
+                        <i class="bi bi-heart-fill me-1"></i>In your wishlist
+                    </div>
+                </div>
+
+                <!-- Login prompt -->
+                <div sec:authorize="isAnonymous()" class="mt-3">
+                    <a th:href="@{/auth/login}"
+                       style="background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:12px;padding:0.9rem 2rem;font-weight:700;text-decoration:none;display:block;text-align:center;">
+                        <i class="bi bi-person me-2"></i>Login to Buy
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="mt-5">
+        <h3 style="font-size:1.5rem;margin-bottom:1.5rem;">
+            Customer Reviews
+            <span style="color:var(--text-muted);font-size:1rem;font-family:'DM Sans',sans-serif;"
+                  th:text="'(' + ${reviews?.size() ?: 0} + ')'"></span>
+        </h3>
+
+        <!-- Write Review (Buyer) -->
+        <div sec:authorize="hasRole('BUYER')" class="mb-4">
+            <div th:if="${!hasReviewed}"
+                 style="background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:1.5rem;">
+                <h6 style="color:var(--orange);margin-bottom:1rem;">Write a Review</h6>
+                <form th:action="@{/buyer/review/add}" method="post">
+                    <input type="hidden" name="productId" th:value="${product.id}"/>
+                    <div class="mb-3">
+                        <label style="color:var(--text-muted);font-size:0.85rem;">Rating</label>
+                        <div class="d-flex gap-2 mt-1">
+                            <th:block th:each="i : ${#numbers.sequence(1,5)}">
+                                <input type="radio" name="rating" th:value="${i}"
+                                       th:id="'star' + ${i}" style="display:none;"/>
+                                <label th:for="'star' + ${i}"
+                                       style="font-size:1.8rem;color:var(--text-muted);cursor:pointer;"
+                                       class="star-label">★</label>
+                            </th:block>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <textarea name="comment" rows="3"
+                                  placeholder="Share your experience with this product..."
+                                  style="background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,107,53,0.2);border-radius:12px;color:var(--text-light);padding:0.8rem 1rem;width:100%;font-family:'DM Sans',sans-serif;resize:none;"
+                                  onfocus="this.style.borderColor='var(--orange)'"
+                                  onblur="this.style.borderColor='rgba(255,107,53,0.2)'"></textarea>
+                    </div>
+                    <button type="submit"
+                            style="background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:10px;padding:0.6rem 1.5rem;font-weight:600;cursor:pointer;">
+                        <i class="bi bi-send me-2"></i>Submit Review
+                    </button>
+                </form>
+            </div>
+            <div th:if="${hasReviewed}"
+                 style="color:var(--text-muted);font-size:0.9rem;padding:1rem;background:rgba(255,107,53,0.05);border-radius:10px;border:1px solid var(--border);">
+                <i class="bi bi-check-circle me-2" style="color:var(--orange);"></i>
+                You have already reviewed this product.
+            </div>
+        </div>
+
+        <!-- Reviews List -->
+        <div th:if="${reviews != null and !reviews.isEmpty()}">
+            <div class="review-card" th:each="review : ${reviews}">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="reviewer-avatar"
+                         th:text="${#strings.substring(review.buyerName,0,1).toUpperCase()}">U</div>
+                    <div>
+                        <div style="font-weight:600;color:var(--text-light);font-size:0.9rem;"
+                             th:text="${review.buyerName}">Buyer</div>
+                        <div class="stars" style="font-size:0.85rem;">
+                            <i th:each="i : ${#numbers.sequence(1,5)}"
+                               th:class="${i <= review.rating} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
+                        </div>
+                    </div>
+                    <div class="ms-auto" style="color:var(--text-muted);font-size:0.75rem;"
+                         th:text="${#temporals.format(review.createdAt,'dd MMM yyyy')}"></div>
+                </div>
+                <p class="review-text" th:text="${review.comment}"></p>
+            </div>
+        </div>
+
+        <div th:if="${reviews == null or reviews.isEmpty()}"
+             style="color:var(--text-muted);text-align:center;padding:2rem;">
+            <i class="bi bi-chat-square-text" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:0.5rem;"></i>
+            No reviews yet. Be the first to review!
+        </div>
+    </div>
+</div>
+
+<footer class="rev-footer">
+    <p style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--text-light);">
+        Rev<span style="color:var(--orange);">Shop</span>
+    </p>
+    <p>© 2026 RevShop. All rights reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function changeQty(delta) {
+        const input = document.getElementById('qtyInput');
+        const val = parseInt(input.value) + delta;
+        const max = parseInt(input.max) || 99;
+        if (val >= 1 && val <= max) input.value = val;
+    }
+
+    // Star rating highlight
+    const labels = document.querySelectorAll('.star-label');
+    const radios  = document.querySelectorAll('input[name="rating"]');
+    labels.forEach((lbl, idx) => {
+        lbl.addEventListener('mouseover', () => {
+            labels.forEach((l, i) => l.style.color = i <= idx ? 'var(--gold)' : 'var(--text-muted)');
+        });
+        lbl.addEventListener('mouseout', () => {
+            const checked = [...radios].findIndex(r => r.checked);
+            labels.forEach((l, i) => l.style.color = i <= checked ? 'var(--gold)' : 'var(--text-muted)');
+        });
+        lbl.addEventListener('click', () => {
+            radios[idx].checked = true;
+            labels.forEach((l, i) => l.style.color = i <= idx ? 'var(--gold)' : 'var(--text-muted)');
+        });
+    });
+</script>
+</body>
+</html>

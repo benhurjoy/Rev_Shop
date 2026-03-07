@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>My Cart – RevShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root{--navy:#0A1628;--navy-mid:#112240;--navy-light:#1E3A5F;--orange:#FF6B35;--gold:#FFB347;--text-light:#E8EDF5;--text-muted:#8899AA;--card-bg:#112240;--border:rgba(255,107,53,0.2);}
+        body{background:var(--navy);color:var(--text-light);font-family:'DM Sans',sans-serif;}
+        h1,h2,h3,h4,h5{font-family:'Playfair Display',serif;}
+        .revshop-navbar{background:linear-gradient(135deg,#0A1628,#1E3A5F);border-bottom:2px solid var(--orange);padding:0.75rem 0;position:sticky;top:0;z-index:1000;}
+        .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;}
+        .navbar-brand span{color:var(--orange);}
+        .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s;}
+        .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
+        .cart-item{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:1.2rem;margin-bottom:1rem;transition:all 0.3s;}
+        .cart-item:hover{border-color:var(--orange);box-shadow:0 8px 30px rgba(255,107,53,0.1);}
+        .item-img{width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid var(--border);}
+        .item-img-ph{width:80px;height:80px;border-radius:10px;background:var(--navy-light);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem;flex-shrink:0;}
+        .qty-control{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;}
+        .qty-btn{background:var(--navy-light);border:none;color:var(--text-light);width:36px;height:36px;cursor:pointer;font-size:1rem;transition:all 0.2s;}
+        .qty-btn:hover{background:var(--orange);color:white;}
+        .qty-val{background:transparent;border:none;color:var(--text-light);text-align:center;width:40px;font-weight:600;}
+        .btn-remove{background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:8px;padding:5px 12px;font-size:0.82rem;cursor:pointer;transition:all 0.2s;}
+        .btn-remove:hover{background:rgba(220,53,69,0.2);}
+        .order-summary{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:1.8rem;position:sticky;top:80px;}
+        .summary-row{display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid rgba(255,107,53,0.08);}
+        .summary-row:last-child{border-bottom:none;}
+        .summary-total{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--orange);}
+        .btn-checkout{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:14px;padding:1rem;font-weight:700;font-size:1rem;width:100%;transition:all 0.3s;box-shadow:0 6px 20px rgba(255,107,53,0.35);}
+        .btn-checkout:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,107,53,0.5);color:white;}
+        .btn-shop{background:transparent;border:1.5px solid var(--border);color:var(--text-muted);border-radius:12px;padding:0.7rem;font-weight:500;width:100%;margin-top:0.8rem;transition:all 0.3s;text-decoration:none;display:block;text-align:center;}
+        .btn-shop:hover{border-color:var(--orange);color:var(--orange);}
+        .empty-cart{text-align:center;padding:4rem 2rem;color:var(--text-muted);}
+        .empty-cart i{font-size:5rem;opacity:0.15;display:block;margin-bottom:1rem;}
+        .alert-success-rev{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;border-radius:10px;padding:0.8rem 1rem;}
+        .alert-error-rev{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:10px;padding:0.8rem 1rem;}
+    </style>
+</head>
+<body>
+
+<nav class="revshop-navbar navbar navbar-expand-lg">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/buyer/home}">Rev<span>Shop</span></a>
+        <div class="ms-auto d-flex gap-2 align-items-center">
+            <a class="nav-link" th:href="@{/buyer/home}"><i class="bi bi-arrow-left me-1"></i>Continue Shopping</a>
+            <a class="nav-link" th:href="@{/buyer/wishlist}"><i class="bi bi-heart"></i></a>
+            <a class="nav-link" th:href="@{/buyer/notifications}"><i class="bi bi-bell"></i></a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-5">
+    <h2 class="mb-4">My Cart
+        <span style="color:var(--text-muted);font-size:1rem;font-family:'DM Sans',sans-serif;"
+              th:text="${'(' + (cartItems != null ? cartItems.size() : 0) + ' items)'}"></span>
+    </h2>
+
+    <div th:if="${successMessage}" class="alert-success-rev mb-4">
+        <i class="bi bi-check-circle me-2"></i><span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert-error-rev mb-4">
+        <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
+    </div>
+
+    <!-- Empty Cart -->
+    <div th:if="${cartItems == null or cartItems.isEmpty()}" class="empty-cart">
+        <i class="bi bi-cart-x"></i>
+        <h4 style="color:var(--text-light);">Your cart is empty</h4>
+        <p>Looks like you haven't added anything yet.</p>
+        <a th:href="@{/buyer/home}"
+           style="background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:12px;padding:0.8rem 2rem;font-weight:700;text-decoration:none;display:inline-block;">
+            <i class="bi bi-bag me-2"></i>Start Shopping
+        </a>
+    </div>
+
+    <div class="row g-4" th:if="${cartItems != null and !cartItems.isEmpty()}">
+
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+            <div class="cart-item" th:each="item : ${cartItems}">
+                <div class="d-flex gap-3 align-items-start">
+                    <img th:if="${item.product.imageUrl != null}"
+                         th:src="${item.product.imageUrl}"
+                         class="item-img" th:alt="${item.product.name}"/>
+                    <div class="item-img-ph" th:unless="${item.product.imageUrl != null}">
+                        <i class="bi bi-image"></i>
+                    </div>
+
+                    <div class="flex-grow-1">
+                        <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.2rem;"
+                             th:text="${item.product.name}"></div>
+                        <div style="color:var(--text-muted);font-size:0.8rem;margin-bottom:0.7rem;"
+                             th:text="${item.product.categoryName}"></div>
+                        <div style="color:var(--orange);font-weight:700;font-size:1rem;margin-bottom:0.8rem;"
+                             th:text="'₹' + ${#numbers.formatDecimal(item.product.price, 1, 2)}"></div>
+
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <!-- Quantity -->
+                            <form th:action="@{/buyer/cart/update/{id}(id=${item.id})}" method="post"
+                                  class="d-flex align-items-center gap-2">
+                                <div class="qty-control">
+                                    <button type="button" class="qty-btn"
+                                            onclick="this.form.quantity.value=Math.max(1,parseInt(this.form.quantity.value)-1);this.form.submit()">−</button>
+                                    <input type="number" name="quantity" class="qty-val"
+                                           th:value="${item.quantity}" min="1"
+                                           th:max="${item.product.stockQuantity}"
+                                           onchange="this.form.submit()"/>
+                                    <button type="button" class="qty-btn"
+                                            onclick="this.form.quantity.value=Math.min(this.form.quantity.max,parseInt(this.form.quantity.value)+1);this.form.submit()">+</button>
+                                </div>
+                            </form>
+
+                            <!-- Remove -->
+                            <form th:action="@{/buyer/cart/remove/{id}(id=${item.id})}" method="post">
+                                <button type="submit" class="btn-remove">
+                                    <i class="bi bi-trash me-1"></i>Remove
+                                </button>
+                            </form>
+
+                            <!-- FIX: was item.product.price.multiply(new java.math.BigDecimal(item.quantity))
+                                 Thymeleaf 3.1 blocks Java class instantiation in templates.
+                                 Use the built-in #numbers utility instead. -->
+                            <span style="margin-left:auto;color:var(--text-light);font-weight:700;"
+                                  th:text="'₹' + ${#numbers.formatDecimal(item.product.price * item.quantity, 1, 2)}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="order-summary">
+                <h5 class="mb-3">Order Summary</h5>
+                <div class="summary-row">
+                    <span style="color:var(--text-muted);">
+                        Subtotal (<span th:text="${cartItems.size()}"></span> items)
+                    </span>
+                    <!-- FIX: use pre-computed ${total} from controller -->
+                    <span th:text="'₹' + ${#numbers.formatDecimal(total, 1, 2)}"></span>
+                </div>
+                <div class="summary-row">
+                    <span style="color:var(--text-muted);">Shipping</span>
+                    <span style="color:#75f5a0;">FREE</span>
+                </div>
+                <div class="summary-row">
+                    <span style="color:var(--text-muted);">Tax (18% GST)</span>
+                    <!-- FIX: was total.multiply(new java.math.BigDecimal('0.18'))... — blocked in Thymeleaf 3.1
+                         Now uses pre-computed ${gst} passed from BuyerController.viewCart() -->
+                    <span th:text="'₹' + ${#numbers.formatDecimal(gst, 1, 2)}"></span>
+                </div>
+                <div class="summary-row mt-2">
+                    <span style="font-weight:700;">Total</span>
+                    <!-- FIX: was total.multiply(new java.math.BigDecimal('1.18'))... — blocked in Thymeleaf 3.1
+                         Now uses pre-computed ${grandTotal} passed from BuyerController.viewCart() -->
+                    <span class="summary-total"
+                          th:text="'₹' + ${#numbers.formatDecimal(grandTotal, 1, 2)}"></span>
+                </div>
+
+                <a th:href="@{/buyer/checkout}" class="btn-checkout d-block text-center text-decoration-none mt-3">
+                    <i class="bi bi-lock me-2"></i>Proceed to Checkout
+                </a>
+                <a th:href="@{/buyer/home}" class="btn-shop">
+                    <i class="bi bi-arrow-left me-2"></i>Continue Shopping
+                </a>
+
+                <!-- Security note -->
+                <div class="text-center mt-3"
+                     style="color:var(--text-muted);font-size:0.78rem;">
+                    <i class="bi bi-shield-check me-1" style="color:var(--orange);"></i>
+                    Secure checkout with 256-bit SSL
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
