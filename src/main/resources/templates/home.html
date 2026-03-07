@@ -90,24 +90,51 @@
 <!-- Navbar -->
 <nav class="revshop-navbar navbar navbar-expand-lg">
     <div class="container-fluid px-4">
-        <a class="navbar-brand" th:href="@{/}">Rev<span>Shop</span></a>
+
+        <!-- Brand: role-based home link -->
+        <a class="navbar-brand" th:href="@{/}" sec:authorize="isAnonymous()">Rev<span>Shop</span></a>
+        <a class="navbar-brand" th:href="@{/buyer/home}" sec:authorize="hasRole('BUYER')">Rev<span>Shop</span></a>
+        <a class="navbar-brand" th:href="@{/seller/dashboard}" sec:authorize="hasRole('SELLER')">Rev<span>Shop</span></a>
+        <a class="navbar-brand" th:href="@{/admin/dashboard}" sec:authorize="hasRole('ADMIN')">Rev<span>Shop</span></a>
+
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
             <i class="bi bi-list text-light fs-4"></i>
         </button>
+
         <div class="collapse navbar-collapse" id="navMenu">
             <ul class="navbar-nav ms-auto align-items-center gap-2">
+
+                <!-- Anonymous -->
                 <li class="nav-item" sec:authorize="isAnonymous()">
                     <a class="nav-link" th:href="@{/auth/login}"><i class="bi bi-person me-1"></i>Login</a>
                 </li>
                 <li class="nav-item" sec:authorize="isAnonymous()">
                     <a class="btn btn-orange" th:href="@{/auth/register}">Register</a>
                 </li>
-                <li class="nav-item" sec:authorize="isAuthenticated()">
+
+                <!-- Buyer -->
+                <li class="nav-item" sec:authorize="hasRole('BUYER')">
                     <a class="nav-link" th:href="@{/buyer/home}"><i class="bi bi-shop me-1"></i>My Shop</a>
                 </li>
+
+                <!-- Seller -->
+                <li class="nav-item" sec:authorize="hasRole('SELLER')">
+                    <a class="nav-link" th:href="@{/seller/dashboard}"><i class="bi bi-grid me-1"></i>Dashboard</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('SELLER')">
+                    <a class="nav-link" th:href="@{/seller/products}"><i class="bi bi-box-seam me-1"></i>My Products</a>
+                </li>
+
+                <!-- Admin -->
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/dashboard}"><i class="bi bi-shield me-1"></i>Admin Panel</a>
+                </li>
+
+                <!-- Logout (all authenticated) -->
                 <li class="nav-item" sec:authorize="isAuthenticated()">
                     <a class="nav-link" th:href="@{/auth/logout}"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
                 </li>
+
             </ul>
         </div>
     </div>
