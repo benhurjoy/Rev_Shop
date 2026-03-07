@@ -1,5 +1,6 @@
 package com.revshop.repository;
 
+
 import com.revshop.entity.Notification;
 import com.revshop.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
