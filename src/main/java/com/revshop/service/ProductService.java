@@ -15,10 +15,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class ProductService {
 
     private static final Logger logger = LogManager.getLogger(ProductService.class);
@@ -50,14 +52,13 @@ public class ProductService {
                 .mrp(dto.getMrp())
                 .discountPercent(dto.getDiscountPercent())
                 .stockQuantity(dto.getStockQuantity())
-                .imageUrl(dto.getImageUrl())
+                .imageUrl(dto.getImageUrl())   // already a clean web path from controller
                 .active(true)
                 .category(category)
                 .seller(seller)
                 .build();
 
         Product saved = productRepository.save(product);
-
         logger.info("Product added successfully: {}", saved.getId());
         return saved;
     }
@@ -65,12 +66,10 @@ public class ProductService {
     // ───────────────── UPDATE PRODUCT ─────────────────
     @Transactional
     public Product updateProduct(Long productId, ProductDTO dto, String sellerEmail) {
-
         logger.info("UpdateProduct called for productId: {}", productId);
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Product not found: " + productId));
+        Product product = productRepository.findByIdWithDetails(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
         Category category = getCategoryById(dto.getCategoryId());
 
@@ -82,12 +81,12 @@ public class ProductService {
         product.setStockQuantity(dto.getStockQuantity());
         product.setCategory(category);
 
-        if (dto.getImageUrl() != null) {
+        // Only update image if a new one was uploaded (dto.imageUrl will be set by controller)
+        if (dto.getImageUrl() != null && !dto.getImageUrl().isBlank()) {
             product.setImageUrl(dto.getImageUrl());
         }
 
         Product updated = productRepository.save(product);
-
         logger.info("Product updated successfully: {}", productId);
         return updated;
     }
@@ -95,80 +94,63 @@ public class ProductService {
     // ───────────────── DELETE PRODUCT (SOFT DELETE) ─────────────────
     @Transactional
     public void deleteProduct(Long productId, String sellerEmail) {
-
         logger.info("DeleteProduct called for productId: {}", productId);
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Product not found: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
         product.setActive(false);
         productRepository.save(product);
-
         logger.info("Product soft deleted: {}", productId);
     }
 
     // ───────────────── GET ALL PRODUCTS ─────────────────
-    @Transactional(readOnly = true)
     public List<ProductDTO> getAllActiveProducts() {
-
         logger.info("GetAllActiveProducts called");
 
-        return productRepository
-                .findByActiveTrueOrderByCreatedAtDesc()
+        return productRepository.findAllActiveWithDetails()
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
     // ───────────────── GET PRODUCTS BY SELLER ─────────────────
-    @Transactional(readOnly = true)
     public List<ProductDTO> getProductsBySeller(String sellerEmail) {
-
         logger.info("GetProductsBySeller called for: {}", sellerEmail);
 
         User seller = getUserByEmail(sellerEmail);
 
-        return productRepository.findBySeller(seller)
+        return productRepository.findBySellerWithDetails(seller)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
     // ───────────────── GET PRODUCT BY ID ─────────────────
-    @Transactional(readOnly = true)
     public ProductDTO getProductById(Long productId) {
-
         logger.info("GetProductById called for: {}", productId);
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Product not found: " + productId));
+        Product product = productRepository.findByIdWithDetails(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
         return mapToDTO(product);
     }
 
     // ───────────────── SEARCH PRODUCTS ─────────────────
-    @Transactional(readOnly = true)
     public List<ProductDTO> searchProducts(String keyword) {
-
         logger.info("SearchProducts called with keyword: {}", keyword);
 
-        return productRepository
-                .findByNameContainingIgnoreCaseAndActiveTrue(keyword)
+        return productRepository.findByNameContainingIgnoreCaseAndActiveTrueWithDetails(keyword)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
     // ───────────────── FILTER BY CATEGORY ─────────────────
-    @Transactional(readOnly = true)
     public List<ProductDTO> filterByCategory(Long categoryId) {
-
         logger.info("FilterByCategory called for categoryId: {}", categoryId);
 
-        return productRepository
-                .findByCategoryIdAndActiveTrue(categoryId)
+        return productRepository.findByCategoryIdAndActiveTrueWithDetails(categoryId)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -177,42 +159,34 @@ public class ProductService {
     // ───────────────── TOGGLE VISIBILITY ─────────────────
     @Transactional
     public void toggleProductVisibility(Long productId, String sellerEmail) {
-
         logger.info("ToggleVisibility called for productId: {}", productId);
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Product not found: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
         product.setActive(!product.isActive());
-
         productRepository.save(product);
-
         logger.info("Visibility toggled: {}", product.isActive());
     }
 
     // ───────────────── REDUCE STOCK ─────────────────
     @Transactional
     public void reduceStock(Long productId, int quantity) {
-
         logger.info("ReduceStock called for productId: {}", productId);
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Product not found: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
         if (product.getStockQuantity() < quantity) {
             throw new RuntimeException("Insufficient stock");
         }
 
         product.setStockQuantity(product.getStockQuantity() - quantity);
-
         productRepository.save(product);
     }
 
     // ───────────────── DTO MAPPER ─────────────────
     private ProductDTO mapToDTO(Product product) {
-
         ProductDTO dto = new ProductDTO();
 
         dto.setId(product.getId());
@@ -222,9 +196,18 @@ public class ProductService {
         dto.setMrp(product.getMrp());
         dto.setDiscountPercent(product.getDiscountPercent());
         dto.setStockQuantity(product.getStockQuantity());
-        dto.setImageUrl(product.getImageUrl());
         dto.setActive(product.isActive());
 
+
+        String raw = product.getImageUrl();
+        if (raw != null && !raw.isBlank()) {
+            String filename = Paths.get(raw).getFileName().toString();
+            dto.setImageUrl("/uploads/products/" + filename);
+        } else {
+            dto.setImageUrl(null);
+        }
+
+        // SAFE: category and seller are always JOIN FETCHed by the new query methods
         if (product.getCategory() != null) {
             dto.setCategoryId(product.getCategory().getId());
             dto.setCategoryName(product.getCategory().getName());
@@ -232,13 +215,10 @@ public class ProductService {
 
         if (product.getSeller() != null) {
             dto.setSellerId(product.getSeller().getId());
-            dto.setSellerName(
-                    product.getSeller().getFirstName() + " "
-                            + product.getSeller().getLastName());
+            dto.setSellerName(product.getSeller().getFirstName() + " " + product.getSeller().getLastName());
         }
 
         Double avgRating = reviewRepository.findAverageRatingByProduct(product);
-
         dto.setAverageRating(avgRating != null ? avgRating : 0.0);
         dto.setTotalReviews(reviewRepository.countByProduct(product));
 
@@ -247,16 +227,12 @@ public class ProductService {
 
     // ───────────────── HELPER METHODS ─────────────────
     private User getUserByEmail(String email) {
-
         return userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
     }
 
     private Category getCategoryById(Long id) {
-
         return categoryRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Category not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + id));
     }
 }
