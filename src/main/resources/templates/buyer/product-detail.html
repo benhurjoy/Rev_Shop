@@ -39,13 +39,10 @@
         .breadcrumb-rev .current{color:var(--text-light);font-size:0.85rem;}
 
         /* ── Product image ── */
-        .product-image-wrap{
-            position:sticky;top:80px;
-        }
+        .product-image-wrap{position:sticky;top:80px;}
         .product-image-main{
             width:100%;height:420px;object-fit:cover;
-            border-radius:20px;border:1px solid var(--border);
-            display:block;
+            border-radius:20px;border:1px solid var(--border);display:block;
         }
         .product-image-placeholder{
             width:100%;height:420px;border-radius:20px;
@@ -55,10 +52,7 @@
         }
 
         /* ── Info card ── */
-        .product-info-card{
-            background:var(--card-bg);border:1px solid var(--border);
-            border-radius:20px;padding:2rem;
-        }
+        .product-info-card{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:2rem;}
         .product-category-tag{
             background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.25);
             border-radius:20px;padding:4px 14px;font-size:0.78rem;
@@ -70,8 +64,7 @@
         .price-mrp{font-size:1rem;color:var(--text-muted);text-decoration:line-through;}
         .discount-chip{
             background:linear-gradient(135deg,var(--orange),#e85d2b);
-            color:white;font-size:0.75rem;font-weight:700;
-            padding:4px 10px;border-radius:8px;
+            color:white;font-size:0.75rem;font-weight:700;padding:4px 10px;border-radius:8px;
         }
         .stock-badge{border-radius:8px;padding:4px 12px;font-size:0.82rem;display:inline-flex;align-items:center;gap:5px;}
         .stock-ok{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;}
@@ -89,19 +82,10 @@
         }
 
         /* ── Qty control ── */
-        .qty-control{
-            display:inline-flex;align-items:center;
-            border:1.5px solid var(--border);border-radius:10px;overflow:hidden;
-        }
-        .qty-btn{
-            background:var(--navy-light);border:none;color:var(--text-light);
-            width:38px;height:42px;font-size:1.1rem;cursor:pointer;transition:all 0.2s;
-        }
+        .qty-control{display:inline-flex;align-items:center;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;}
+        .qty-btn{background:var(--navy-light);border:none;color:var(--text-light);width:38px;height:42px;font-size:1.1rem;cursor:pointer;transition:all 0.2s;}
         .qty-btn:hover{background:var(--orange);color:white;}
-        .qty-input{
-            background:transparent;border:none;color:var(--text-light);
-            text-align:center;width:48px;font-size:0.95rem;font-weight:600;
-        }
+        .qty-input{background:transparent;border:none;color:var(--text-light);text-align:center;width:48px;font-size:0.95rem;font-weight:600;}
         .qty-input:focus{outline:none;}
 
         /* ── Buttons ── */
@@ -109,8 +93,7 @@
             background:linear-gradient(135deg,var(--orange),#e85d2b);
             color:white;border:none;border-radius:12px;
             padding:0.85rem 1.8rem;font-weight:700;font-size:0.95rem;
-            transition:all 0.3s;box-shadow:0 6px 20px rgba(255,107,53,0.3);
-            cursor:pointer;
+            transition:all 0.3s;box-shadow:0 6px 20px rgba(255,107,53,0.3);cursor:pointer;
         }
         .btn-cart:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,107,53,0.5);color:white;}
         .btn-wish{
@@ -127,10 +110,7 @@
         .alert-error-rev{background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;}
 
         /* ── Reviews ── */
-        .review-card{
-            background:var(--card-bg);border:1px solid var(--border);
-            border-radius:14px;padding:1.2rem;margin-bottom:0.8rem;
-        }
+        .review-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:1.2rem;margin-bottom:0.8rem;}
         .reviewer-avatar{
             width:38px;height:38px;border-radius:50%;flex-shrink:0;
             background:linear-gradient(135deg,var(--orange),#e85d2b);
@@ -138,10 +118,7 @@
             font-weight:700;font-size:0.9rem;color:white;
         }
         .review-text{color:var(--text-muted);font-size:0.88rem;margin-top:0.5rem;line-height:1.6;}
-        .write-review-box{
-            background:var(--card-bg);border:1px solid var(--border);
-            border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;
-        }
+        .write-review-box{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;}
         .textarea-rev{
             background:rgba(255,255,255,0.04);border:1.5px solid var(--border);
             border-radius:10px;color:var(--text-light);
@@ -173,6 +150,9 @@
             </a>
             <a class="nav-link" sec:authorize="hasRole('BUYER')" th:href="@{/buyer/cart}">
                 <i class="bi bi-cart3 me-1"></i>Cart
+                <span th:if="${cartCount != null and cartCount > 0}"
+                      style="background:var(--orange);color:white;border-radius:50%;font-size:0.6rem;font-weight:700;padding:2px 5px;margin-left:2px;"
+                      th:text="${cartCount}"></span>
             </a>
         </div>
     </div>
@@ -277,7 +257,6 @@
                 <div sec:authorize="hasRole('BUYER')" th:if="${product.stockQuantity > 0}">
                     <form th:action="@{/buyer/cart/add}" method="post">
                         <input type="hidden" name="productId" th:value="${product.id}"/>
-
                         <div class="d-flex align-items-center gap-3 mb-4">
                             <span style="color:var(--text-muted);font-size:0.88rem;">Quantity:</span>
                             <div class="qty-control">
@@ -288,7 +267,6 @@
                                 <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
                             </div>
                         </div>
-
                         <div class="d-flex gap-3 flex-wrap">
                             <button type="submit" class="btn-cart">
                                 <i class="bi bi-cart-plus me-2"></i>Add to Cart
@@ -317,7 +295,7 @@
                     </button>
                 </div>
 
-                <!-- Login prompt -->
+                <!-- Login prompt for anonymous -->
                 <div sec:authorize="isAnonymous()" class="mt-3">
                     <a th:href="@{/auth/login}"
                        style="background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:12px;padding:0.9rem 2rem;font-weight:700;text-decoration:none;display:block;text-align:center;">
@@ -328,7 +306,9 @@
         </div>
     </div>
 
-    <!-- Reviews Section -->
+    <!-- ═══════════════════════════════════════════════════════
+         Reviews Section
+         ═══════════════════════════════════════════════════════ -->
     <div class="mt-5">
         <h3 style="font-size:1.4rem;margin-bottom:1.5rem;">
             Customer Reviews
@@ -336,9 +316,18 @@
                   th:text="'(' + ${reviews?.size() ?: 0} + ')'"></span>
         </h3>
 
-        <!-- Write Review (Buyer) -->
+        <!-- ── Write Review block (Buyer only) ── -->
         <div sec:authorize="hasRole('BUYER')" class="mb-4">
-            <div th:if="${!hasReviewed}" class="write-review-box">
+
+            <!-- Case 1: Already reviewed -->
+            <div th:if="${hasReviewed}"
+                 style="color:var(--text-muted);font-size:0.88rem;padding:0.9rem 1rem;background:rgba(255,107,53,0.05);border-radius:10px;border:1px solid var(--border);">
+                <i class="bi bi-check-circle me-2" style="color:var(--orange);"></i>
+                You have already reviewed this product.
+            </div>
+
+            <!-- Case 2: Not reviewed + HAS purchased → show form -->
+            <div th:if="${!hasReviewed and hasPurchased}" class="write-review-box">
                 <h6 style="color:var(--orange);margin-bottom:1rem;font-size:0.95rem;font-weight:700;">
                     <i class="bi bi-pencil-square me-2"></i>Write a Review
                 </h6>
@@ -367,12 +356,21 @@
                     </button>
                 </form>
             </div>
-            <div th:if="${hasReviewed}"
-                 style="color:var(--text-muted);font-size:0.88rem;padding:0.9rem 1rem;background:rgba(255,107,53,0.05);border-radius:10px;border:1px solid var(--border);">
-                <i class="bi bi-check-circle me-2" style="color:var(--orange);"></i>
-                You have already reviewed this product.
+
+            <!-- Case 3: Not reviewed + has NOT purchased → locked -->
+            <div th:if="${!hasReviewed and !hasPurchased}"
+                 style="padding:1rem 1.2rem;background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.25);border-radius:12px;display:flex;align-items:center;gap:0.75rem;">
+                <i class="bi bi-lock-fill" style="color:var(--gold);font-size:1.2rem;flex-shrink:0;"></i>
+                <div>
+                    <div style="color:var(--text-light);font-size:0.88rem;font-weight:600;">Purchase required to review</div>
+                    <div style="color:var(--text-muted);font-size:0.8rem;margin-top:2px;">
+                        Only buyers who have received this product can leave a review.
+                    </div>
+                </div>
             </div>
+
         </div>
+        <!-- ── End Write Review block ── -->
 
         <!-- Reviews List -->
         <div th:if="${reviews != null and !reviews.isEmpty()}">
@@ -395,12 +393,14 @@
             </div>
         </div>
 
+        <!-- No reviews empty state -->
         <div th:if="${reviews == null or reviews.isEmpty()}"
              style="color:var(--text-muted);text-align:center;padding:2.5rem;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;">
             <i class="bi bi-chat-square-text" style="font-size:2.5rem;opacity:0.25;display:block;margin-bottom:0.8rem;"></i>
             <p style="margin:0;font-size:0.9rem;">No reviews yet. Be the first to review!</p>
         </div>
     </div>
+
 </div>
 
 <footer class="rev-footer">
