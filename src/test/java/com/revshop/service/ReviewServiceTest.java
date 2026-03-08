@@ -31,6 +31,9 @@ class ReviewServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private OrderRepository orderRepository; // ← ADDED: required by ReviewService
+
     @InjectMocks
     private ReviewService reviewService;
 
@@ -74,6 +77,8 @@ class ReviewServiceTest {
     void addReview_FirstTimeReview_ShouldSave() {
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
         when(productRepository.findById(1L)).thenReturn(Optional.of(mockProduct));
+        // ADDED: stub the purchase check — buyer has a delivered order
+        when(orderRepository.existsByBuyerAndProductDelivered(mockBuyer, 1L)).thenReturn(true);
         when(reviewRepository.existsByProductAndBuyer(mockProduct, mockBuyer)).thenReturn(false);
         when(reviewRepository.save(any(Review.class))).thenReturn(mockReview);
 
@@ -88,7 +93,22 @@ class ReviewServiceTest {
     void addReview_AlreadyReviewed_ShouldThrowException() {
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
         when(productRepository.findById(1L)).thenReturn(Optional.of(mockProduct));
+        // ADDED: buyer has purchased the product (so we get past the purchase check)
+        when(orderRepository.existsByBuyerAndProductDelivered(mockBuyer, 1L)).thenReturn(true);
         when(reviewRepository.existsByProductAndBuyer(mockProduct, mockBuyer)).thenReturn(true);
+
+        assertThrows(Exception.class,
+                () -> reviewService.addReview("buyer@test.com", reviewDTO));
+
+        verify(reviewRepository, never()).save(any());
+    }
+
+    @Test
+    void addReview_NoPurchase_ShouldThrowException() {
+        // NEW TEST: buyer has NOT purchased the product
+        when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(mockProduct));
+        when(orderRepository.existsByBuyerAndProductDelivered(mockBuyer, 1L)).thenReturn(false);
 
         assertThrows(Exception.class,
                 () -> reviewService.addReview("buyer@test.com", reviewDTO));
@@ -101,6 +121,8 @@ class ReviewServiceTest {
         reviewDTO.setRating(6); // out of range
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
         when(productRepository.findById(1L)).thenReturn(Optional.of(mockProduct));
+        // ADDED: buyer has purchased (so we get past purchase check, fail on rating)
+        when(orderRepository.existsByBuyerAndProductDelivered(mockBuyer, 1L)).thenReturn(true);
         when(reviewRepository.existsByProductAndBuyer(mockProduct, mockBuyer)).thenReturn(false);
 
         assertThrows(Exception.class,
