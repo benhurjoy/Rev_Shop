@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>My Orders – RevShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root{--navy:#0A1628;--navy-mid:#112240;--navy-light:#1E3A5F;--orange:#FF6B35;--gold:#FFB347;--text-light:#E8EDF5;--text-muted:#8899AA;--card-bg:#112240;--border:rgba(255,107,53,0.2);}
+        body{background:var(--navy);color:var(--text-light);font-family:'DM Sans',sans-serif;}
+        h1,h2,h3,h4,h5{font-family:'Playfair Display',serif;}
+        .revshop-navbar{background:linear-gradient(135deg,#0A1628,#1E3A5F);border-bottom:2px solid var(--orange);padding:0.75rem 0;position:sticky;top:0;z-index:1000;}
+        .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;}
+        .navbar-brand span{color:var(--orange);}
+        .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s;}
+        .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
+        .order-card{background:var(--card-bg);border:1px solid var(--border);border-radius:18px;padding:1.5rem;margin-bottom:1.2rem;transition:all 0.3s;}
+        .order-card:hover{border-color:var(--orange);box-shadow:0 8px 30px rgba(255,107,53,0.1);}
+        .order-header{display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid rgba(255,107,53,0.08);}
+        .order-id{font-weight:700;color:var(--orange);font-size:1rem;}
+        .order-date{color:var(--text-muted);font-size:0.8rem;}
+        /* Status badges */
+        .status-pending{background:rgba(255,179,71,0.12);color:var(--gold);border:1px solid rgba(255,179,71,0.3);border-radius:8px;padding:4px 12px;font-size:0.78rem;font-weight:600;}
+        .status-processing{background:rgba(23,162,184,0.12);color:#5bc8d5;border:1px solid rgba(23,162,184,0.3);border-radius:8px;padding:4px 12px;font-size:0.78rem;font-weight:600;}
+        .status-shipped{background:rgba(111,66,193,0.12);color:#c084fc;border:1px solid rgba(111,66,193,0.3);border-radius:8px;padding:4px 12px;font-size:0.78rem;font-weight:600;}
+        .status-delivered{background:rgba(40,167,69,0.12);color:#75f5a0;border:1px solid rgba(40,167,69,0.3);border-radius:8px;padding:4px 12px;font-size:0.78rem;font-weight:600;}
+        .status-cancelled{background:rgba(220,53,69,0.12);color:#ff8fa3;border:1px solid rgba(220,53,69,0.3);border-radius:8px;padding:4px 12px;font-size:0.78rem;font-weight:600;}
+        .item-thumb{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--border);}
+        .item-thumb-ph{width:48px;height:48px;border-radius:8px;background:var(--navy-light);display:flex;align-items:center;justify-content:center;color:var(--text-muted);flex-shrink:0;}
+        .btn-sm-orange{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:8px;padding:5px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.2s;display:inline-block;}
+        .btn-sm-orange:hover{transform:translateY(-1px);color:white;}
+        .btn-sm-cancel{background:rgba(220,53,69,0.08);border:1px solid rgba(220,53,69,0.25);color:#ff8fa3;border-radius:8px;padding:5px 14px;font-size:0.82rem;cursor:pointer;transition:all 0.2s;}
+        .btn-sm-cancel:hover{background:rgba(220,53,69,0.15);}
+        .alert-success-rev{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;border-radius:10px;padding:0.8rem 1rem;}
+        .alert-error-rev{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:10px;padding:0.8rem 1rem;}
+        .empty-state{text-align:center;padding:4rem;color:var(--text-muted);}
+        .empty-state i{font-size:4rem;opacity:0.15;display:block;margin-bottom:1rem;}
+
+        /* Timeline */
+        .order-timeline{display:flex;align-items:center;gap:0;margin:1rem 0;}
+        .timeline-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
+        .timeline-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:0.65rem;z-index:1;}
+        .timeline-dot.done{background:var(--orange);border-color:var(--orange);color:white;}
+        .timeline-dot.active{border-color:var(--orange);color:var(--orange);}
+        .timeline-label{font-size:0.68rem;color:var(--text-muted);margin-top:4px;text-align:center;}
+        .timeline-line{position:absolute;top:12px;left:50%;right:-50%;height:2px;background:var(--border);}
+        .timeline-line.done{background:var(--orange);}
+        .timeline-step:last-child .timeline-line{display:none;}
+    </style>
+</head>
+<body>
+<nav class="revshop-navbar navbar navbar-expand-lg">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/buyer/home}">Rev<span>Shop</span></a>
+        <div class="ms-auto d-flex gap-2">
+            <a class="nav-link" th:href="@{/buyer/home}"><i class="bi bi-arrow-left me-1"></i>Shop</a>
+            <a class="nav-link" th:href="@{/buyer/cart}"><i class="bi bi-cart3"></i></a>
+            <a class="nav-link" th:href="@{/auth/logout}"><i class="bi bi-box-arrow-right"></i></a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-5">
+    <h2 class="mb-4">My Orders
+        <span style="color:var(--text-muted);font-size:1rem;font-family:'DM Sans',sans-serif;"
+              th:text="${'(' + (orders != null ? orders.size() : 0) + ')'}"></span>
+    </h2>
+
+    <div th:if="${successMessage}" class="alert-success-rev mb-4">
+        <i class="bi bi-check-circle me-2"></i><span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert-error-rev mb-4">
+        <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
+    </div>
+
+    <!-- Empty -->
+    <div th:if="${orders == null or orders.isEmpty()}" class="empty-state">
+        <i class="bi bi-bag"></i>
+        <h4 style="color:var(--text-light);">No orders yet</h4>
+        <p>Your orders will appear here after you shop.</p>
+        <a th:href="@{/buyer/home}"
+           style="background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:12px;padding:0.8rem 2rem;font-weight:700;text-decoration:none;display:inline-block;">
+            <i class="bi bi-bag me-2"></i>Start Shopping
+        </a>
+    </div>
+
+    <!-- Orders List -->
+    <div th:each="order : ${orders}" class="order-card">
+        <div class="order-header">
+            <div>
+                <div class="order-id" th:text="'Order #' + ${order.id}"></div>
+                <div class="order-date"
+                     th:text="${#temporals.format(order.orderedAt,'dd MMM yyyy, hh:mm a')}"></div>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span th:switch="${order.status?.name()}">
+                    <span th:case="'PENDING'"    class="status-pending">⏳ Pending</span>
+                    <span th:case="'PROCESSING'" class="status-processing">⚙️ Processing</span>
+                    <span th:case="'SHIPPED'"    class="status-shipped">🚚 Shipped</span>
+                    <span th:case="'DELIVERED'"  class="status-delivered">✅ Delivered</span>
+                    <span th:case="'CANCELLED'"  class="status-cancelled">❌ Cancelled</span>
+                    <span th:case="*" class="status-pending" th:text="${order.status}"></span>
+                </span>
+                <span style="color:var(--orange);font-weight:700;"
+                      th:text="'₹' + ${order.totalAmount}"></span>
+            </div>
+        </div>
+
+        <!-- Order items preview -->
+        <div class="d-flex gap-3 align-items-center flex-wrap mb-3">
+            <div th:each="item, iter : ${order.orderItems}"
+                 th:if="${iter.index < 3}"
+                 class="d-flex align-items-center gap-2">
+                <img th:if="${item.productImage != null}"
+                     th:src="${item.productImage}"
+                     class="item-thumb" th:alt="${item.productName}"/>
+                <div class="item-thumb-ph" th:unless="${item.productImage != null}">
+                    <i class="bi bi-image"></i>
+                </div>
+                <div>
+                    <div style="font-size:0.85rem;font-weight:500;"
+                         th:text="${item.productName}"></div>
+                    <div style="color:var(--text-muted);font-size:0.75rem;"
+                         th:text="'Qty: ' + ${item.quantity} + ' × ₹' + ${item.price}"></div>
+                </div>
+            </div>
+            <div th:if="${order.orderItems.size() > 3}"
+                 style="color:var(--text-muted);font-size:0.82rem;">
+                +<span th:text="${order.orderItems.size() - 3}"></span> more items
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="order-timeline">
+            <div th:each="s, iter : ${ {'PENDING','PROCESSING','SHIPPED','DELIVERED'} }"
+                 class="timeline-step">
+                <div class="timeline-line"
+                     th:classappend="${order.status?.name() != 'CANCELLED' and
+                        ((s == 'PENDING' and #lists.contains({'PROCESSING','SHIPPED','DELIVERED'}, order.status?.name())) or
+                        (s == 'PROCESSING' and #lists.contains({'SHIPPED','DELIVERED'}, order.status?.name())) or
+                        (s == 'SHIPPED' and order.status?.name() == 'DELIVERED'))} ? ' done' : ''">
+                </div>
+                <div class="timeline-dot"
+                     th:classappend="${order.status?.name() == s ? ' active' : (order.status?.name() != 'CANCELLED' and (s == 'PENDING' or (s == 'PROCESSING' and #lists.contains({'PROCESSING','SHIPPED','DELIVERED'}, order.status?.name())) or (s == 'SHIPPED' and #lists.contains({'SHIPPED','DELIVERED'}, order.status?.name())) or (s == 'DELIVERED' and order.status?.name() == 'DELIVERED'))) ? ' done' : ''}">
+                    <i class="bi bi-check"></i>
+                </div>
+                <div class="timeline-label" th:text="${s}"></div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex gap-2 mt-2">
+            <a th:href="@{/buyer/orders/{id}(id=${order.id})}"
+               class="btn-sm-orange">
+                <i class="bi bi-eye me-1"></i>View Details
+            </a>
+            <form th:if="${order.status?.name() == 'PENDING'}"
+                  th:action="@{/buyer/orders/cancel/{id}(id=${order.id})}"
+                  method="post"
+                  onsubmit="return confirm('Cancel this order?')">
+                <button type="submit" class="btn-sm-cancel">
+                    <i class="bi bi-x-circle me-1"></i>Cancel
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Edit Product – RevShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root{--navy:#0A1628;--navy-mid:#112240;--navy-light:#1E3A5F;--orange:#FF6B35;--gold:#FFB347;--text-light:#E8EDF5;--text-muted:#8899AA;--card-bg:#112240;--border:rgba(255,107,53,0.2);}
+        body{background:var(--navy);color:var(--text-light);font-family:'DM Sans',sans-serif;}
+        h1,h2,h3,h4,h5{font-family:'Playfair Display',serif;}
+        .revshop-navbar{background:linear-gradient(135deg,#0A1628,#1E3A5F);border-bottom:2px solid var(--orange);padding:0.75rem 0;position:sticky;top:0;z-index:1000;}
+        .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;}
+        .navbar-brand span{color:var(--orange);}
+        .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s;}
+        .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
+        .sidebar{background:var(--card-bg);border-right:1px solid var(--border);min-height:calc(100vh - 66px);padding:1.5rem 0;width:230px;position:fixed;top:66px;left:0;}
+        .sidebar-link{display:flex;align-items:center;gap:10px;padding:0.75rem 1.5rem;color:var(--text-muted);text-decoration:none;font-weight:500;font-size:0.9rem;border-left:3px solid transparent;transition:all 0.3s;}
+        .sidebar-link:hover,.sidebar-link.active{color:var(--orange);background:rgba(255,107,53,0.08);border-left-color:var(--orange);}
+        .main{margin-left:230px;padding:2rem;}
+        .form-card{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:2rem;}
+        .form-label{color:var(--text-muted);font-size:0.83rem;font-weight:500;margin-bottom:0.4rem;}
+        .form-control,.form-select{background:rgba(255,255,255,0.05)!important;border:1.5px solid rgba(255,107,53,0.2)!important;border-radius:12px!important;color:var(--text-light)!important;padding:0.75rem 1rem!important;font-family:'DM Sans',sans-serif;transition:all 0.3s;}
+        .form-control:focus,.form-select:focus{border-color:var(--orange)!important;box-shadow:0 0 0 3px rgba(255,107,53,0.15)!important;background:rgba(255,255,255,0.08)!important;}
+        .form-control::placeholder{color:var(--text-muted)!important;}
+        .form-select option{background:var(--navy-mid);}
+        textarea.form-control{resize:vertical;min-height:100px;}
+        .btn-submit{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:12px;padding:0.85rem 2rem;font-weight:700;transition:all 0.3s;box-shadow:0 6px 20px rgba(255,107,53,0.35);}
+        .btn-submit:hover{transform:translateY(-2px);color:white;}
+        .btn-cancel{background:var(--navy-light);color:var(--text-light);border:1px solid var(--border);border-radius:12px;padding:0.85rem 2rem;font-weight:600;text-decoration:none;transition:all 0.3s;}
+        .btn-cancel:hover{color:var(--orange);}
+        .text-danger{color:#ff8fa3!important;font-size:0.8rem;}
+        .current-image{width:100%;height:160px;object-fit:cover;border-radius:12px;border:1px solid var(--border);}
+        .upload-area{border:2px dashed rgba(255,107,53,0.3);border-radius:16px;padding:1.5rem;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;margin-top:0.8rem;}
+        .upload-area:hover{border-color:var(--orange);background:rgba(255,107,53,0.05);}
+        .upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+        .dropdown-item{color:var(--text-muted);transition:all 0.2s;}
+        .dropdown-item:hover{background:rgba(255,107,53,0.1)!important;color:var(--orange)!important;}
+        .dropdown-toggle::after{display:none;}
+        @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;padding:1rem;}}
+    </style>
+</head>
+<body>
+<nav class="revshop-navbar navbar">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/}">Rev<span>Shop</span></a>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <a th:href="@{/seller/products}" class="nav-link">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
+            <!-- Avatar Dropdown -->
+            <div class="dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center p-0 ps-1"
+                   href="#" id="profileDrop" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#e85d2b);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:white;border:2px solid rgba(255,107,53,0.4);cursor:pointer;">
+                        <span th:text="${currentUser != null} ? ${currentUser.initials} : 'S'">S</span>
+                    </div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end mt-2"
+                    style="background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;min-width:210px;padding:0.5rem;box-shadow:0 12px 40px rgba(0,0,0,0.4);">
+                    <li style="padding:0.75rem 1rem;border-bottom:1px solid var(--border);">
+                        <div style="font-weight:600;color:var(--text-light);font-size:0.9rem;"
+                             th:text="${currentUser != null} ? ${currentUser.firstName} + ' ' + ${currentUser.lastName} : ''"></div>
+                        <div style="color:var(--gold);font-size:0.78rem;margin-top:1px;"
+                             th:text="${currentUser?.businessName}"></div>
+                        <div style="color:var(--text-muted);font-size:0.75rem;margin-top:1px;"
+                             th:text="${currentUser != null} ? ${currentUser.email} : ''"></div>
+                    </li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
+                           th:href="@{/seller/profile}"
+                           style="color:var(--orange)!important;font-weight:600;">
+                            <i class="bi bi-person-circle"></i> My Profile
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
+                           th:href="@{/seller/products}">
+                            <i class="bi bi-box-seam" style="color:var(--orange);"></i> My Products
+                        </a>
+                    </li>
+                    <li><hr style="border-color:var(--border);margin:0.4rem 0;"></li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
+                           th:href="@{/auth/logout}" style="color:#ff8fa3!important;">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="sidebar">
+    <a th:href="@{/seller/dashboard}" class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a th:href="@{/seller/products}" class="sidebar-link active"><i class="bi bi-box-seam"></i> My Products</a>
+    <a th:href="@{/seller/products/add}" class="sidebar-link"><i class="bi bi-plus-circle"></i> Add Product</a>
+    <a th:href="@{/seller/low-stock}" class="sidebar-link"><i class="bi bi-exclamation-triangle"></i> Low Stock</a>
+    <a th:href="@{/seller/notifications}" class="sidebar-link"><i class="bi bi-bell"></i> Notifications</a>
+</div>
+
+<div class="main">
+    <div style="margin-bottom:2rem;">
+        <h2>Edit Product</h2>
+        <p style="color:var(--text-muted);margin:0;font-size:0.9rem;">Update your product details</p>
+    </div>
+
+    <form th:action="@{/seller/products/edit/{id}(id=${productDTO.id})}"
+          th:object="${productDTO}" method="post" enctype="multipart/form-data">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="form-card">
+                    <h5 class="mb-4">Product Information</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Product Name *</label>
+                        <input type="text" class="form-control" th:field="*{name}"/>
+                        <div class="text-danger" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" th:field="*{description}" rows="4"></textarea>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Selling Price (₹) *</label>
+                            <input type="number" class="form-control" th:field="*{price}" step="0.01"/>
+                            <div class="text-danger" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">MRP (₹) *</label>
+                            <input type="number" class="form-control" th:field="*{mrp}" step="0.01"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Discount (%)</label>
+                            <input type="number" class="form-control" th:field="*{discountPercent}" min="0" max="100"/>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label">Stock Quantity *</label>
+                            <input type="number" class="form-control" th:field="*{stockQuantity}" min="0"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Category *</label>
+                            <select class="form-select" th:field="*{categoryId}">
+                                <option value="">-- Select Category --</option>
+                                <option th:each="cat : ${categories}"
+                                        th:value="${cat.id}"
+                                        th:text="${cat.name}"
+                                        th:selected="${cat.id == productDTO.categoryId}"></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="form-card">
+                    <h5 class="mb-3">Product Image</h5>
+                    <img th:if="${productDTO.imageUrl != null}"
+                         th:src="${productDTO.imageUrl}"
+                         class="current-image" alt="Current image"/>
+                    <p style="color:var(--text-muted);font-size:0.8rem;margin-top:0.5rem;">
+                        Current image. Upload new to replace.
+                    </p>
+                    <div class="upload-area">
+                        <input type="file" name="image" accept="image/*" onchange="previewImg(event)"/>
+                        <i class="bi bi-cloud-upload" style="font-size:1.5rem;color:var(--orange);opacity:0.6;"></i>
+                        <p style="color:var(--text-muted);font-size:0.82rem;margin:0.3rem 0 0;">
+                            Click to upload new image
+                        </p>
+                        <img id="newPreview" style="width:100%;height:120px;object-fit:cover;border-radius:10px;margin-top:0.8rem;display:none;"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn-submit">
+                        <i class="bi bi-check-circle me-2"></i>Update Product
+                    </button>
+                    <a th:href="@{/seller/products}" class="btn-cancel">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function previewImg(event) {
+        const preview = document.getElementById('newPreview');
+        preview.src = URL.createObjectURL(event.target.files[0]);
+        preview.style.display = 'block';
+    }
+</script>
+</body>
+</html>

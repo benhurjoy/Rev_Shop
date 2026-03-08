@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Low Stock – RevShop Seller</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root{--navy:#0A1628;--navy-mid:#112240;--navy-light:#1E3A5F;--orange:#FF6B35;--gold:#FFB347;--text-light:#E8EDF5;--text-muted:#8899AA;--card-bg:#112240;--border:rgba(255,107,53,0.2);}
+        body{background:var(--navy);color:var(--text-light);font-family:'DM Sans',sans-serif;margin:0;}
+        h1,h2,h3,h4,h5{font-family:'Playfair Display',serif;}
+        .revshop-navbar{background:linear-gradient(135deg,#0A1628,#1E3A5F);border-bottom:2px solid var(--orange);padding:0.75rem 0;position:sticky;top:0;z-index:1000;}
+        .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;}
+        .navbar-brand span{color:var(--orange);}
+        .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s;}
+        .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
+        .sidebar{background:var(--card-bg);border-right:1px solid var(--border);min-height:calc(100vh - 66px);width:230px;position:fixed;top:66px;left:0;padding:1.5rem 0;}
+        .sidebar-link{display:flex;align-items:center;gap:10px;padding:0.75rem 1.5rem;color:var(--text-muted);text-decoration:none;font-weight:500;font-size:0.9rem;border-left:3px solid transparent;transition:all 0.3s;}
+        .sidebar-link:hover,.sidebar-link.active{color:var(--orange);background:rgba(255,107,53,0.08);border-left-color:var(--orange);}
+        .main{margin-left:230px;padding:2rem;}
+        .low-stock-card{background:var(--card-bg);border:1px solid rgba(255,179,71,0.3);border-radius:16px;padding:1.2rem 1.5rem;margin-bottom:1rem;display:flex;align-items:center;gap:1.2rem;transition:all 0.3s;}
+        .low-stock-card:hover{border-color:var(--gold);box-shadow:0 8px 30px rgba(255,179,71,0.1);}
+        .product-thumb{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--border);}
+        .product-thumb-ph{width:56px;height:56px;border-radius:10px;background:var(--navy-light);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.3rem;flex-shrink:0;}
+        .stock-bar{flex:1;max-width:120px;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+        .stock-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#dc3545,var(--gold));}
+        .btn-edit{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:8px;padding:6px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+        .btn-edit:hover{transform:translateY(-1px);color:white;}
+        .alert-banner{background:rgba(255,179,71,0.1);border:1px solid rgba(255,179,71,0.3);border-radius:14px;padding:1.2rem 1.5rem;margin-bottom:2rem;display:flex;align-items:center;gap:1rem;}
+        .empty-state{text-align:center;padding:4rem;color:var(--text-muted);}
+        .dropdown-item{color:var(--text-muted);transition:all 0.2s;}
+        .dropdown-item:hover{background:rgba(255,107,53,0.1)!important;color:var(--orange)!important;}
+        .dropdown-toggle::after{display:none;}
+        @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;padding:1rem;}}
+    </style>
+</head>
+<body>
+<nav class="revshop-navbar navbar">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/}">Rev<span>Shop</span></a>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <!-- Avatar Dropdown -->
+            <div class="dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center p-0 ps-1"
+                   href="#" id="profileDrop" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#e85d2b);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:white;border:2px solid rgba(255,107,53,0.4);cursor:pointer;">
+                        <span th:text="${currentUser != null} ? ${currentUser.initials} : 'S'">S</span>
+                    </div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end mt-2"
+                    style="background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;min-width:210px;padding:0.5rem;box-shadow:0 12px 40px rgba(0,0,0,0.4);">
+                    <li style="padding:0.75rem 1rem;border-bottom:1px solid var(--border);">
+                        <div style="font-weight:600;color:var(--text-light);font-size:0.9rem;"
+                             th:text="${currentUser != null} ? ${currentUser.firstName} + ' ' + ${currentUser.lastName} : ''"></div>
+                        <div style="color:var(--gold);font-size:0.78rem;margin-top:1px;"
+                             th:text="${currentUser?.businessName}"></div>
+                        <div style="color:var(--text-muted);font-size:0.75rem;margin-top:1px;"
+                             th:text="${currentUser != null} ? ${currentUser.email} : ''"></div>
+                    </li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
+                           th:href="@{/seller/profile}"
+                           style="color:var(--orange)!important;font-weight:600;">
+                            <i class="bi bi-person-circle"></i> My Profile
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
+                           th:href="@{/seller/products}">
+                            <i class="bi bi-box-seam" style="color:var(--orange);"></i> My Products
+                        </a>
+                    </li>
+                    <li><hr style="border-color:var(--border);margin:0.4rem 0;"></li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
+                           th:href="@{/auth/logout}" style="color:#ff8fa3!important;">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="sidebar">
+    <a th:href="@{/seller/dashboard}"     class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a th:href="@{/seller/products}"      class="sidebar-link"><i class="bi bi-box-seam"></i> My Products</a>
+    <a th:href="@{/seller/products/add}"  class="sidebar-link"><i class="bi bi-plus-circle"></i> Add Product</a>
+    <a th:href="@{/seller/low-stock}"     class="sidebar-link active"><i class="bi bi-exclamation-triangle"></i> Low Stock</a>
+    <a th:href="@{/seller/notifications}" class="sidebar-link"><i class="bi bi-bell"></i> Notifications</a>
+</div>
+
+<div class="main">
+
+    <div th:if="${lowStockProducts != null and !lowStockProducts.isEmpty()}" class="alert-banner">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:1.5rem;color:var(--gold);flex-shrink:0;"></i>
+        <div>
+            <div style="font-weight:600;color:var(--gold);">Stock Alert</div>
+            <div style="color:var(--text-muted);font-size:0.85rem;">
+                <span th:text="${lowStockProducts.size()}"></span>
+                product(s) are running low on stock. Restock soon to avoid missing orders.
+            </div>
+        </div>
+    </div>
+
+    <h2 class="mb-4">
+        <i class="bi bi-exclamation-triangle me-2" style="color:var(--gold);"></i>
+        Low Stock Products
+    </h2>
+
+    <!-- Empty -->
+    <div th:if="${lowStockProducts == null or lowStockProducts.isEmpty()}" class="empty-state">
+        <i class="bi bi-check-circle" style="font-size:4rem;color:var(--orange);opacity:0.3;display:block;margin-bottom:1rem;"></i>
+        <h5 style="color:var(--text-light);">All products are well-stocked!</h5>
+        <p>No products below 5 units right now.</p>
+    </div>
+
+    <!-- Low Stock Cards -->
+    <div th:each="product : ${lowStockProducts}" class="low-stock-card">
+
+        <img th:if="${product.imageUrl != null}"
+             th:src="${product.imageUrl}"
+             class="product-thumb" th:alt="${product.name}"/>
+        <div class="product-thumb-ph" th:unless="${product.imageUrl != null}">
+            <i class="bi bi-image"></i>
+        </div>
+
+        <div class="flex-grow-1">
+            <div style="font-weight:600;font-size:0.95rem;" th:text="${product.name}"></div>
+            <div style="color:var(--text-muted);font-size:0.8rem;margin-top:0.2rem;"
+                 th:text="${product.categoryName}"></div>
+        </div>
+
+        <!-- Stock bar -->
+        <div style="text-align:center;min-width:80px;">
+            <div style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;"
+                 th:style="${product.stockQuantity == 0} ? 'color:#ff8fa3;' : 'color:var(--gold);'"
+                 th:text="${product.stockQuantity}">0</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);">units left</div>
+            <div class="stock-bar mt-1">
+                <div class="stock-bar-fill"
+                     th:style="'width:' + ${(product.stockQuantity / 5.0) * 100} + '%'"></div>
+            </div>
+        </div>
+
+        <div style="color:var(--orange);font-weight:700;min-width:70px;text-align:right;"
+             th:text="'₹' + ${product.price}"></div>
+
+        <a th:href="@{/seller/products/edit/{id}(id=${product.id})}" class="btn-edit">
+            <i class="bi bi-pencil me-1"></i>Restock
+        </a>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
