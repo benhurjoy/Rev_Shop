@@ -41,7 +41,7 @@
         /* Table */
         .rev-table{color:var(--text-light);}
         .rev-table thead th{background:var(--navy-light);color:var(--orange);font-weight:600;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px;border:none;padding:1rem;}
-        .rev-table tbody tr:{border-bottom:1px solid rgba(255,107,53,0.06);transition:background 0.2s;}
+        .rev-table tbody tr{border-bottom:1px solid rgba(255,107,53,0.06);transition:background 0.2s;}
         .rev-table tbody tr:hover{background:rgba(255,107,53,0.04);}
         .rev-table tbody td{padding:0.9rem 1rem;border:none;vertical-align:middle;}
 
@@ -179,8 +179,6 @@
                 <div style="display:flex;justify-content:space-between;
                             padding:0.5rem 0;font-size:0.88rem;">
                     <span style="color:var(--text-muted);">Total Products</span>
-                    <!-- FIX: Thymeleaf 3.1 blocks Java lambda expressions (c -> c.productCount).
-                         Pass totalProductsAcrossCategories from the controller instead. -->
                     <strong style="color:var(--text-light);"
                             th:text="${totalProductsAcrossCategories ?: 0}">0</strong>
                 </div>
@@ -246,20 +244,25 @@
 
                             <!-- Description -->
                             <td style="color:var(--text-muted);font-size:0.83rem;max-width:200px;">
-                                    <span th:if="${cat.description != null and !cat.description.isEmpty()}"
-                                          th:text="${#strings.abbreviate(cat.description, 60)}"></span>
+                                <span th:if="${cat.description != null and !cat.description.isEmpty()}"
+                                      th:text="${#strings.abbreviate(cat.description, 60)}"></span>
                                 <span th:unless="${cat.description != null and !cat.description.isEmpty()}"
                                       style="font-style:italic;opacity:0.5;">No description</span>
                             </td>
 
                             <!-- Product Count -->
                             <td>
-                                    <span class="product-count"
-                                          th:text="${cat.products.size()} + ' products'"></span>
+                                <span class="product-count"
+                                      th:text="${cat.products.size()} + ' products'"></span>
                             </td>
 
-                            <!-- Created Date -->
-                            <td style="color:var(--text-muted);font-size:0.82rem;">—</td>
+                            <!-- Created Date — FIXED -->
+                            <td style="color:var(--text-muted);font-size:0.82rem;">
+                                <span th:if="${cat.createdAt != null}"
+                                      th:text="${#temporals.format(cat.createdAt, 'dd MMM yyyy')}"></span>
+                                <span th:unless="${cat.createdAt != null}"
+                                      style="font-style:italic;opacity:0.5;">—</span>
+                            </td>
 
                             <!-- Delete Action -->
                             <td>
