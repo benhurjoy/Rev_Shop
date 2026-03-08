@@ -1,6 +1,10 @@
 package com.revshop.controller;
 
 import com.revshop.dto.ReviewDTO;
+import com.revshop.dto.UserDTO;
+import com.revshop.entity.User;
+import com.revshop.exception.ResourceNotFoundException;
+import com.revshop.repository.UserRepository;
 import com.revshop.service.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -8,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -23,23 +28,31 @@ public class BuyerController {
 
     private static final Logger logger = LogManager.getLogger(BuyerController.class);
 
-    @Autowired
-    private ProductService productService;
+    @Autowired private ProductService productService;
+    @Autowired private CartService cartService;
+    @Autowired private WishlistService wishlistService;
+    @Autowired private ReviewService reviewService;
+    @Autowired private NotificationService notificationService;
+    @Autowired private CategoryService categoryService;
+    @Autowired private UserRepository userRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private CartService cartService;
-
-    @Autowired
-    private WishlistService wishlistService;
-
-    @Autowired
-    private ReviewService reviewService;
-
-    @Autowired
-    private NotificationService notificationService;
-
-    @Autowired
-    private CategoryService categoryService;
+    // ── Helper: build UserDTO from email ─────────────────────
+    private UserDTO getCurrentUserDTO(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getId());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setEmail(user.getEmail());
+        dto.setPhone(user.getPhone());
+        dto.setRole(user.getRole());
+        dto.setEnabled(user.isEnabled());
+        dto.setBlocked(user.isBlocked());
+        dto.setCreatedAt(user.getCreatedAt());
+        return dto;
+    }
 
     // ── Home ─────────────────────────────────────────────────
     @GetMapping("/home")
@@ -65,7 +78,89 @@ public class BuyerController {
         model.addAttribute("categories", categoryService.getAllCategories());
         model.addAttribute("cartCount", cartService.getCartItemCount(email));
         model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
+        model.addAttribute("currentUser", getCurrentUserDTO(email));
         return "buyer/home";
+    }
+
+    // ── Profile ───────────────────────────────────────────────
+    @GetMapping("/profile")
+    public String viewProfile(
+            @AuthenticationPrincipal UserDetails userDetails,
+            Model model) {
+
+        String email = userDetails.getUsername();
+        logger.info("Buyer viewing profile: {}", email);
+
+        model.addAttribute("currentUser", getCurrentUserDTO(email));
+        model.addAttribute("cartCount", cartService.getCartItemCount(email));
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
+        return "buyer/profile";
+    }
+
+    @PostMapping("/profile/update")
+    public String updateProfile(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String firstName,
+            @RequestParam String lastName,
+            @RequestParam String phone,
+            RedirectAttributes redirectAttributes) {
+
+        String email = userDetails.getUsername();
+        logger.info("Buyer updating profile: {}", email);
+
+        try {
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            user.setFirstName(firstName);
+            user.setLastName(lastName);
+            user.setPhone(phone);
+            userRepository.save(user);
+            redirectAttributes.addFlashAttribute("successMessage", "Profile updated successfully!");
+        } catch (Exception e) {
+            logger.error("Profile update failed: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Update failed: " + e.getMessage());
+        }
+        return "redirect:/buyer/profile";
+    }
+
+    @PostMapping("/profile/change-password")
+    public String changePassword(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String currentPassword,
+            @RequestParam String newPassword,
+            @RequestParam String confirmPassword,
+            RedirectAttributes redirectAttributes) {
+
+        String email = userDetails.getUsername();
+        logger.info("Buyer changing password: {}", email);
+
+        try {
+            if (!newPassword.equals(confirmPassword)) {
+                redirectAttributes.addFlashAttribute("pwError", "New passwords do not match.");
+                return "redirect:/buyer/profile";
+            }
+            if (newPassword.length() < 6) {
+                redirectAttributes.addFlashAttribute("pwError", "Password must be at least 6 characters.");
+                return "redirect:/buyer/profile";
+            }
+
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                redirectAttributes.addFlashAttribute("pwError", "Current password is incorrect.");
+                return "redirect:/buyer/profile";
+            }
+
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            redirectAttributes.addFlashAttribute("pwSuccess", "Password changed successfully!");
+
+        } catch (Exception e) {
+            logger.error("Password change failed: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("pwError", "Failed: " + e.getMessage());
+        }
+        return "redirect:/buyer/profile";
     }
 
     // ── Product Detail ────────────────────────────────────────
@@ -82,9 +177,11 @@ public class BuyerController {
         model.addAttribute("reviews", reviewService.getReviewsByProduct(productId));
         model.addAttribute("averageRating", reviewService.getAverageRating(productId));
         model.addAttribute("hasReviewed", reviewService.hasAlreadyReviewed(email, productId));
+        model.addAttribute("hasPurchased", reviewService.hasPurchasedProduct(email, productId)); // ← NEW
         model.addAttribute("isInWishlist", wishlistService.isInWishlist(email, productId));
         model.addAttribute("cartCount", cartService.getCartItemCount(email));
         model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
+        model.addAttribute("currentUser", getCurrentUserDTO(email));
         return "buyer/product-detail";
     }
 
@@ -98,9 +195,6 @@ public class BuyerController {
         logger.info("Buyer viewing cart: {}", email);
 
         BigDecimal total = cartService.calculateTotal(email);
-
-        // FIX: Thymeleaf 3.1 blocks `new java.math.BigDecimal(...)` in templates for security.
-        // Pre-compute gst and grandTotal here in Java and pass as model attributes.
         BigDecimal gst = total.multiply(new BigDecimal("0.18"))
                 .setScale(2, RoundingMode.HALF_UP);
         BigDecimal grandTotal = total.add(gst)
@@ -108,10 +202,11 @@ public class BuyerController {
 
         model.addAttribute("cartItems", cartService.getCartItems(email));
         model.addAttribute("total", total);
-        model.addAttribute("gst", gst);                 // use ${gst} in template
-        model.addAttribute("grandTotal", grandTotal);   // use ${grandTotal} in template
+        model.addAttribute("gst", gst);
+        model.addAttribute("grandTotal", grandTotal);
         model.addAttribute("cartCount", cartService.getCartItemCount(email));
         model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
+        model.addAttribute("currentUser", getCurrentUserDTO(email));
         return "buyer/cart";
     }
 
@@ -180,6 +275,7 @@ public class BuyerController {
         model.addAttribute("wishlist", wishlistService.getOrCreateWishlist(email));
         model.addAttribute("cartCount", cartService.getCartItemCount(email));
         model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
+        model.addAttribute("currentUser", getCurrentUserDTO(email));
         return "buyer/wishlist";
     }
 
@@ -266,6 +362,7 @@ public class BuyerController {
         model.addAttribute("notifications", notificationService.getNotifications(email));
         model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
         model.addAttribute("cartCount", cartService.getCartItemCount(email));
+        model.addAttribute("currentUser", getCurrentUserDTO(email));
         return "buyer/notifications";
     }
 
