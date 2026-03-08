@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>My Profile – RevShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root{
+            --navy:#0A1628;--navy-mid:#112240;--navy-light:#1E3A5F;
+            --orange:#FF6B35;--gold:#FFB347;
+            --text-light:#E8EDF5;--text-muted:#8899AA;
+            --card-bg:#112240;--border:rgba(255,107,53,0.2);
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{background:var(--navy);color:var(--text-light);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+        /* ── Navbar ── */
+        .revshop-navbar{background:linear-gradient(135deg,#0A1628,#1E3A5F);border-bottom:2px solid var(--orange);padding:0.75rem 0;position:sticky;top:0;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+        .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;text-decoration:none;}
+        .navbar-brand span{color:var(--orange);}
+        .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 0.9rem!important;border-radius:8px;transition:all 0.3s;position:relative;}
+        .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
+        .nav-badge{background:var(--orange);color:white;border-radius:50%;font-size:0.6rem;font-weight:700;padding:2px 5px;position:absolute;top:4px;right:4px;min-width:16px;text-align:center;line-height:1.4;}
+        .dropdown-item{color:var(--text-muted);transition:all 0.2s;}
+        .dropdown-item:hover{background:rgba(255,107,53,0.1)!important;color:var(--orange)!important;}
+        .dropdown-toggle::after{display:none;}
+
+        /* ── Layout ── */
+        .profile-wrapper{max-width:780px;margin:3rem auto;padding:0 1rem 4rem;}
+
+        /* ── Avatar card ── */
+        .avatar-card{
+            background:var(--card-bg);border:1px solid var(--border);
+            border-radius:20px;padding:2.5rem;
+            display:flex;align-items:center;gap:2rem;
+            margin-bottom:1.5rem;
+            box-shadow:0 8px 30px rgba(0,0,0,0.3);
+        }
+        .avatar-circle{
+            width:90px;height:90px;border-radius:50%;flex-shrink:0;
+            background:linear-gradient(135deg,var(--orange),#e85d2b);
+            display:flex;align-items:center;justify-content:center;
+            font-size:2rem;font-weight:800;color:white;
+            border:3px solid rgba(255,107,53,0.4);
+            box-shadow:0 8px 25px rgba(255,107,53,0.3);
+        }
+        .avatar-info h4{font-size:1.5rem;margin-bottom:0.3rem;color:var(--text-light);}
+        .role-badge{
+            display:inline-flex;align-items:center;gap:5px;
+            background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.3);
+            color:var(--orange);font-size:0.78rem;font-weight:600;
+            padding:3px 10px;border-radius:20px;
+        }
+        .member-since{color:var(--text-muted);font-size:0.82rem;margin-top:0.4rem;}
+
+        /* ── Cards ── */
+        .info-card{
+            background:var(--card-bg);border:1px solid var(--border);
+            border-radius:20px;padding:2rem;
+            box-shadow:0 8px 30px rgba(0,0,0,0.3);
+            margin-bottom:1.5rem;
+        }
+        .info-card h5{
+            font-family:'Playfair Display',serif;font-size:1.15rem;
+            color:var(--text-light);margin-bottom:1.5rem;
+            padding-bottom:0.75rem;border-bottom:1px solid var(--border);
+            display:flex;align-items:center;gap:8px;
+        }
+        .info-row{
+            display:flex;align-items:center;
+            padding:0.85rem 0;
+            border-bottom:1px solid rgba(255,107,53,0.08);
+        }
+        .info-row:last-of-type{border-bottom:none;}
+        .info-icon{
+            width:36px;height:36px;border-radius:10px;flex-shrink:0;
+            background:rgba(255,107,53,0.1);
+            display:flex;align-items:center;justify-content:center;
+            color:var(--orange);font-size:1rem;margin-right:1rem;
+        }
+        .info-label{font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;}
+        .info-value{font-size:0.95rem;color:var(--text-light);font-weight:500;}
+
+        /* ── Collapsible sections ── */
+        .section-toggle-btn{
+            background:rgba(255,107,53,0.08);border:1px solid var(--border);
+            color:var(--orange);border-radius:10px;padding:0.5rem 1.2rem;
+            font-size:0.85rem;font-weight:600;cursor:pointer;
+            transition:all 0.3s;display:inline-flex;align-items:center;gap:6px;
+        }
+        .section-toggle-btn:hover{background:rgba(255,107,53,0.18);border-color:var(--orange);}
+        .section-toggle-btn.danger{color:#ff8fa3;border-color:rgba(220,53,69,0.3);background:rgba(220,53,69,0.06);}
+        .section-toggle-btn.danger:hover{background:rgba(220,53,69,0.12);border-color:#ff8fa3;}
+
+        .collapsible-form{
+            background:rgba(255,107,53,0.04);border:1px solid var(--border);
+            border-radius:14px;padding:1.5rem;margin-top:1rem;
+            display:none;
+        }
+        .collapsible-form.open{display:block;animation:fadeIn 0.3s ease;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+
+        /* ── Form controls ── */
+        .form-label{color:var(--text-muted);font-size:0.82rem;font-weight:500;margin-bottom:0.4rem;}
+        .form-control{
+            background:rgba(255,255,255,0.05)!important;
+            border:1.5px solid rgba(255,107,53,0.2)!important;
+            border-radius:10px!important;color:var(--text-light)!important;
+            padding:0.7rem 1rem!important;font-family:'DM Sans',sans-serif;
+            transition:all 0.3s;
+        }
+        .form-control:focus{border-color:var(--orange)!important;box-shadow:0 0 0 3px rgba(255,107,53,0.15)!important;background:rgba(255,255,255,0.08)!important;}
+        .form-control::placeholder{color:var(--text-muted)!important;}
+
+        /* password wrapper */
+        .pw-wrap{position:relative;}
+        .pw-wrap .form-control{padding-right:3rem!important;}
+        .pw-toggle{
+            position:absolute;right:0.85rem;top:50%;transform:translateY(-50%);
+            background:none;border:none;color:var(--text-muted);
+            font-size:1rem;cursor:pointer;padding:0;transition:color 0.2s;z-index:5;
+        }
+        .pw-toggle:hover{color:var(--orange);}
+
+        /* strength bar */
+        .strength-bar-wrap{display:flex;gap:4px;margin-top:6px;}
+        .strength-seg{flex:1;height:3px;border-radius:4px;background:rgba(255,255,255,0.1);transition:background 0.3s;}
+        .strength-seg.weak{background:#e74c3c;}
+        .strength-seg.fair{background:var(--gold);}
+        .strength-seg.strong{background:#2ecc71;}
+        .strength-lbl{font-size:0.73rem;margin-top:3px;color:var(--text-muted);min-height:1em;}
+
+        /* match indicator */
+        .match-ind{font-size:0.76rem;margin-top:4px;display:flex;align-items:center;gap:4px;min-height:1.2em;}
+        .match-ind.match{color:#2ecc71;}
+        .match-ind.no-match{color:#e74c3c;}
+
+        /* buttons */
+        .btn-save{
+            background:linear-gradient(135deg,var(--orange),#e85d2b);
+            color:white;border:none;border-radius:10px;
+            padding:0.65rem 1.8rem;font-weight:700;font-size:0.9rem;
+            cursor:pointer;transition:all 0.3s;
+            box-shadow:0 4px 15px rgba(255,107,53,0.3);
+        }
+        .btn-save:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,107,53,0.5);}
+        .btn-save:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+        .btn-cancel{
+            background:transparent;border:1px solid var(--border);
+            color:var(--text-muted);border-radius:10px;
+            padding:0.65rem 1.2rem;font-weight:600;font-size:0.9rem;
+            cursor:pointer;transition:all 0.3s;
+        }
+        .btn-cancel:hover{border-color:var(--text-muted);color:var(--text-light);}
+
+        /* ── Alerts ── */
+        .alert-rev{border-radius:10px;padding:0.8rem 1rem;display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;margin-bottom:1.2rem;}
+        .alert-success-rev{background:rgba(40,167,69,0.1);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;}
+        .alert-error-rev{background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;}
+
+        /* ── Footer ── */
+        .rev-footer{background:var(--navy-mid);border-top:1px solid var(--border);padding:2rem 0;margin-top:4rem;text-align:center;color:var(--text-muted);font-size:0.85rem;}
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="revshop-navbar navbar navbar-expand-lg">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/buyer/home}">Rev<span>Shop</span></a>
+        <button class="navbar-toggler border-0" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <i class="bi bi-list text-light fs-4"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+            <ul class="navbar-nav ms-auto align-items-center gap-1">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/buyer/wishlist}"><i class="bi bi-heart me-1"></i>Wishlist</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/buyer/orders}"><i class="bi bi-bag me-1"></i>Orders</a>
+                </li>
+                <li class="nav-item position-relative">
+                    <a class="nav-link" th:href="@{/buyer/notifications}">
+                        <i class="bi bi-bell fs-5"></i>
+                        <span class="nav-badge" th:if="${unreadCount != null and unreadCount > 0}" th:text="${unreadCount}"></span>
+                    </a>
+                </li>
+                <li class="nav-item position-relative">
+                    <a class="nav-link" th:href="@{/buyer/cart}">
+                        <i class="bi bi-cart3 fs-5"></i>
+                        <span class="nav-badge" th:if="${cartCount != null and cartCount > 0}" th:text="${cartCount}"></span>
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 p-0 ps-2"
+                       href="#" id="profileDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#e85d2b);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:white;border:2px solid rgba(255,107,53,0.4);cursor:pointer;">
+                            <span th:text="${currentUser != null} ? ${currentUser.initials} : 'U'">U</span>
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end mt-2"
+                        style="background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;min-width:210px;padding:0.5rem;box-shadow:0 12px 40px rgba(0,0,0,0.4);">
+                        <li style="padding:0.75rem 1rem;border-bottom:1px solid var(--border);">
+                            <div style="font-weight:600;color:var(--text-light);font-size:0.9rem;"
+                                 th:text="${currentUser != null} ? ${currentUser.firstName} + ' ' + ${currentUser.lastName} : ''"></div>
+                            <div style="color:var(--text-muted);font-size:0.78rem;margin-top:2px;"
+                                 th:text="${currentUser != null} ? ${currentUser.email} : ''"></div>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
+                               th:href="@{/buyer/profile}" style="color:var(--orange)!important;font-weight:600;">
+                                <i class="bi bi-person-circle"></i> My Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
+                               th:href="@{/buyer/orders}">
+                                <i class="bi bi-bag-check" style="color:var(--orange);"></i> My Orders
+                            </a>
+                        </li>
+                        <li><hr style="border-color:var(--border);margin:0.4rem 0;"></li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
+                               th:href="@{/auth/logout}" style="color:#ff8fa3!important;">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Profile Content -->
+<div class="profile-wrapper">
+
+    <!-- Profile alerts -->
+    <div th:if="${successMessage}" class="alert-rev alert-success-rev">
+        <i class="bi bi-check-circle-fill"></i><span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert-rev alert-error-rev">
+        <i class="bi bi-exclamation-circle-fill"></i><span th:text="${errorMessage}"></span>
+    </div>
+
+    <!-- Avatar Card -->
+    <div class="avatar-card">
+        <div class="avatar-circle">
+            <span th:text="${currentUser.initials}">U</span>
+        </div>
+        <div class="avatar-info">
+            <h4 th:text="${currentUser.firstName} + ' ' + ${currentUser.lastName}">Full Name</h4>
+            <div class="role-badge">
+                <i class="bi bi-person-check-fill"></i>
+                <span th:text="${currentUser.role}">BUYER</span>
+            </div>
+            <div class="member-since">
+                <i class="bi bi-calendar3 me-1"></i>
+                Member since
+                <span th:text="${#temporals.format(currentUser.createdAt, 'MMMM yyyy')}">January 2026</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Account Information Card ── -->
+    <div class="info-card">
+        <h5><i class="bi bi-person-lines-fill" style="color:var(--orange);"></i> Account Information</h5>
+
+        <div class="info-row">
+            <div class="info-icon"><i class="bi bi-person"></i></div>
+            <div>
+                <div class="info-label">First Name</div>
+                <div class="info-value" th:text="${currentUser.firstName}">—</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="info-icon"><i class="bi bi-person"></i></div>
+            <div>
+                <div class="info-label">Last Name</div>
+                <div class="info-value" th:text="${currentUser.lastName}">—</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="info-icon"><i class="bi bi-envelope"></i></div>
+            <div>
+                <div class="info-label">Email Address</div>
+                <div class="info-value" th:text="${currentUser.email}">—</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="info-icon"><i class="bi bi-telephone"></i></div>
+            <div>
+                <div class="info-label">Phone Number</div>
+                <div class="info-value" th:text="${currentUser.phone}">—</div>
+            </div>
+        </div>
+
+        <!-- Edit Profile toggle -->
+        <div style="margin-top:1.5rem;">
+            <button class="section-toggle-btn" onclick="toggleSection('editForm', this)">
+                <i class="bi bi-pencil-square"></i> Edit Profile
+            </button>
+            <div class="collapsible-form" id="editForm">
+                <form th:action="@{/buyer/profile/update}" method="post">
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" name="firstName"
+                                   th:value="${currentUser.firstName}" required/>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="lastName"
+                                   th:value="${currentUser.lastName}" required/>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-control" th:value="${currentUser.email}"
+                               disabled style="opacity:0.5;cursor:not-allowed;"/>
+                        <small style="color:var(--text-muted);font-size:0.75rem;">Email cannot be changed.</small>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" name="phone"
+                               th:value="${currentUser.phone}"
+                               pattern="[0-9]{10}" placeholder="10-digit number" required/>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn-save">
+                            <i class="bi bi-check-lg me-1"></i>Save Changes
+                        </button>
+                        <button type="button" class="btn-cancel"
+                                onclick="toggleSection('editForm', document.querySelector('[onclick*=editForm]'))">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Change Password Card ── -->
+    <div class="info-card">
+        <h5><i class="bi bi-shield-lock-fill" style="color:var(--orange);"></i> Password &amp; Security</h5>
+
+        <!-- Password alerts -->
+        <div th:if="${pwSuccess}" class="alert-rev alert-success-rev">
+            <i class="bi bi-check-circle-fill"></i><span th:text="${pwSuccess}"></span>
+        </div>
+        <div th:if="${pwError}" class="alert-rev alert-error-rev">
+            <i class="bi bi-exclamation-circle-fill"></i><span th:text="${pwError}"></span>
+        </div>
+
+        <div class="info-row">
+            <div class="info-icon"><i class="bi bi-lock"></i></div>
+            <div>
+                <div class="info-label">Password</div>
+                <div class="info-value">••••••••••••</div>
+            </div>
+        </div>
+
+        <div style="margin-top:1.5rem;">
+            <button class="section-toggle-btn danger" onclick="toggleSection('pwForm', this)">
+                <i class="bi bi-key-fill"></i> Change Password
+            </button>
+            <div class="collapsible-form" id="pwForm">
+                <form th:action="@{/buyer/profile/change-password}" method="post" id="pwChangeForm">
+
+                    <!-- Current password -->
+                    <div class="mb-3">
+                        <label class="form-label">Current Password</label>
+                        <div class="pw-wrap">
+                            <input type="password" class="form-control" name="currentPassword"
+                                   id="currentPw" placeholder="Enter current password" required/>
+                            <button type="button" class="pw-toggle"
+                                    onclick="togglePw('currentPw', 'icon0')" tabindex="-1">
+                                <i class="bi bi-eye" id="icon0"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- New password -->
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <div class="pw-wrap">
+                            <input type="password" class="form-control" name="newPassword"
+                                   id="newPw" placeholder="Min 6 characters"
+                                   oninput="checkStrength(this.value); checkPwMatch()" required/>
+                            <button type="button" class="pw-toggle"
+                                    onclick="togglePw('newPw', 'icon1')" tabindex="-1">
+                                <i class="bi bi-eye" id="icon1"></i>
+                            </button>
+                        </div>
+                        <!-- Strength bar -->
+                        <div class="strength-bar-wrap">
+                            <div class="strength-seg" id="ps1"></div>
+                            <div class="strength-seg" id="ps2"></div>
+                            <div class="strength-seg" id="ps3"></div>
+                            <div class="strength-seg" id="ps4"></div>
+                        </div>
+                        <div class="strength-lbl" id="strengthLbl"></div>
+                    </div>
+
+                    <!-- Confirm new password -->
+                    <div class="mb-4">
+                        <label class="form-label">Confirm New Password</label>
+                        <div class="pw-wrap">
+                            <input type="password" class="form-control" name="confirmPassword"
+                                   id="confirmPw" placeholder="Re-enter new password"
+                                   oninput="checkPwMatch()" required/>
+                            <button type="button" class="pw-toggle"
+                                    onclick="togglePw('confirmPw', 'icon2')" tabindex="-1">
+                                <i class="bi bi-eye" id="icon2"></i>
+                            </button>
+                        </div>
+                        <div class="match-ind" id="matchInd"></div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn-save" id="pwSaveBtn">
+                            <i class="bi bi-shield-check me-1"></i>Update Password
+                        </button>
+                        <button type="button" class="btn-cancel"
+                                onclick="toggleSection('pwForm', document.querySelector('[onclick*=pwForm]'))">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer class="rev-footer">
+    <p style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--text-light);margin-bottom:0.3rem;">
+        Rev<span style="color:var(--orange);">Shop</span>
+    </p>
+    <p>© 2026 RevShop. All rights reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    /* ── Toggle collapsible sections ── */
+    function toggleSection(id, btn) {
+        const el = document.getElementById(id);
+        el.classList.toggle('open');
+    }
+
+    /* ── Auto-open section on error after redirect ── */
+    window.addEventListener('DOMContentLoaded', () => {
+        if (document.querySelector('.alert-error-rev')) {
+            document.getElementById('editForm').classList.add('open');
+        }
+        if (document.getElementById('pwForm')) {
+            const pwAlert = document.querySelector('#pwForm')?.closest('.info-card')?.querySelector('.alert-error-rev, .alert-success-rev');
+            // open pw section if there's a pw-specific flash
+            const hasPwMsg = /*[[${pwError != null or pwSuccess != null}]]*/ false;
+            if (hasPwMsg) document.getElementById('pwForm').classList.add('open');
+        }
+    });
+
+    /* ── Toggle password visibility ── */
+    function togglePw(fieldId, iconId) {
+        const f = document.getElementById(fieldId);
+        const i = document.getElementById(iconId);
+        if (f.type === 'password') {
+            f.type = 'text';
+            i.classList.replace('bi-eye', 'bi-eye-slash');
+        } else {
+            f.type = 'password';
+            i.classList.replace('bi-eye-slash', 'bi-eye');
+        }
+    }
+
+    /* ── Password strength ── */
+    function checkStrength(val) {
+        const segs  = ['ps1','ps2','ps3','ps4'].map(id => document.getElementById(id));
+        const label = document.getElementById('strengthLbl');
+        const levels = ['weak','fair','fair','strong'];
+        const labels = ['','Weak','Fair','Strong','Very Strong'];
+        const colors = {1:'#e74c3c', 2:'var(--gold)', 3:'var(--gold)', 4:'#2ecc71'};
+
+        let score = 0;
+        if (val.length >= 6)                             score++;
+        if (val.length >= 10)                            score++;
+        if (/[A-Z]/.test(val) && /[0-9]/.test(val))     score++;
+        if (/[^A-Za-z0-9]/.test(val))                   score++;
+
+        segs.forEach((s, i) => {
+            s.className = 'strength-seg';
+            if (i < score) s.classList.add(levels[score - 1] || 'strong');
+        });
+        label.textContent = val.length ? labels[score] : '';
+        label.style.color = val.length ? (colors[score] || 'var(--text-muted)') : 'var(--text-muted)';
+    }
+
+    /* ── Confirm password match ── */
+    function checkPwMatch() {
+        const nw  = document.getElementById('newPw').value;
+        const cf  = document.getElementById('confirmPw').value;
+        const ind = document.getElementById('matchInd');
+        const btn = document.getElementById('pwSaveBtn');
+
+        if (!cf) { ind.textContent = ''; ind.className = 'match-ind'; btn.disabled = false; return; }
+
+        if (nw === cf) {
+            ind.innerHTML = '<i class="bi bi-check-circle-fill"></i> Passwords match';
+            ind.className = 'match-ind match';
+            btn.disabled = false;
+        } else {
+            ind.innerHTML = '<i class="bi bi-x-circle-fill"></i> Passwords do not match';
+            ind.className = 'match-ind no-match';
+            btn.disabled = true;
+        }
+    }
+
+    /* ── Block submit if passwords don't match ── */
+    document.getElementById('pwChangeForm').addEventListener('submit', function(e) {
+        const nw = document.getElementById('newPw').value;
+        const cf = document.getElementById('confirmPw').value;
+        if (nw !== cf) { e.preventDefault(); checkPwMatch(); }
+    });
+</script>
+</body>
+</html>
