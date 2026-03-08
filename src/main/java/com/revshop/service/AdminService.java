@@ -2,6 +2,7 @@ package com.revshop.service;
 
 import com.revshop.dto.DashboardDTO;
 import com.revshop.dto.UserDTO;
+import com.revshop.entity.Order;
 import com.revshop.entity.User;
 import com.revshop.exception.ResourceNotFoundException;
 import com.revshop.repository.*;
@@ -15,22 +16,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional(readOnly = true) // FIX: keeps session open for all reads
+@Transactional(readOnly = true)
 public class AdminService {
 
     private static final Logger logger = LogManager.getLogger(AdminService.class);
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private ReviewRepository reviewRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private ProductRepository productRepository;
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private ReviewRepository reviewRepository;
 
     public List<UserDTO> getAllUsers() {
         logger.info("Admin fetching all users");
@@ -91,19 +85,20 @@ public class AdminService {
     public DashboardDTO getDashboardStats() {
         logger.info("Admin fetching dashboard stats");
 
-        long totalUsers = userRepository.count();
-        long totalBuyers = userRepository.findByRole(User.Role.BUYER).size();
-        long totalSellers = userRepository.findByRole(User.Role.SELLER).size();
-        long blockedUsers = userRepository.findByBlocked(true).size();
-        long totalProducts = productRepository.count();
+        long totalUsers      = userRepository.count();
+        long totalBuyers     = userRepository.findByRole(User.Role.BUYER).size();
+        long totalSellers    = userRepository.findByRole(User.Role.SELLER).size();
+        long blockedUsers    = userRepository.findByBlocked(true).size();
+        long totalProducts   = productRepository.count();
+        long activeProducts  = productRepository.findAllActiveWithDetails().size();
+        long outOfStock      = productRepository.findByStockQuantityEquals(0).size();
+        long totalOrders     = orderRepository.count();
+        long totalReviews    = reviewRepository.count();
 
-        // FIX: was findByActiveTrue() — triggers lazy init on category/seller during .size() count
-        // Use countActiveProductsBySeller alternative or a count query; here we use a simple count query
-        long activeProducts = productRepository.findAllActiveWithDetails().size();
-
-        long outOfStock = productRepository.findByStockQuantityEquals(0).size();
-        long totalOrders = orderRepository.count();
-        long totalReviews = reviewRepository.count();
+        // Fixed: use count queries per status instead of fetching full entities
+        long pendingOrders   = orderRepository.countByStatus(Order.OrderStatus.PENDING);
+        long deliveredOrders = orderRepository.countByStatus(Order.OrderStatus.DELIVERED);
+        long cancelledOrders = orderRepository.countByStatus(Order.OrderStatus.CANCELLED);
 
         Double revenue = orderRepository.sumTotalRevenue();
 
@@ -116,6 +111,9 @@ public class AdminService {
                 .activeProducts(activeProducts)
                 .outOfStockProducts(outOfStock)
                 .totalOrders(totalOrders)
+                .pendingOrders(pendingOrders)
+                .deliveredOrders(deliveredOrders)
+                .cancelledOrders(cancelledOrders)
                 .totalRevenue(revenue != null ? revenue : 0.0)
                 .totalReviews(totalReviews)
                 .build();

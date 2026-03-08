@@ -1,12 +1,12 @@
 package com.revshop.service;
 
-
 import com.revshop.dto.ReviewDTO;
 import com.revshop.entity.Product;
 import com.revshop.entity.Review;
 import com.revshop.entity.User;
 import com.revshop.exception.BadRequestException;
 import com.revshop.exception.ResourceNotFoundException;
+import com.revshop.repository.OrderRepository;
 import com.revshop.repository.ProductRepository;
 import com.revshop.repository.ReviewRepository;
 import com.revshop.repository.UserRepository;
@@ -20,19 +20,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional(readOnly = true) // FIX: keeps session open for all reads
+@Transactional(readOnly = true)
 public class ReviewService {
 
     private static final Logger logger = LogManager.getLogger(ReviewService.class);
 
-    @Autowired
-    private ReviewRepository reviewRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired private ReviewRepository reviewRepository;
+    @Autowired private ProductRepository productRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private OrderRepository orderRepository;   // ← NEW
 
     @Transactional
     public ReviewDTO addReview(String email, ReviewDTO dto) {
@@ -44,9 +40,15 @@ public class ReviewService {
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + dto.getProductId()));
 
+        // ── NEW: must have purchased the product ──
+        if (!orderRepository.existsByBuyerAndProductDelivered(buyer, dto.getProductId())) {
+            logger.warn("Review blocked - no delivered purchase: {} for productId: {}", email, dto.getProductId());
+            throw new BadRequestException("You can only review products you have purchased and received.");
+        }
+
         if (reviewRepository.existsByProductAndBuyer(product, buyer)) {
             logger.warn("Duplicate review attempt by: {} for productId: {}", email, dto.getProductId());
-            throw new BadRequestException("You have already reviewed this product");
+            throw new BadRequestException("You have already reviewed this product.");
         }
 
         if (dto.getRating() < 1 || dto.getRating() > 5) {
@@ -71,7 +73,6 @@ public class ReviewService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
-        // FIX: was findByProductOrderByCreatedAtDesc() — review.getBuyer() is lazy → crash in mapToDTO
         return reviewRepository.findByProductWithBuyer(product)
                 .stream()
                 .map(this::mapToDTO)
@@ -82,7 +83,6 @@ public class ReviewService {
     public void deleteReview(Long reviewId) {
         logger.info("DeleteReview called for reviewId: {}", reviewId);
         if (!reviewRepository.existsById(reviewId)) {
-            logger.warn("Review not found for delete: {}", reviewId);
             throw new ResourceNotFoundException("Review not found: " + reviewId);
         }
         reviewRepository.deleteById(reviewId);
@@ -106,11 +106,17 @@ public class ReviewService {
         return reviewRepository.existsByProductAndBuyer(product, buyer);
     }
 
+    // ── NEW: check if buyer has a delivered order for this product ──
+    public boolean hasPurchasedProduct(String email, Long productId) {
+        logger.info("HasPurchasedProduct called for: {} productId: {}", email, productId);
+        User buyer = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
+        return orderRepository.existsByBuyerAndProductDelivered(buyer, productId);
+    }
+
     private ReviewDTO mapToDTO(Review review) {
         ReviewDTO dto = new ReviewDTO();
         dto.setId(review.getId());
-
-        // SAFE: product and buyer are JOIN FETCHed by findByProductWithBuyer
         dto.setProductId(review.getProduct().getId());
         dto.setProductName(review.getProduct().getName());
         dto.setBuyerId(review.getBuyer().getId());
