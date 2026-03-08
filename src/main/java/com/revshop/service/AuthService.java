@@ -55,6 +55,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .phone(dto.getPhone())
                 .role(dto.getRole())
+                .businessName(dto.getBusinessName()) // ← ADDED
                 .enabled(false)
                 .blocked(false)
                 .build();
@@ -167,7 +168,7 @@ public class AuthService {
         userRepository.save(user);
         logger.info("Password reset successful for: {}", email);
     }
-    // Add this method to the existing AuthService.java
+
     public String getRoleFromToken(String token) {
         logger.info("Extracting role from token");
         return jwtUtil.extractRole(token);
