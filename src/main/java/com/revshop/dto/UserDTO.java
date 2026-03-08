@@ -12,8 +12,15 @@ public class UserDTO {
     private String lastName;
     private String email;
     private String phone;
+    private String businessName; // ← ADDED
     private User.Role role;
     private boolean enabled;
     private boolean blocked;
     private LocalDateTime createdAt;
+
+    public String getInitials() {
+        String f = (firstName != null && !firstName.isEmpty()) ? String.valueOf(firstName.charAt(0)) : "";
+        String l = (lastName  != null && !lastName.isEmpty())  ? String.valueOf(lastName.charAt(0))  : "";
+        return (f + l).toUpperCase();
+    }
 }
