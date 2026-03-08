@@ -29,7 +29,7 @@
 
 <br/>
 
-**[📖 Diagrams & Architecture](./docs/DIAGRAMS.html)** · **[🐛 Report a Bug](../../issues)** · **[💡 Request a Feature](../../issues)**
+**[📖 Diagrams & Architecture](https://revshop-erd.vercel.app/#arch)** · **[🐛 Report a Bug](../../issues)** · **[💡 Request a Feature](../../issues)**
 
 </div>
 
