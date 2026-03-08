@@ -15,13 +15,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     long countByBuyer(User buyer);
     List<Order> findByStatus(Order.OrderStatus status);
 
+    // Added: count orders by status — used for dashboard pending/delivered/cancelled counts
+    long countByStatus(Order.OrderStatus status);
+
     @Query("SELECT COUNT(o) FROM Order o")
     Long countTotalOrders();
 
     @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.status = 'DELIVERED'")
     Double sumTotalRevenue();
-
-    // ── Use these wherever order details / items are rendered in templates ──
 
     @Query("""
         SELECT DISTINCT o FROM Order o
@@ -55,4 +56,15 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         ORDER BY o.orderedAt DESC
         """)
     List<Order> findAllWithDetails();
+
+    @Query("""
+        SELECT COUNT(o) > 0 FROM Order o
+        JOIN o.orderItems oi
+        WHERE o.buyer = :buyer
+        AND oi.product.id = :productId
+        AND o.status = 'DELIVERED'
+        """)
+    boolean existsByBuyerAndProductDelivered(
+            @Param("buyer") User buyer,
+            @Param("productId") Long productId);
 }

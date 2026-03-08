@@ -12,31 +12,36 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    // ── raw finders kept for internal use (no lazy risk if used inside @Transactional) ──
+    // ── raw finders ──
 
     List<Product> findByStockQuantityLessThan(int threshold);
     List<Product> findByStockQuantityEquals(int quantity);
 
-    @Query("SELECT COUNT(p) FROM Product p WHERE p.seller = :seller AND p.active = true")
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.seller = :seller AND p.active = true AND p.deleted = false")
     Long countActiveProductsBySeller(@Param("seller") User seller);
 
-    // ── JOIN FETCH variants — use these everywhere entities are passed to templates ──
+    // ── JOIN FETCH variants ──
 
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category LEFT JOIN FETCH p.seller WHERE p.id = :id")
     Optional<Product> findByIdWithDetails(@Param("id") Long id);
 
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category LEFT JOIN FETCH p.seller WHERE p.active = true ORDER BY p.createdAt DESC")
+    // Customer-facing: only active, non-deleted products
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category LEFT JOIN FETCH p.seller WHERE p.active = true AND p.deleted = false ORDER BY p.createdAt DESC")
     List<Product> findAllActiveWithDetails();
 
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category LEFT JOIN FETCH p.seller WHERE p.seller = :seller")
-    List<Product> findBySellerWithDetails(@Param("seller") User seller);
+    // Seller dashboard: all non-deleted products (active + hidden), excludes deleted
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category LEFT JOIN FETCH p.seller WHERE p.seller = :seller AND p.deleted = false ORDER BY p.createdAt DESC")
+    List<Product> findBySellerNotDeletedWithDetails(@Param("seller") User seller);
 
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category LEFT JOIN FETCH p.seller WHERE p.seller = :seller AND p.active = true")
+    // Kept for reference — returns only active products for a seller
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category LEFT JOIN FETCH p.seller WHERE p.seller = :seller AND p.active = true AND p.deleted = false")
     List<Product> findBySellerActiveTrueWithDetails(@Param("seller") User seller);
 
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category LEFT JOIN FETCH p.seller WHERE LOWER(p.name) LIKE LOWER(CONCAT('%',:name,'%')) AND p.active = true")
+    // Customer-facing search: only active, non-deleted
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category LEFT JOIN FETCH p.seller WHERE LOWER(p.name) LIKE LOWER(CONCAT('%',:name,'%')) AND p.active = true AND p.deleted = false")
     List<Product> findByNameContainingIgnoreCaseAndActiveTrueWithDetails(@Param("name") String name);
 
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category LEFT JOIN FETCH p.seller WHERE p.category.id = :categoryId AND p.active = true")
+    // Customer-facing category filter: only active, non-deleted
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category LEFT JOIN FETCH p.seller WHERE p.category.id = :categoryId AND p.active = true AND p.deleted = false")
     List<Product> findByCategoryIdAndActiveTrueWithDetails(@Param("categoryId") Long categoryId);
 }

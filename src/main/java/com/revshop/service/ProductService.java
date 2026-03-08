@@ -25,17 +25,10 @@ public class ProductService {
 
     private static final Logger logger = LogManager.getLogger(ProductService.class);
 
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ReviewRepository reviewRepository;
+    @Autowired private ProductRepository productRepository;
+    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private ReviewRepository reviewRepository;
 
     // ───────────────── ADD PRODUCT ─────────────────
     @Transactional
@@ -52,8 +45,9 @@ public class ProductService {
                 .mrp(dto.getMrp())
                 .discountPercent(dto.getDiscountPercent())
                 .stockQuantity(dto.getStockQuantity())
-                .imageUrl(dto.getImageUrl())   // already a clean web path from controller
+                .imageUrl(dto.getImageUrl())
                 .active(true)
+                .deleted(false)
                 .category(category)
                 .seller(seller)
                 .build();
@@ -81,7 +75,6 @@ public class ProductService {
         product.setStockQuantity(dto.getStockQuantity());
         product.setCategory(category);
 
-        // Only update image if a new one was uploaded (dto.imageUrl will be set by controller)
         if (dto.getImageUrl() != null && !dto.getImageUrl().isBlank()) {
             product.setImageUrl(dto.getImageUrl());
         }
@@ -91,7 +84,10 @@ public class ProductService {
         return updated;
     }
 
-    // ───────────────── DELETE PRODUCT (SOFT DELETE) ─────────────────
+    // ───────────────── DELETE PRODUCT (SOFT DELETE with deleted flag) ─────────────────
+    // Cannot hard delete because order_items has a FK reference to products.
+    // We mark deleted=true AND active=false so it disappears from seller list
+    // and from all customer-facing queries, but order history stays intact.
     @Transactional
     public void deleteProduct(Long productId, String sellerEmail) {
         logger.info("DeleteProduct called for productId: {}", productId);
@@ -99,12 +95,13 @@ public class ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
+        product.setDeleted(true);
         product.setActive(false);
         productRepository.save(product);
-        logger.info("Product soft deleted: {}", productId);
+        logger.info("Product soft-deleted (deleted=true, active=false): {}", productId);
     }
 
-    // ───────────────── GET ALL PRODUCTS ─────────────────
+    // ───────────────── GET ALL ACTIVE PRODUCTS (customer-facing) ─────────────────
     public List<ProductDTO> getAllActiveProducts() {
         logger.info("GetAllActiveProducts called");
 
@@ -115,12 +112,14 @@ public class ProductService {
     }
 
     // ───────────────── GET PRODUCTS BY SELLER ─────────────────
+    // Returns all NON-DELETED products (active + hidden) so seller can manage visibility.
+    // Deleted products are excluded — they are gone from seller's view permanently.
     public List<ProductDTO> getProductsBySeller(String sellerEmail) {
         logger.info("GetProductsBySeller called for: {}", sellerEmail);
 
         User seller = getUserByEmail(sellerEmail);
 
-        return productRepository.findBySellerActiveTrueWithDetails(seller)
+        return productRepository.findBySellerNotDeletedWithDetails(seller)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -166,7 +165,7 @@ public class ProductService {
 
         product.setActive(!product.isActive());
         productRepository.save(product);
-        logger.info("Visibility toggled: {}", product.isActive());
+        logger.info("Visibility toggled to: {}", product.isActive());
     }
 
     // ───────────────── REDUCE STOCK ─────────────────
@@ -198,7 +197,6 @@ public class ProductService {
         dto.setStockQuantity(product.getStockQuantity());
         dto.setActive(product.isActive());
 
-
         String raw = product.getImageUrl();
         if (raw != null && !raw.isBlank()) {
             String filename = Paths.get(raw).getFileName().toString();
@@ -207,7 +205,6 @@ public class ProductService {
             dto.setImageUrl(null);
         }
 
-        // SAFE: category and seller are always JOIN FETCHed by the new query methods
         if (product.getCategory() != null) {
             dto.setCategoryId(product.getCategory().getId());
             dto.setCategoryName(product.getCategory().getName());

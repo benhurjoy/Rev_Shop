@@ -31,6 +31,9 @@ public class User {
     @Column(nullable = false)
     private String phone;
 
+    @Column(name = "business_name")  // ← ADDED (nullable by default)
+    private String businessName;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;

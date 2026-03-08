@@ -27,4 +27,7 @@ public class RegisterDTO {
 
     @NotNull(message = "Role is required")
     private User.Role role;
+
+    // ← ADDED: optional for buyers, required for sellers
+    private String businessName;
 }
