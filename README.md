@@ -7,7 +7,7 @@
 [![Java](https://img.shields.io/badge/Java_17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/17/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot_3.2-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Spring Security](https://img.shields.io/badge/Spring_Security_6-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white)](https://spring.io/projects/spring-security)
-[![MySQL](https://img.shields.io/badge/MySQL_8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://mysql.com)
+[![Oracle](https://img.shields.io/badge/Oracle_23.0-4479A1?style=for-the-badge&logo=oracle&logoColor=white)](https://Oracle.com)
 [![Thymeleaf](https://img.shields.io/badge/Thymeleaf_3.1-005F0F?style=for-the-badge&logo=thymeleaf&logoColor=white)](https://thymeleaf.org)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap_5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com)
 [![Razorpay](https://img.shields.io/badge/Razorpay-02042B?style=for-the-badge&logo=razorpay&logoColor=3395FF)](https://razorpay.com)
@@ -41,21 +41,21 @@
 <summary>Expand full table of contents</summary>
 
 1. [Project Overview](#-project-overview)
-2. [Team & Module Ownership](#-team--module-ownership)
-3. [System Architecture](#-system-architecture)
-4. [Entity Relationship Diagram](#-entity-relationship-diagram)
-5. [User Flow Diagrams](#-user-flow-diagrams)
-6. [Features Deep Dive](#-features-deep-dive)
-7. [Tech Stack](#-tech-stack)
-8. [Project Structure](#-project-structure)
-9. [Getting Started](#-getting-started)
-10. [Environment Variables](#-environment-variables)
-11. [API / Route Reference](#-api--route-reference)
-12. [Database Schema Notes](#-database-schema-notes)
-13. [Testing](#-testing)
-14. [Git Workflow](#-git-workflow)
-15. [UI Design System](#-ui-design-system)
-16. [Troubleshooting](#-troubleshooting)
+   2. [Team & Module Ownership](#-team--module-ownership)
+   3. [System Architecture](#-system-architecture)
+   4. [Entity Relationship Diagram](#-entity-relationship-diagram)
+   5. [User Flow Diagrams](#-user-flow-diagrams)
+   6. [Features Deep Dive](#-features-deep-dive)
+   7. [Tech Stack](#-tech-stack)
+   8. [Project Structure](#-project-structure)
+   9. [Getting Started](#-getting-started)
+   10. [Environment Variables](#-environment-variables)
+   11. [API / Route Reference](#-api--route-reference)
+   12. [Database Schema Notes](#-database-schema-notes)
+   13. [Testing](#-testing)
+   14. [Git Workflow](#-git-workflow)
+   15. [UI Design System](#-ui-design-system)
+   16. [Troubleshooting](#-troubleshooting)
 
 </details>
 
@@ -1150,10 +1150,10 @@ main        ← tagged releases only (v1.0.0, v1.1.0 ...)
 ### Rules
 
 - **Never push directly to `main` or `develop`**
-- Every change goes through a Pull Request
-- Pull Requests must target `develop`
-- Benhur reviews and merges all PRs (resolves conflicts)
-- Delete your feature branch after merge
+  - Every change goes through a Pull Request
+  - Pull Requests must target `develop`
+  - Benhur reviews and merges all PRs (resolves conflicts)
+  - Delete your feature branch after merge
 
 ### Commit Message Convention
 
@@ -1287,10 +1287,10 @@ public List<CartItemDTO> getCartItems(String email) {
 
 **Steps:**
 1. Go to [myaccount.google.com](https://myaccount.google.com)
-2. Security → 2-Step Verification → enable it
-3. Security → App Passwords → generate for "Mail"
-4. Copy the 16-character code (remove spaces) into `MAIL_PASSWORD` in `.env`
-5. Ensure `MAIL_USERNAME` is the same Gmail address
+   2. Security → 2-Step Verification → enable it
+   3. Security → App Passwords → generate for "Mail"
+   4. Copy the 16-character code (remove spaces) into `MAIL_PASSWORD` in `.env`
+   5. Ensure `MAIL_USERNAME` is the same Gmail address
 
 </details>
 
@@ -1301,8 +1301,8 @@ public List<CartItemDTO> getCartItems(String email) {
 
 **Fix:**
 1. Copy the secret directly from Razorpay Dashboard → Settings → API Keys
-2. Ensure no leading/trailing spaces in the `.env` value
-3. Make sure you're using **test** keys (`rzp_test_*`) for development — live keys need SSL
+   2. Ensure no leading/trailing spaces in the `.env` value
+   3. Make sure you're using **test** keys (`rzp_test_*`) for development — live keys need SSL
 
 </details>
 
@@ -1323,7 +1323,7 @@ Common missing files: `DashboardDTO.java`, `CheckoutDTO.java`, `OrderItemDTO.jav
 
 **Fix:**
 1. Ensure `uploads/products/` directory exists in project root
-2. Verify `WebConfig.java` has:
+   2. Verify `WebConfig.java` has:
 ```java
 registry.addResourceHandler("/uploads/**")
         .addResourceLocations("file:uploads/");

@@ -25,6 +25,8 @@
 		<dotenv.version>3.0.0</dotenv.version>
 		<razorpay.version>1.4.3</razorpay.version>
 		<log4j2.version>2.21.1</log4j2.version>
+		<!-- ✅ ADDED: Oracle JDBC driver version -->
+		<oracle.jdbc.version>23.3.0.23.09</oracle.jdbc.version>
 	</properties>
 
 	<dependencies>
@@ -76,10 +78,18 @@
 			<artifactId>spring-boot-starter-log4j2</artifactId>
 		</dependency>
 
-		<!-- MySQL -->
+		<!-- ✅ CHANGED: Replaced MySQL connector with Oracle JDBC driver -->
+		<!-- REMOVED:
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		-->
+		<dependency>
+			<groupId>com.oracle.database.jdbc</groupId>
+			<artifactId>ojdbc11</artifactId>
+			<version>${oracle.jdbc.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -158,7 +168,11 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- H2 for integration tests -->
+
+		<!-- ⚠️ NOTE: H2 is used for integration tests.
+		     H2 has an Oracle-compatibility mode — update your test config if needed:
+		     spring.datasource.url=jdbc:h2:mem:testdb;MODE=Oracle
+		     See: https://h2database.com/html/features.html#compatibility -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
@@ -174,15 +188,6 @@
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
 		</dependency>
-<!--		<dependency>-->
-<!--			<groupId>io.github.cdimascio</groupId>-->
-<!--			<artifactId>dotenv-java</artifactId>-->
-<!--			<version>3.0.0</version>-->
-<!--		</dependency>-->
-<!--		<dependency>-->
-<!--			<groupId>org.thymeleaf.extras</groupId>-->
-<!--			<artifactId>thymeleaf-extras-springsecurity6</artifactId>-->
-<!--		</dependency>-->
 	</dependencies>
 
 	<build>
