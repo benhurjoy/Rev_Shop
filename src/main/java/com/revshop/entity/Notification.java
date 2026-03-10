@@ -11,8 +11,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Notification {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "notifications_seq")
+    @SequenceGenerator(name = "notifications_seq", sequenceName = "notifications_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -29,6 +31,8 @@ public class Notification {
     @Builder.Default
     private NotificationType type = NotificationType.GENERAL;
 
+    // Oracle: boolean mapped to NUMBER(1,0) by Hibernate OracleDialect
+    // No columnDefinition needed — Hibernate handles it automatically
     @Column(nullable = false)
     @Builder.Default
     private boolean isRead = false;
@@ -49,5 +53,4 @@ public class Notification {
         ACCOUNT_BLOCKED,
         GENERAL
     }
-
 }

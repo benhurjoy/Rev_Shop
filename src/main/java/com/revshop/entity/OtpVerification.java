@@ -3,6 +3,7 @@ package com.revshop.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "otp_verifications")
 @Data
@@ -10,8 +11,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class OtpVerification {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "otp_verifications_seq")
+    @SequenceGenerator(name = "otp_verifications_seq", sequenceName = "otp_verifications_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false)
@@ -23,6 +26,7 @@ public class OtpVerification {
     @Column(nullable = false)
     private LocalDateTime expiresAt;
 
+    // Oracle: boolean mapped to NUMBER(1,0) by Hibernate — no changes needed
     @Column(nullable = false)
     @Builder.Default
     private boolean used = false;
@@ -38,6 +42,4 @@ public class OtpVerification {
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);
     }
-
-
 }

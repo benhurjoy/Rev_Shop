@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_seq")
+    @SequenceGenerator(name = "users_seq", sequenceName = "users_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false)
@@ -31,13 +32,15 @@ public class User {
     @Column(nullable = false)
     private String phone;
 
-    @Column(name = "business_name")  // ← ADDED (nullable by default)
+    @Column(name = "business_name")
     private String businessName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
+    // Oracle has no native BOOLEAN — Hibernate maps Java boolean to NUMBER(1)
+    // Using @Column without columnDefinition lets Hibernate handle it via dialect
     @Column(nullable = false)
     @Builder.Default
     private boolean enabled = false;

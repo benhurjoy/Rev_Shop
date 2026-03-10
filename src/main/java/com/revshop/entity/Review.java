@@ -5,18 +5,21 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews",
-        uniqueConstraints = @UniqueConstraint(
-                columnNames = {"product_id", "buyer_id"}
-        ))
+@Table(
+        name = "reviews",
+        indexes = {
+                @Index(name = "uk_review_product_buyer", columnList = "product_id, buyer_id", unique = true)
+        }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 public class Review {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "reviews_seq")
+    @SequenceGenerator(name = "reviews_seq", sequenceName = "reviews_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,10 +34,11 @@ public class Review {
     @Column(nullable = false)
     private Integer rating;
 
-    @Column(length = 1000)
+    // Renamed column to avoid Oracle reserved keyword "COMMENT"
+    @Column(name = "review_comment", length = 1000)
     private String comment;
 
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist

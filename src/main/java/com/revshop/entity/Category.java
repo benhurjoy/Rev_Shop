@@ -15,12 +15,14 @@ import java.util.List;
 public class Category {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "categories_seq")
+    @SequenceGenerator(name = "categories_seq", sequenceName = "categories_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false, unique = true)
     private String name;
 
+    // Oracle VARCHAR2 max is 4000 chars — fine for description
     private String description;
 
     @Column(updatable = false)
