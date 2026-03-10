@@ -14,7 +14,8 @@ import java.util.List;
 public class Wishlist {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "wishlists_seq")
+    @SequenceGenerator(name = "wishlists_seq", sequenceName = "wishlists_seq", allocationSize = 1)
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)

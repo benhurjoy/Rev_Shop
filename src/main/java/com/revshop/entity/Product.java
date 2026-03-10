@@ -14,12 +14,14 @@ import java.time.LocalDateTime;
 public class Product {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "products_seq")
+    @SequenceGenerator(name = "products_seq", sequenceName = "products_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false)
     private String name;
 
+    // Oracle VARCHAR2 max is 4000 chars — length=2000 is safe
     @Column(length = 2000)
     private String description;
 
@@ -39,6 +41,7 @@ public class Product {
 
     private String imageUrl;
 
+    // Oracle: boolean -> NUMBER(1,0). Removed MySQL-specific columnDefinition.
     @Column(nullable = false)
     @Builder.Default
     private boolean active = true;
@@ -56,7 +59,10 @@ public class Product {
 
     private LocalDateTime updatedAt;
 
-    @Column(nullable = false, columnDefinition = "boolean default false")
+    // !! CHANGED: Removed columnDefinition = "boolean default false"
+    // Oracle does not support "boolean" as a column type.
+    // Hibernate will map this to NUMBER(1,0) DEFAULT 0 via OracleDialect.
+    @Column(nullable = false)
     @Builder.Default
     private boolean deleted = false;
 
@@ -71,7 +77,6 @@ public class Product {
         updatedAt = LocalDateTime.now();
     }
 
-    // Helper method so templates can use product.categoryName safely
     public String getCategoryName() {
         return category != null ? category.getName() : "";
     }
