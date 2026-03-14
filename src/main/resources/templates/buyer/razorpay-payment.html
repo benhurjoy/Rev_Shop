@@ -26,138 +26,37 @@
                 radial-gradient(ellipse at 80% 80%, rgba(56,189,248,0.06) 0%, transparent 50%);
         }
         h1,h2,h3{font-family:'Playfair Display',serif;}
-
-        /* ── Brand ── */
-        .brand{
-            font-family:'Playfair Display',serif;font-size:1.9rem;
-            font-weight:800;color:var(--text-light);
-            margin-bottom:1.5rem;text-align:center;
-        }
+        .brand{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:800;color:var(--text-light);margin-bottom:1.5rem;text-align:center;}
         .brand span{color:var(--orange);}
-
-        /* ── Card ── */
-        .payment-card{
-            background:var(--card-bg);
-            border:1px solid var(--border);
-            border-radius:28px;padding:2.5rem 2rem;
-            width:100%;max-width:460px;
-            box-shadow:0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,107,53,0.08);
-            position:relative;overflow:hidden;
-        }
-        .payment-card::before{
-            content:'';position:absolute;top:-80px;right:-80px;
-            width:200px;height:200px;border-radius:50%;
-            background:radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 70%);
-        }
-
-        /* ── Icon ── */
-        .pay-icon{
-            width:72px;height:72px;border-radius:50%;
-            background:linear-gradient(135deg, rgba(56,189,248,0.15), rgba(56,189,248,0.05));
-            border:1.5px solid rgba(56,189,248,0.3);
-            display:flex;align-items:center;justify-content:center;
-            font-size:2rem;color:var(--cyan);
-            margin:0 auto 1.2rem;
-            box-shadow:0 0 30px var(--cyan-glow);
-        }
-
-        /* ── Heading ── */
-        .pay-heading{
-            text-align:center;margin-bottom:0.3rem;
-            font-size:1.25rem;font-weight:700;color:var(--text-light);
-        }
-        .pay-sub{
-            text-align:center;color:var(--text-muted);
-            font-size:0.85rem;margin-bottom:1.5rem;
-        }
-
-        /* ── Amount ── */
-        .amount-block{
-            background:linear-gradient(135deg,rgba(255,107,53,0.08),rgba(255,107,53,0.04));
-            border:1px solid rgba(255,107,53,0.2);border-radius:16px;
-            padding:1.2rem;text-align:center;margin-bottom:1.5rem;
-        }
+        .payment-card{background:var(--card-bg);border:1px solid var(--border);border-radius:28px;padding:2.5rem 2rem;width:100%;max-width:460px;box-shadow:0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,107,53,0.08);position:relative;overflow:hidden;}
+        .payment-card::before{content:'';position:absolute;top:-80px;right:-80px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 70%);}
+        .pay-icon{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg, rgba(56,189,248,0.15), rgba(56,189,248,0.05));border:1.5px solid rgba(56,189,248,0.3);display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--cyan);margin:0 auto 1.2rem;box-shadow:0 0 30px var(--cyan-glow);}
+        .pay-heading{text-align:center;margin-bottom:0.3rem;font-size:1.25rem;font-weight:700;color:var(--text-light);}
+        .pay-sub{text-align:center;color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem;}
+        .amount-block{background:linear-gradient(135deg,rgba(255,107,53,0.08),rgba(255,107,53,0.04));border:1px solid rgba(255,107,53,0.2);border-radius:16px;padding:1.2rem;text-align:center;margin-bottom:1.5rem;}
         .amount-label{font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.3rem;}
-        .amount-value{
-            font-family:'Playfair Display',serif;font-size:2.8rem;
-            font-weight:800;color:var(--orange);line-height:1;
-        }
-
-        /* ── Order details ── */
-        .order-details{
-            background:rgba(255,255,255,0.03);
-            border:1px solid rgba(255,255,255,0.06);
-            border-radius:14px;padding:1rem 1.1rem;margin-bottom:1.5rem;
-        }
-        .detail-row{
-            display:flex;justify-content:space-between;align-items:center;
-            padding:0.45rem 0;font-size:0.87rem;
-            border-bottom:1px solid rgba(255,255,255,0.04);
-        }
+        .amount-value{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:800;color:var(--orange);line-height:1;}
+        .order-details{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:1rem 1.1rem;margin-bottom:1.5rem;}
+        .detail-row{display:flex;justify-content:space-between;align-items:center;padding:0.45rem 0;font-size:0.87rem;border-bottom:1px solid rgba(255,255,255,0.04);}
         .detail-row:last-child{border-bottom:none;}
         .detail-row .label{color:var(--text-muted);}
         .detail-row .value{font-weight:600;color:var(--text-light);}
         .value-cyan{color:var(--cyan)!important;}
         .value-orange{color:var(--orange)!important;}
-
-        /* ── Pay button ── */
-        .btn-pay{
-            background:linear-gradient(135deg,#0ea5e9,#0284c7);
-            color:white;border:none;border-radius:14px;
-            padding:1rem 2rem;font-weight:700;font-size:1rem;
-            width:100%;cursor:pointer;transition:all 0.3s;
-            box-shadow:0 6px 24px rgba(14,165,233,0.35);
-            display:flex;align-items:center;justify-content:center;gap:0.6rem;
-            position:relative;overflow:hidden;
-        }
-        .btn-pay::after{
-            content:'';position:absolute;inset:0;
-            background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);
-            opacity:0;transition:opacity 0.3s;
-        }
+        .btn-pay{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white;border:none;border-radius:14px;padding:1rem 2rem;font-weight:700;font-size:1rem;width:100%;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 24px rgba(14,165,233,0.35);display:flex;align-items:center;justify-content:center;gap:0.6rem;position:relative;overflow:hidden;}
+        .btn-pay::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);opacity:0;transition:opacity 0.3s;}
         .btn-pay:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(14,165,233,0.5);}
         .btn-pay:hover::after{opacity:1;}
         .btn-pay:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
-
-        /* ── Back button ── */
-        .btn-back{
-            background:transparent;
-            border:1.5px solid rgba(255,255,255,0.1);
-            color:var(--text-muted);border-radius:12px;
-            padding:0.7rem 1.5rem;cursor:pointer;
-            transition:all 0.3s;margin-top:0.75rem;width:100%;
-            font-size:0.9rem;display:flex;align-items:center;justify-content:center;gap:0.5rem;
-        }
+        /* FIX: btn-back is now an <a> tag styled as a button so it's safe to click */
+        .btn-back{background:transparent;border:1.5px solid rgba(255,255,255,0.1);color:var(--text-muted);border-radius:12px;padding:0.7rem 1.5rem;transition:all 0.3s;margin-top:0.75rem;width:100%;font-size:0.9rem;display:flex;align-items:center;justify-content:center;gap:0.5rem;text-decoration:none;}
         .btn-back:hover{border-color:var(--border);color:var(--text-light);}
-
-        /* ── Loading state ── */
-        .loading-msg{
-            display:none;text-align:center;
-            color:var(--cyan);font-size:0.85rem;
-            margin-top:0.8rem;
-            animation:pulse 1.5s ease-in-out infinite;
-        }
+        .loading-msg{display:none;text-align:center;color:var(--cyan);font-size:0.85rem;margin-top:0.8rem;animation:pulse 1.5s ease-in-out infinite;}
         @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
-
-        /* ── Security badge ── */
-        .security-row{
-            display:flex;align-items:center;justify-content:center;
-            gap:0.5rem;margin-top:1.2rem;
-            color:var(--text-muted);font-size:0.76rem;
-        }
+        .security-row{display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-top:1.2rem;color:var(--text-muted);font-size:0.76rem;}
         .security-row i{color:var(--orange);}
-
-        /* ── Divider ── */
         .rev-divider{border:none;border-top:1px solid rgba(255,255,255,0.06);margin:1.2rem 0;}
-
-        /* ── Razorpay badge ── */
-        .rzp-badge{
-            display:flex;align-items:center;justify-content:center;gap:0.5rem;
-            padding:0.5rem 1rem;border-radius:8px;
-            background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);
-            font-size:0.78rem;color:var(--cyan);font-weight:600;
-            margin-bottom:1.5rem;
-        }
+        .rzp-badge{display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.5rem 1rem;border-radius:8px;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);font-size:0.78rem;color:var(--cyan);font-weight:600;margin-bottom:1.5rem;}
     </style>
 </head>
 <body>
@@ -166,7 +65,6 @@
 
 <div class="payment-card">
 
-    <!-- Icon -->
     <div class="pay-icon">
         <i class="bi bi-credit-card-2-front-fill"></i>
     </div>
@@ -174,31 +72,28 @@
     <h2 class="pay-heading">Complete Your Payment</h2>
     <p class="pay-sub">Review your order and pay securely</p>
 
-    <!-- Razorpay badge -->
     <div class="rzp-badge">
         <i class="bi bi-shield-check"></i>
         Secured by Razorpay
     </div>
 
-    <!-- Amount -->
+    <!-- FIX: was ${total} (subtotal only). Now ${grandTotal} = subtotal − coupon + GST -->
     <div class="amount-block">
-        <div class="amount-label">Total Payable</div>
-        <div class="amount-value" th:text="'₹' + ${total}">₹0.00</div>
+        <div class="amount-label">Total Payable (incl. GST)</div>
+        <div class="amount-value"
+             th:text="'₹' + ${#numbers.formatDecimal(grandTotal, 1, 2)}">₹0.00</div>
     </div>
 
-    <!-- Order Details -->
     <div class="order-details">
-        <div class="detail-row">
-            <span class="label"><i class="bi bi-hash me-1"></i>Order ID</span>
-            <span class="value" th:text="'#' + ${order.id}">#000</span>
-        </div>
         <div class="detail-row">
             <span class="label"><i class="bi bi-wallet2 me-1"></i>Payment via</span>
             <span class="value value-cyan">Razorpay</span>
         </div>
         <div class="detail-row">
             <span class="label"><i class="bi bi-currency-rupee me-1"></i>Amount</span>
-            <span class="value value-orange" th:text="'₹' + ${total}">₹0.00</span>
+            <!-- FIX: same fix here -->
+            <span class="value value-orange"
+                  th:text="'₹' + ${#numbers.formatDecimal(grandTotal, 1, 2)}">₹0.00</span>
         </div>
         <div class="detail-row">
             <span class="label"><i class="bi bi-person me-1"></i>Account</span>
@@ -207,32 +102,34 @@
         </div>
     </div>
 
-    <!-- Pay Button -->
     <button class="btn-pay" id="payBtn" onclick="openRazorpay()">
         <i class="bi bi-lock-fill"></i>
         Pay Now
     </button>
 
-    <!-- Loading -->
     <div class="loading-msg" id="loadingMsg">
         <i class="bi bi-arrow-repeat me-2"></i>Opening payment gateway...
     </div>
 
-    <!-- Back -->
-    <button class="btn-back" onclick="history.back()">
-        <i class="bi bi-arrow-left"></i>Go Back
-    </button>
+    <!--
+        FIX (back-button bug): was <button onclick="history.back()">
+        Using history.back() on the old flow would leave an already-saved
+        PENDING order in the DB. Now this is a plain link to /buyer/checkout.
+        Since the DB order is only created in the callback (after payment),
+        going back here is completely safe — nothing was written to the DB yet.
+    -->
+    <a th:href="@{/buyer/checkout}" class="btn-back">
+        <i class="bi bi-arrow-left"></i>Go Back &amp; Edit Order
+    </a>
 
     <hr class="rev-divider"/>
 
-    <!-- Security footer -->
     <div class="security-row">
         <i class="bi bi-shield-lock-fill"></i>
         256-bit SSL encrypted · Your data is safe
     </div>
 </div>
 
-<!-- Razorpay Callback Form -->
 <form id="callbackForm" th:action="@{/buyer/payment/callback}" method="post" style="display:none;">
     <input type="hidden" name="razorpay_order_id"  id="rzpOrderId"/>
     <input type="hidden" name="razorpay_payment_id" id="rzpPaymentId"/>
@@ -243,7 +140,8 @@
 <script th:inline="javascript">
     const rzpOrderId  = /*[[${razorpayOrderId}]]*/ '';
     const rzpKeyId    = /*[[${razorpayKeyId}]]*/ '';
-    const totalAmount = /*[[${total}]]*/ 0;
+    // FIX: was totalAmount from ${total}. Now uses ${grandTotal} (coupon + GST applied)
+    const totalAmount = /*[[${grandTotal}]]*/ 0;
     const userEmail   = /*[[${email}]]*/ '';
 
     function openRazorpay() {
@@ -253,14 +151,14 @@
         msg.style.display = 'block';
 
         const options = {
-            key: rzpKeyId,
-            amount: Math.round(parseFloat(totalAmount) * 100),
+            key:      rzpKeyId,
+            amount:   Math.round(parseFloat(totalAmount) * 100),  // paise
             currency: 'INR',
-            name: 'RevShop',
+            name:     'RevShop',
             description: 'Order Payment',
             order_id: rzpOrderId,
-            prefill: { email: userEmail },
-            theme: { color: '#FF6B35' },
+            prefill:  { email: userEmail },
+            theme:    { color: '#FF6B35' },
             handler: function(response) {
                 document.getElementById('rzpOrderId').value   = response.razorpay_order_id;
                 document.getElementById('rzpPaymentId').value = response.razorpay_payment_id;
