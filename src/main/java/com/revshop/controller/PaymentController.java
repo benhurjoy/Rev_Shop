@@ -4,9 +4,11 @@ import com.revshop.dto.CheckoutDTO;
 import com.revshop.entity.Order;
 import com.revshop.exception.PaymentException;
 import com.revshop.service.CartService;
+import com.revshop.service.CouponService;
 import com.revshop.service.NotificationService;
 import com.revshop.service.OrderService;
 import com.revshop.service.PaymentService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,136 +33,227 @@ public class PaymentController {
 
     private static final Logger logger = LogManager.getLogger(PaymentController.class);
 
-    @Autowired
-    private OrderService orderService;
-
-    @Autowired
-    private PaymentService paymentService;
-
-    @Autowired
-    private CartService cartService;
-
-    @Autowired
-    private NotificationService notificationService;
+    @Autowired private OrderService orderService;
+    @Autowired private PaymentService paymentService;
+    @Autowired private CartService cartService;
+    @Autowired private NotificationService notificationService;
+    @Autowired private CouponService couponService;
 
     @Value("${razorpay.key.id:test_key}")
     private String razorpayKeyId;
 
-    // ── Checkout Page ─────────────────────────────────────────
+    // ── Helper: build checkout model ──────────────────────────
+    private void populateCheckoutModel(Model model, String email,
+                                       BigDecimal discount, String appliedCoupon) {
+        BigDecimal total          = cartService.calculateTotal(email);
+        BigDecimal safeDiscount   = (discount != null ? discount : BigDecimal.ZERO);
+        BigDecimal discountedTotal = total.subtract(safeDiscount).max(BigDecimal.ZERO);
+        BigDecimal gst            = discountedTotal.multiply(new BigDecimal("0.18"))
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal grandTotal     = discountedTotal.add(gst).setScale(2, RoundingMode.HALF_UP);
+
+        model.addAttribute("cartItems",        cartService.getCartItems(email));
+        model.addAttribute("total",            total);
+        model.addAttribute("discount",         safeDiscount);
+        model.addAttribute("gst",              gst);
+        model.addAttribute("grandTotal",       grandTotal);
+        model.addAttribute("appliedCoupon",    appliedCoupon != null ? appliedCoupon : "");
+        model.addAttribute("cartCount",        cartService.getCartItemCount(email));
+        model.addAttribute("unreadCount",      notificationService.getUnreadCount(email));
+        // Show only active, non-expired, within-usage-limit coupons to the buyer
+        model.addAttribute("availableCoupons", couponService.getAvailableCoupons(total));
+    }
+
+    // ── Checkout GET ──────────────────────────────────────────
     @GetMapping("/checkout")
     public String showCheckout(
             @AuthenticationPrincipal UserDetails userDetails,
+            HttpSession session,
             Model model) {
 
         String email = userDetails.getUsername();
-        logger.info("Checkout page accessed by: {}", email);
-
         if (cartService.getCartItems(email).isEmpty()) {
             return "redirect:/buyer/cart";
         }
 
-        BigDecimal total = cartService.calculateTotal(email);
-
-        // FIX: pre-compute gst and grandTotal here so the template can use
-        // ${gst} and ${grandTotal} instead of blocked new java.math.BigDecimal() expressions
-        BigDecimal gst = total.multiply(new BigDecimal("0.18")).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal grandTotal = total.add(gst).setScale(2, RoundingMode.HALF_UP);
+        String appliedCoupon = (String)     session.getAttribute("appliedCoupon");
+        BigDecimal discount  = (BigDecimal) session.getAttribute("couponDiscount");
 
         model.addAttribute("checkoutDTO", new CheckoutDTO());
-        model.addAttribute("cartItems", cartService.getCartItems(email));
-        model.addAttribute("total", total);
-        model.addAttribute("gst", gst);
-        model.addAttribute("grandTotal", grandTotal);
-        model.addAttribute("cartCount", cartService.getCartItemCount(email));
-        model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
+        populateCheckoutModel(model, email, discount, appliedCoupon);
         return "buyer/checkout";
     }
 
+    // ── Apply Coupon ──────────────────────────────────────────
+    @PostMapping("/checkout/apply-coupon")
+    public String applyCoupon(
+            @RequestParam String couponCode,
+            @AuthenticationPrincipal UserDetails userDetails,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        String email = userDetails.getUsername();
+        try {
+            BigDecimal total    = cartService.calculateTotal(email);
+            BigDecimal discount = couponService.applyAndCalculateDiscount(couponCode, total);
+            session.setAttribute("appliedCoupon",  couponCode.toUpperCase().trim());
+            session.setAttribute("couponDiscount", discount);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Coupon applied! You save ₹" + discount);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/buyer/checkout";
+    }
+
+    // ── Remove Coupon ─────────────────────────────────────────
+    @PostMapping("/checkout/remove-coupon")
+    public String removeCoupon(HttpSession session, RedirectAttributes redirectAttributes) {
+        session.removeAttribute("appliedCoupon");
+        session.removeAttribute("couponDiscount");
+        redirectAttributes.addFlashAttribute("successMessage", "Coupon removed.");
+        return "redirect:/buyer/checkout";
+    }
+
     // ── Place Order ───────────────────────────────────────────
+    // FIX (back-button bug): For RAZORPAY, do NOT save the order here.
+    // Save a "pending checkout" in session and only create the order
+    // after Razorpay confirms payment in the callback.
     @PostMapping("/checkout")
     public String placeOrder(
             @Valid @ModelAttribute CheckoutDTO checkoutDTO,
             BindingResult result,
             @AuthenticationPrincipal UserDetails userDetails,
+            HttpSession session,
             RedirectAttributes redirectAttributes,
             Model model) {
 
         String email = userDetails.getUsername();
 
+        // Always read discount from session (tamper-proof)
+        String appliedCoupon = (String)     session.getAttribute("appliedCoupon");
+        BigDecimal discount  = (BigDecimal) session.getAttribute("couponDiscount");
+        if (discount == null) discount = BigDecimal.ZERO;
+
         if (result.hasErrors()) {
-            // FIX: also add gst/grandTotal when re-rendering on validation error
-            BigDecimal total = cartService.calculateTotal(email);
-            BigDecimal gst = total.multiply(new BigDecimal("0.18")).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal grandTotal = total.add(gst).setScale(2, RoundingMode.HALF_UP);
-            model.addAttribute("cartItems", cartService.getCartItems(email));
-            model.addAttribute("total", total);
-            model.addAttribute("gst", gst);
-            model.addAttribute("grandTotal", grandTotal);
+            populateCheckoutModel(model, email, discount, appliedCoupon);
             return "buyer/checkout";
         }
 
-        try {
-            Order order = orderService.placeOrder(email, checkoutDTO);
-            logger.info("Order placed: {} for: {}", order.getId(), email);
+        checkoutDTO.setAppliedCoupon(appliedCoupon);
 
-            // Razorpay flow
-            if (checkoutDTO.getPaymentMethod() == com.revshop.entity.Payment.PaymentMethod.RAZORPAY) {
-                String razorpayOrderId = paymentService.createRazorpayOrder(order.getId());
+        try {
+            if (checkoutDTO.getPaymentMethod() ==
+                    com.revshop.entity.Payment.PaymentMethod.RAZORPAY) {
+
+                // ── RAZORPAY: store intent in session, don't create order yet ──
+                // Calculate the grand total to pass to Razorpay
+                BigDecimal total           = cartService.calculateTotal(email);
+                BigDecimal discountedTotal = total.subtract(discount).max(BigDecimal.ZERO);
+                BigDecimal gst             = discountedTotal.multiply(new BigDecimal("0.18"))
+                        .setScale(2, RoundingMode.HALF_UP);
+                BigDecimal grandTotal      = discountedTotal.add(gst)
+                        .setScale(2, RoundingMode.HALF_UP);
+
+                // Save the full checkout intent in session
+                session.setAttribute("pendingCheckoutDTO", checkoutDTO);
+                session.setAttribute("pendingDiscount",    discount);
+                session.setAttribute("pendingGrandTotal",  grandTotal);
+
+                // Create a Razorpay order (just a payment order, no DB Order yet)
+                String razorpayOrderId = paymentService.createRazorpayOrderForAmount(grandTotal);
+
                 model.addAttribute("razorpayOrderId", razorpayOrderId);
-                model.addAttribute("razorpayKeyId", razorpayKeyId);
-                model.addAttribute("order", order);
-                model.addAttribute("total", order.getTotalAmount());
-                model.addAttribute("email", email);
-                logger.info("Razorpay payment initiated for orderId: {}", order.getId());
+                model.addAttribute("razorpayKeyId",   razorpayKeyId);
+                model.addAttribute("grandTotal",      grandTotal);
+                model.addAttribute("email",           email);
+                logger.info("Razorpay payment initiated for: {}, amount: {}", email, grandTotal);
                 return "buyer/razorpay-payment";
             }
 
-            // COD flow
+            // ── COD: place order immediately ──────────────────
+            Order order = orderService.placeOrder(email, checkoutDTO, discount);
+            logger.info("COD order placed: {} for: {}", order.getId(), email);
+
+            if (appliedCoupon != null && !appliedCoupon.isBlank()) {
+                couponService.incrementUsage(appliedCoupon);
+            }
+
+            // Clear coupon session
+            session.removeAttribute("appliedCoupon");
+            session.removeAttribute("couponDiscount");
+
             redirectAttributes.addFlashAttribute("successMessage",
                     "Order placed successfully! Order ID: #" + order.getId());
-            logger.info("COD order confirmed: {} for: {}", order.getId(), email);
             return "redirect:/buyer/orders";
 
         } catch (Exception e) {
             logger.error("Order placement failed for: {} - {}", email, e.getMessage());
-
-            // FIX: also add gst/grandTotal when re-rendering on order failure
-            BigDecimal total = cartService.calculateTotal(email);
-            BigDecimal gst = total.multiply(new BigDecimal("0.18")).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal grandTotal = total.add(gst).setScale(2, RoundingMode.HALF_UP);
+            populateCheckoutModel(model, email, discount, appliedCoupon);
             model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("cartItems", cartService.getCartItems(email));
-            model.addAttribute("total", total);
-            model.addAttribute("gst", gst);
-            model.addAttribute("grandTotal", grandTotal);
             return "buyer/checkout";
         }
     }
 
     // ── Razorpay Callback ─────────────────────────────────────
+    // FIX: Order is created HERE, only after Razorpay confirms payment.
+    // If the user presses back and never pays, this callback never fires
+    // and no order is ever saved to the database.
     @PostMapping("/payment/callback")
     public String razorpayCallback(
             @RequestParam String razorpay_order_id,
             @RequestParam String razorpay_payment_id,
             @RequestParam String razorpay_signature,
+            @AuthenticationPrincipal UserDetails userDetails,
+            HttpSession session,
             RedirectAttributes redirectAttributes) {
 
-        logger.info("Razorpay callback received for orderId: {}", razorpay_order_id);
+        String email = userDetails.getUsername();
+        logger.info("Razorpay callback for: {}, paymentId: {}", email, razorpay_payment_id);
+
         try {
-            paymentService.confirmPayment(
-                    razorpay_order_id,
-                    razorpay_payment_id,
-                    razorpay_signature);
+            // 1. Verify the signature with Razorpay
+            paymentService.verifyRazorpaySignature(
+                    razorpay_order_id, razorpay_payment_id, razorpay_signature);
+
+            // 2. Retrieve the checkout intent saved before the payment
+            CheckoutDTO checkoutDTO = (CheckoutDTO) session.getAttribute("pendingCheckoutDTO");
+            BigDecimal discount     = (BigDecimal) session.getAttribute("pendingDiscount");
+            if (checkoutDTO == null) {
+                throw new PaymentException("Session expired. Please try checkout again.");
+            }
+            if (discount == null) discount = BigDecimal.ZERO;
+
+            // 3. Now create the order in the database
+            Order order = orderService.placeOrder(email, checkoutDTO, discount);
+            logger.info("Razorpay order confirmed and saved: {} for: {}", order.getId(), email);
+
+            // 4. Mark the payment as PAID and link Razorpay IDs
+            paymentService.confirmPayment(razorpay_order_id, razorpay_payment_id, order.getId());
+
+            // 5. Increment coupon usage
+            String appliedCoupon = checkoutDTO.getAppliedCoupon();
+            if (appliedCoupon != null && !appliedCoupon.isBlank()) {
+                couponService.incrementUsage(appliedCoupon);
+            }
+
+            // 6. Clean up session
+            session.removeAttribute("pendingCheckoutDTO");
+            session.removeAttribute("pendingDiscount");
+            session.removeAttribute("pendingGrandTotal");
+            session.removeAttribute("appliedCoupon");
+            session.removeAttribute("couponDiscount");
+
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Payment successful! Your order is confirmed.");
-            logger.info("Payment confirmed for orderId: {}", razorpay_order_id);
-        } catch (PaymentException e) {
-            logger.error("Payment failed for orderId: {} - {}",
-                    razorpay_order_id, e.getMessage());
+                    "Payment successful! Order #" + order.getId() + " confirmed.");
+            return "redirect:/buyer/orders";
+
+        } catch (Exception e) {
+            logger.error("Razorpay callback failed for: {} - {}", email, e.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage",
-                    "Payment verification failed. Please contact support.");
+                    "Payment verification failed. Please contact support. Ref: " + razorpay_payment_id);
+            return "redirect:/buyer/orders";
         }
-        return "redirect:/buyer/orders";
     }
 
     // ── View All Orders ───────────────────────────────────────
@@ -170,10 +263,8 @@ public class PaymentController {
             Model model) {
 
         String email = userDetails.getUsername();
-        logger.info("Buyer viewing orders: {}", email);
-
-        model.addAttribute("orders", orderService.getOrderHistory(email));
-        model.addAttribute("cartCount", cartService.getCartItemCount(email));
+        model.addAttribute("orders",      orderService.getOrderHistory(email));
+        model.addAttribute("cartCount",   cartService.getCartItemCount(email));
         model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
         return "buyer/orders";
     }
@@ -186,10 +277,8 @@ public class PaymentController {
             Model model) {
 
         String email = userDetails.getUsername();
-        logger.info("Buyer viewing order detail - orderId: {} by: {}", orderId, email);
-
-        model.addAttribute("order", orderService.getOrderById(orderId, email));
-        model.addAttribute("cartCount", cartService.getCartItemCount(email));
+        model.addAttribute("order",       orderService.getOrderById(orderId, email));
+        model.addAttribute("cartCount",   cartService.getCartItemCount(email));
         model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
         return "buyer/order-detail";
     }
@@ -202,13 +291,11 @@ public class PaymentController {
             RedirectAttributes redirectAttributes) {
 
         String email = userDetails.getUsername();
-        logger.info("Buyer cancelling orderId: {} by: {}", orderId, email);
         try {
             orderService.cancelOrder(orderId, email);
             redirectAttributes.addFlashAttribute("successMessage",
                     "Order #" + orderId + " cancelled successfully.");
         } catch (Exception e) {
-            logger.error("Cancel order failed: {}", e.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/buyer/orders";

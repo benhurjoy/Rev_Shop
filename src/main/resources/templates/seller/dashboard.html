@@ -71,7 +71,6 @@
                       style="position:absolute;top:2px;right:2px;background:var(--orange);color:white;border-radius:50%;font-size:0.62rem;padding:2px 5px;"
                       th:text="${unreadCount}"></span>
             </a>
-            <!-- Avatar Dropdown -->
             <div class="dropdown">
                 <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 p-0 ps-1"
                    href="#" id="profileDrop" role="button"
@@ -92,8 +91,7 @@
                     </li>
                     <li>
                         <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
-                           th:href="@{/seller/profile}"
-                           style="color:var(--orange)!important;font-weight:600;">
+                           th:href="@{/seller/profile}" style="color:var(--orange)!important;font-weight:600;">
                             <i class="bi bi-person-circle"></i> My Profile
                         </a>
                     </li>
@@ -133,16 +131,19 @@
     <a th:href="@{/seller/low-stock}" class="sidebar-link">
         <i class="bi bi-exclamation-triangle"></i> Low Stock
     </a>
+    <a th:href="@{/seller/reviews}" class="sidebar-link">
+        <i class="bi bi-star-half"></i> Reviews
+    </a>
     <a th:href="@{/seller/notifications}" class="sidebar-link">
         <i class="bi bi-bell"></i> Notifications
         <span th:if="${unreadCount > 0}"
               style="margin-left:auto;background:var(--orange);color:white;border-radius:50%;font-size:0.65rem;width:20px;height:20px;display:flex;align-items:center;justify-content:center;"
               th:text="${unreadCount}"></span>
     </a>
-    <hr style="border-color:var(--border);margin:1rem 1.5rem;"/>
-    <a th:href="@{/auth/logout}" class="sidebar-link">
-        <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
+    <!--    <hr style="border-color:var(&#45;&#45;border);margin:1rem 1.5rem;"/>-->
+    <!--    <a th:href="@{/auth/logout}" class="sidebar-link">-->
+    <!--        <i class="bi bi-box-arrow-right"></i> Logout-->
+    <!--    </a>-->
 </div>
 
 <!-- Main Content -->
@@ -177,7 +178,7 @@
             <div class="stat-card green">
                 <div class="stat-icon si-green"><i class="bi bi-check-circle"></i></div>
                 <div class="stat-num"
-                     th:text="${#lists.size(products) > 0 ? #lists.size(products.?[active == true]) : 0}">0</div>
+                     th:text="${products != null ? #lists.size(products.?[active == true]) : 0}">0</div>
                 <div class="stat-label">Active Products</div>
             </div>
         </div>
@@ -192,7 +193,9 @@
         <div class="col-6 col-md-3">
             <div class="stat-card gold">
                 <div class="stat-icon si-gold"><i class="bi bi-star"></i></div>
-                <div class="stat-num">4.5</div>
+                <!-- FIX: Use avgRating passed from controller instead of hardcoded 4.5 -->
+                <div class="stat-num"
+                     th:text="${avgRating != null and avgRating > 0} ? ${#numbers.formatDecimal(avgRating, 1, 1)} : '—'">—</div>
                 <div class="stat-label">Avg Rating</div>
             </div>
         </div>
@@ -241,18 +244,24 @@
                     <td style="color:var(--text-muted);font-size:0.85rem;" th:text="${p.categoryName}"></td>
                     <td style="color:var(--orange);font-weight:600;" th:text="'₹' + ${p.price}"></td>
                     <td>
-                        <span th:if="${p.stockQuantity > 5}" th:text="${p.stockQuantity}"></span>
+                        <span  th:if="${p.stockQuantity > 5}" th:text="${p.stockQuantity}"></span>
                         <span th:if="${p.stockQuantity > 0 and p.stockQuantity <= 5}"
-                              class="badge-low" th:text="p.stockQuantity + ' low'"></span>
+                              class="badge-low" th:text="${p.stockQuantity} + ' low'"></span>
                         <span th:if="${p.stockQuantity == 0}" class="badge-inactive">Out</span>
                     </td>
                     <td>
                         <span th:if="${p.active}" class="badge-active">Active</span>
                         <span th:unless="${p.active}" class="badge-inactive">Hidden</span>
                     </td>
+                    <!-- FIX: Format rating to 1 decimal, show — if null/zero -->
                     <td>
-                        <span class="stars" style="font-size:0.8rem;color:var(--gold);">★</span>
-                        <span style="font-size:0.85rem;" th:text="${p.averageRating ?: '—'}"></span>
+                        <span style="color:var(--gold);">★</span>
+                        <span style="font-size:0.85rem;"
+                              th:text="${p.averageRating != null and p.averageRating > 0}
+                                       ? ${#numbers.formatDecimal(p.averageRating, 1, 1)}
+                                       : '—'"></span>
+                        <span style="color:var(--text-muted);font-size:0.75rem;"
+                              th:text="'(' + ${p.totalReviews ?: 0} + ')'"></span>
                     </td>
                     <td>
                         <div class="d-flex gap-2">

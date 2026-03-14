@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Coupons – RevShop Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root{--navy:#0A1628;--navy-mid:#112240;--navy-light:#1E3A5F;--orange:#FF6B35;--gold:#FFB347;--text-light:#E8EDF5;--text-muted:#8899AA;--card-bg:#112240;--border:rgba(255,107,53,0.2);}
+        body{background:var(--navy);color:var(--text-light);font-family:'DM Sans',sans-serif;margin:0;}
+        h1,h2,h3,h4,h5{font-family:'Playfair Display',serif;}
+        .revshop-navbar{background:linear-gradient(135deg,#0A1628,#1E3A5F);border-bottom:2px solid var(--orange);padding:0.75rem 0;position:sticky;top:0;z-index:1000;}
+        .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;}
+        .navbar-brand span{color:var(--orange);}
+        .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s;}
+        .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
+        .sidebar{background:var(--card-bg);border-right:1px solid var(--border);min-height:calc(100vh - 66px);width:230px;position:fixed;top:66px;left:0;padding:1.5rem 0;}
+        .sidebar-section{font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;padding:0 1.5rem;margin-bottom:0.5rem;}
+        .sidebar-link{display:flex;align-items:center;gap:10px;padding:0.75rem 1.5rem;color:var(--text-muted);text-decoration:none;font-weight:500;font-size:0.9rem;border-left:3px solid transparent;transition:all 0.3s;}
+        .sidebar-link:hover,.sidebar-link.active{color:var(--orange);background:rgba(255,107,53,0.08);border-left-color:var(--orange);}
+        .main{margin-left:230px;padding:2rem;}
+        .page-hdr{margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid var(--border);}
+        .section-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+        .section-hdr{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.8rem;}
+        .rev-table{color:var(--text-light);}
+        .rev-table thead th{background:var(--navy-light);color:var(--orange);font-weight:600;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px;border:none;padding:1rem;}
+        .rev-table tbody tr{border-bottom:1px solid rgba(255,107,53,0.06);transition:background 0.2s;}
+        .rev-table tbody tr:hover{background:rgba(255,107,53,0.04);}
+        .rev-table tbody td{padding:0.9rem 1rem;border:none;vertical-align:middle;}
+        .badge-active{background:rgba(40,167,69,0.12);color:#75f5a0;border:1px solid rgba(40,167,69,0.3);border-radius:8px;padding:3px 10px;font-size:0.75rem;font-weight:600;}
+        .badge-inactive{background:rgba(220,53,69,0.12);color:#ff8fa3;border:1px solid rgba(220,53,69,0.3);border-radius:8px;padding:3px 10px;font-size:0.75rem;font-weight:600;}
+        .badge-expired{background:rgba(136,153,170,0.12);color:var(--text-muted);border:1px solid rgba(136,153,170,0.3);border-radius:8px;padding:3px 10px;font-size:0.75rem;font-weight:600;}
+        .btn-sm-orange{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:8px;padding:5px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+        .btn-sm-orange:hover{transform:translateY(-1px);color:white;}
+        .btn-sm-danger{background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:8px;padding:4px 12px;font-size:0.78rem;cursor:pointer;transition:all 0.2s;}
+        .btn-sm-danger:hover{background:rgba(220,53,69,0.2);}
+        .btn-sm-muted{background:rgba(255,107,53,0.08);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:4px 12px;font-size:0.78rem;cursor:pointer;transition:all 0.2s;}
+        .btn-sm-muted:hover{border-color:var(--orange);color:var(--orange);}
+        .alert-success-rev{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;border-radius:10px;padding:0.8rem 1rem;}
+        .alert-error-rev{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:10px;padding:0.8rem 1rem;}
+        .form-card{background:var(--navy);border:1px solid var(--border);border-radius:16px;padding:1.5rem;}
+        .form-label{color:var(--text-muted);font-size:0.83rem;font-weight:500;margin-bottom:0.4rem;}
+        .form-control,.form-select{background:rgba(255,255,255,0.05)!important;border:1.5px solid rgba(255,107,53,0.2)!important;border-radius:10px!important;color:var(--text-light)!important;padding:0.6rem 1rem!important;font-family:'DM Sans',sans-serif;transition:all 0.3s;}
+        .form-control:focus,.form-select:focus{border-color:var(--orange)!important;box-shadow:0 0 0 3px rgba(255,107,53,0.15)!important;}
+        .form-control::placeholder{color:var(--text-muted)!important;}
+        .form-select option{background:var(--navy-mid);}
+        .coupon-code{font-family:monospace;font-weight:700;font-size:0.95rem;color:var(--orange);background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);border-radius:6px;padding:2px 8px;letter-spacing:1px;}
+        @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;padding:1rem;}}
+    </style>
+</head>
+<body>
+
+<nav class="revshop-navbar navbar">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/}">Rev<span>Shop</span></a>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <span style="color:var(--text-muted);font-size:0.82rem;">
+                <i class="bi bi-shield-check me-1" style="color:var(--orange);"></i>Admin
+            </span>
+            <a class="nav-link" th:href="@{/auth/logout}">
+                <i class="bi bi-box-arrow-right me-1"></i>Logout
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="sidebar">
+    <div style="padding:1rem 1.5rem 0.5rem;">
+        <div class="sidebar-section">Admin Panel</div>
+    </div>
+    <a th:href="@{/admin/dashboard}"  class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a th:href="@{/admin/users}"      class="sidebar-link"><i class="bi bi-people"></i> Users</a>
+    <a th:href="@{/admin/products}"   class="sidebar-link"><i class="bi bi-box-seam"></i> Products</a>
+    <a th:href="@{/admin/orders}"     class="sidebar-link"><i class="bi bi-bag-check"></i> Orders</a>
+    <a th:href="@{/admin/categories}" class="sidebar-link"><i class="bi bi-grid"></i> Categories</a>
+    <a th:href="@{/admin/coupons}"    class="sidebar-link active"><i class="bi bi-ticket-perforated"></i> Coupons</a>
+    <hr style="border-color:var(--border);margin:1rem 1.5rem;"/>
+    <a th:href="@{/auth/logout}"      class="sidebar-link"><i class="bi bi-box-arrow-right"></i> Logout</a>
+</div>
+
+<div class="main">
+    <div class="page-hdr">
+        <h2>Coupons</h2>
+        <p style="color:var(--text-muted);margin:0;font-size:0.9rem;">Create and manage discount coupons for buyers</p>
+    </div>
+
+    <div th:if="${successMessage}" class="alert-success-rev mb-4">
+        <i class="bi bi-check-circle me-2"></i><span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert-error-rev mb-4">
+        <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
+    </div>
+
+    <!-- Create Coupon Form -->
+    <div class="form-card mb-4">
+        <h5 class="mb-3">Create New Coupon</h5>
+        <form th:action="@{/admin/coupons/add}" th:object="${couponDTO}" method="post">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Coupon Code *</label>
+                    <input type="text" class="form-control text-uppercase" th:field="*{code}"
+                           placeholder="e.g. SAVE20" style="letter-spacing:1px;"/>
+                    <div style="color:#ff8fa3;font-size:0.78rem;" th:if="${#fields.hasErrors('code')}"
+                         th:errors="*{code}"></div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Discount Type *</label>
+                    <select class="form-select" th:field="*{discountType}">
+                        <option value="">-- Type --</option>
+                        <option value="PERCENTAGE">Percentage (%)</option>
+                        <option value="FIXED">Fixed (₹)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Discount Value *</label>
+                    <input type="number" class="form-control" th:field="*{discountValue}"
+                           placeholder="e.g. 10" step="0.01" min="0.01"/>
+                    <div style="color:#ff8fa3;font-size:0.78rem;" th:if="${#fields.hasErrors('discountValue')}"
+                         th:errors="*{discountValue}"></div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Min Order (₹)</label>
+                    <input type="number" class="form-control" th:field="*{minimumOrderAmount}"
+                           placeholder="0 = none" step="0.01" min="0"/>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Usage Limit</label>
+                    <input type="number" class="form-control" th:field="*{usageLimit}"
+                           placeholder="0 = ∞" min="0"/>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Expiry Date *</label>
+                    <input type="datetime-local" class="form-control" th:field="*{expiryDate}"/>
+                    <div style="color:#ff8fa3;font-size:0.78rem;" th:if="${#fields.hasErrors('expiryDate')}"
+                         th:errors="*{expiryDate}"></div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn-sm-orange">
+                        <i class="bi bi-plus-circle"></i> Create Coupon
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Coupons Table -->
+    <div class="section-card">
+        <div class="section-hdr">
+            <div>
+                <h5 style="margin:0;font-size:1.05rem;">All Coupons</h5>
+                <span style="color:var(--text-muted);font-size:0.82rem;"
+                      th:text="${coupons?.size() ?: 0} + ' coupons'"></span>
+            </div>
+        </div>
+
+        <div th:if="${coupons == null or coupons.isEmpty()}"
+             style="text-align:center;padding:3rem;color:var(--text-muted);">
+            <i class="bi bi-ticket-perforated" style="font-size:3rem;opacity:0.2;display:block;margin-bottom:1rem;"></i>
+            <p>No coupons created yet.</p>
+        </div>
+
+        <div class="table-responsive" th:if="${coupons != null and !coupons.isEmpty()}">
+            <table class="table rev-table mb-0">
+                <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Type</th>
+                    <th>Value</th>
+                    <th>Min Order</th>
+                    <th>Usage</th>
+                    <th>Expires</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${coupons}">
+                    <td><span class="coupon-code" th:text="${c.code}"></span></td>
+                    <td style="color:var(--text-muted);font-size:0.85rem;"
+                        th:text="${c.discountType == T(com.revshop.entity.Coupon.DiscountType).PERCENTAGE} ? 'Percentage' : 'Fixed'"></td>
+                    <td style="color:var(--orange);font-weight:700;">
+                        <span th:if="${c.discountType.name() == 'PERCENTAGE'}"
+                              th:text="${c.discountValue} + '%'"></span>
+                        <span th:if="${c.discountType.name() == 'FIXED'}"
+                              th:text="'₹' + ${c.discountValue}"></span>
+                    </td>
+                    <td style="color:var(--text-muted);font-size:0.85rem;"
+                        th:text="${c.minimumOrderAmount != null and c.minimumOrderAmount > 0} ? '₹' + ${c.minimumOrderAmount} : 'None'"></td>
+                    <td style="font-size:0.85rem;">
+                        <span th:text="${c.usedCount}"></span>
+                        <span style="color:var(--text-muted);"
+                              th:text="${c.usageLimit > 0} ? ' / ' + ${c.usageLimit} : ' / ∞'"></span>
+                    </td>
+                    <td style="color:var(--text-muted);font-size:0.82rem;"
+                        th:text="${#temporals.format(c.expiryDate, 'dd MMM yyyy')}"></td>
+                    <td>
+                        <span th:text="${c.status}"
+                              th:class="${c.status == 'Active'} ? 'badge-active' :
+                                         (${c.status == 'Inactive'} ? 'badge-inactive' : 'badge-expired')"></span>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <!-- Toggle active/inactive -->
+                            <form th:action="@{/admin/coupons/toggle/{id}(id=${c.id})}" method="post">
+                                <button type="submit" class="btn-sm-muted"
+                                        th:title="${c.active} ? 'Deactivate' : 'Activate'">
+                                    <i th:class="${c.active} ? 'bi bi-pause-circle' : 'bi bi-play-circle'"></i>
+                                </button>
+                            </form>
+                            <!-- Delete -->
+                            <form th:action="@{/admin/coupons/delete/{id}(id=${c.id})}" method="post"
+                                  onsubmit="return confirm('Delete this coupon?')">
+                                <button type="submit" class="btn-sm-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Auto-uppercase coupon code as user types
+    document.querySelector('[name="code"]')?.addEventListener('input', function() {
+        this.value = this.value.toUpperCase();
+    });
+</script>
+</body>
+</html>
