@@ -65,8 +65,11 @@
         .tog input:checked + .tog-slider{background:rgba(255,107,53,0.25);border-color:var(--orange);}
         .tog input:checked + .tog-slider:before{background:var(--orange);transform:translateX(16px);}
 
-        /* Variant column cell */
-        .variant-cell{display:flex;flex-direction:column;gap:6px;}
+        .variant-cell{display:flex;flex-direction:column;gap:8px;}
+
+        /* Slider ON state driven by JS (used in Add form where checkbox is hidden) */
+        .tog-slider.tog-on{background:rgba(255,107,53,0.25)!important;border-color:var(--orange)!important;}
+        .tog-slider.tog-on:before{background:var(--orange)!important;transform:translateX(16px)!important;}
 
         @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;padding:1rem;}}
     </style>
@@ -147,26 +150,46 @@
                                   style="resize:none;"></textarea>
                     </div>
 
-                    <!-- ── Variant flags on add ── -->
+                    <!--
+                        FIX: Use hidden inputs + checkbox pattern so unchecked = false is
+                        always submitted. The hidden input sends "false" first; if the
+                        checkbox is checked it overrides with "true". Spring's Boolean
+                        binding then correctly receives true or false in all cases.
+                    -->
                     <div class="mb-4" style="background:rgba(255,107,53,0.04);border:1px solid var(--border);border-radius:12px;padding:1rem;">
                         <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.8px;color:var(--orange);font-weight:700;margin-bottom:0.75rem;">
                             <i class="bi bi-palette2 me-1"></i>Product Variants
                         </div>
                         <div class="d-flex flex-column gap-3">
-                            <label class="toggle-wrap" style="cursor:pointer;">
-                                <span class="tog">
-                                    <input type="checkbox" th:field="*{hasColors}"/>
-                                    <span class="tog-slider"></span>
+                            <!--
+                                FIX: th:field handles correct hidden+checkbox submission.
+                                BUT th:field renders a hidden input before the .tog span,
+                                which breaks the CSS sibling selector (input:checked + .tog-slider).
+                                Solution: put th:field on a visually-hidden real checkbox,
+                                then use a separate visible fake checkbox (the .tog span)
+                                that is kept in sync via JavaScript. On form submit,
+                                the hidden real checkbox carries the correct value.
+                            -->
+                            <label class="toggle-wrap" style="cursor:pointer;" onclick="syncToggle('hasColors')">
+                                <span class="tog" id="tog_hasColors">
+                                    <!-- Visible slider — driven by JS, not CSS :checked -->
+                                    <span class="tog-slider" id="slider_hasColors"></span>
                                 </span>
+                                <!-- Real checkbox — visually hidden, carries the actual value -->
+                                <input type="checkbox" th:field="*{hasColors}"
+                                       id="hasColors" style="display:none;"
+                                       onchange="updateSlider('hasColors')"/>
                                 <span class="toggle-label" style="color:var(--text-light);font-size:0.87rem;">
                                     Enable <strong>Color</strong> field for products
                                 </span>
                             </label>
-                            <label class="toggle-wrap" style="cursor:pointer;">
-                                <span class="tog">
-                                    <input type="checkbox" th:field="*{hasSizes}"/>
-                                    <span class="tog-slider"></span>
+                            <label class="toggle-wrap" style="cursor:pointer;" onclick="syncToggle('hasSizes')">
+                                <span class="tog" id="tog_hasSizes">
+                                    <span class="tog-slider" id="slider_hasSizes"></span>
                                 </span>
+                                <input type="checkbox" th:field="*{hasSizes}"
+                                       id="hasSizes" style="display:none;"
+                                       onchange="updateSlider('hasSizes')"/>
                                 <span class="toggle-label" style="color:var(--text-light);font-size:0.87rem;">
                                     Enable <strong>Size</strong> field for products
                                 </span>
@@ -222,10 +245,6 @@
                             <th>Category</th>
                             <th>Description</th>
                             <th>Products</th>
-                            <!--
-                                NEW: Variants column — shows Color/Size toggles for each
-                                existing category. Toggling auto-submits the inline form.
-                            -->
                             <th>Variants</th>
                             <th>Created</th>
                             <th>Actions</th>
@@ -259,38 +278,62 @@
                                       th:text="${cat.products.size()} + ' products'"></span>
                             </td>
 
-                            <!-- ── NEW: inline variant toggle form ── -->
+                            <!--
+                                FIX: Each toggle is its OWN separate mini-form posting to
+                                update-variants. This means toggling Color doesn't
+                                accidentally submit a stale value for Size and vice versa.
+
+                                Each form also carries a hidden input for the OTHER flag
+                                so the endpoint always receives both values and can't
+                                accidentally null-out the untouched one.
+
+                                The hidden input before the checkbox ensures the field is
+                                always submitted (false when unchecked, true when checked).
+                            -->
                             <td>
-                                <form th:action="@{/admin/categories/update-variants/{id}(id=${cat.id})}"
-                                      method="post" class="variant-cell">
+                                <div class="variant-cell">
 
-                                    <!-- Color toggle -->
-                                    <label class="toggle-wrap" style="cursor:pointer;"
-                                           th:title="${cat.isHasColors()} ? 'Color field ON — click to disable' : 'Color field OFF — click to enable'">
-                                        <span class="tog">
-                                            <input type="checkbox" name="hasColors"
-                                                   th:checked="${cat.isHasColors()}"
-                                                   onchange="this.form.submit()"/>
-                                            <span class="tog-slider"></span>
-                                        </span>
-                                        <span class="toggle-label">Color</span>
-                                    </label>
+                                    <!-- Color toggle — its own form -->
+                                    <form th:action="@{/admin/categories/update-variants/{id}(id=${cat.id})}"
+                                          method="post" style="margin:0;">
+                                        <!-- Always send the current value of hasSizes so it isn't lost -->
+                                        <input type="hidden" name="hasSizes"
+                                               th:value="${cat.isHasSizes()}"/>
+                                        <label class="toggle-wrap" style="cursor:pointer;"
+                                               th:title="${cat.isHasColors()} ? 'Color ON — click to disable' : 'Color OFF — click to enable'">
+                                            <span class="tog">
+                                                <!-- hidden sends false; checkbox overrides to true when checked -->
+                                                <input type="hidden"   name="hasColors" value="false"/>
+                                                <input type="checkbox" name="hasColors" value="true"
+                                                       th:checked="${cat.isHasColors()}"
+                                                       onchange="this.form.submit()"/>
+                                                <span class="tog-slider"></span>
+                                            </span>
+                                            <span class="toggle-label">Color</span>
+                                        </label>
+                                    </form>
 
-                                    <!-- Size toggle -->
-                                    <label class="toggle-wrap" style="cursor:pointer;"
-                                           th:title="${cat.isHasSizes()} ? 'Size field ON — click to disable' : 'Size field OFF — click to enable'">
-                                        <span class="tog">
-                                            <input type="checkbox" name="hasSizes"
-                                                   th:checked="${cat.isHasSizes()}"
-                                                   onchange="this.form.submit()"/>
-                                            <span class="tog-slider"></span>
-                                        </span>
-                                        <span class="toggle-label">Size</span>
-                                    </label>
+                                    <!-- Size toggle — its own form -->
+                                    <form th:action="@{/admin/categories/update-variants/{id}(id=${cat.id})}"
+                                          method="post" style="margin:0;">
+                                        <!-- Always send the current value of hasColors so it isn't lost -->
+                                        <input type="hidden" name="hasColors"
+                                               th:value="${cat.isHasColors()}"/>
+                                        <label class="toggle-wrap" style="cursor:pointer;"
+                                               th:title="${cat.isHasSizes()} ? 'Size ON — click to disable' : 'Size OFF — click to enable'">
+                                            <span class="tog">
+                                                <input type="hidden"   name="hasSizes" value="false"/>
+                                                <input type="checkbox" name="hasSizes" value="true"
+                                                       th:checked="${cat.isHasSizes()}"
+                                                       onchange="this.form.submit()"/>
+                                                <span class="tog-slider"></span>
+                                            </span>
+                                            <span class="toggle-label">Size</span>
+                                        </label>
+                                    </form>
 
-                                </form>
+                                </div>
                             </td>
-                            <!-- ── End Variants ── -->
 
                             <td style="color:var(--text-muted);font-size:0.82rem;">
                                 <span th:if="${cat.createdAt != null}"
@@ -331,6 +374,39 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // ── Add-form toggle helpers ───────────────────────────────────────────────
+    // th:field renders the checkbox hidden (display:none) so the CSS :checked
+    // selector can't drive the visual slider. Instead we manually toggle an
+    // .active class on the slider and sync it with the real hidden checkbox.
+
+    function updateSlider(fieldName) {
+        const cb     = document.getElementById(fieldName);
+        const slider = document.getElementById('slider_' + fieldName);
+        if (!cb || !slider) return;
+        if (cb.checked) {
+            slider.style.background      = 'rgba(255,107,53,0.25)';
+            slider.style.borderColor     = 'var(--orange)';
+            slider.style.setProperty('--thumb-color', 'var(--orange)');
+            slider.classList.add('tog-on');
+        } else {
+            slider.style.background  = 'rgba(255,255,255,0.1)';
+            slider.style.borderColor = 'rgba(255,107,53,0.25)';
+            slider.classList.remove('tog-on');
+        }
+    }
+
+    function syncToggle(fieldName) {
+        const cb = document.getElementById(fieldName);
+        if (!cb) return;
+        cb.checked = !cb.checked;
+        updateSlider(fieldName);
+    }
+
+    // Seed visual state on page load (e.g. after validation error re-render)
+    document.addEventListener('DOMContentLoaded', function() {
+        ['hasColors', 'hasSizes'].forEach(updateSlider);
+    });
+
     function filterCategories() {
         const q = document.getElementById('catSearch').value.toLowerCase();
         document.querySelectorAll('#catTable tbody tr').forEach(row => {
