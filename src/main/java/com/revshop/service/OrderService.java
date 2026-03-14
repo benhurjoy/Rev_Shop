@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,43 +24,38 @@ public class OrderService {
 
     private static final Logger logger = LogManager.getLogger(OrderService.class);
 
-    @Autowired
-    private OrderRepository orderRepository;
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private ProductRepository productRepository;
+    @Autowired private PaymentRepository paymentRepository;
+    @Autowired private CartService cartService;
+    @Autowired private NotificationService notificationService;
+    @Autowired private ProductService productService;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private PaymentRepository paymentRepository;
-
-    @Autowired
-    private CartService cartService;
-
-    @Autowired
-    private NotificationService notificationService;
-
+    // ── Place Order (with optional coupon discount) ───────────
     @Transactional
-    public Order placeOrder(String email, CheckoutDTO dto) {
-        logger.info("PlaceOrder called for: {}", email);
+    public Order placeOrder(String email, CheckoutDTO dto, BigDecimal discount) {
+        logger.info("PlaceOrder called for: {} with discount: {}", email, discount);
 
         User buyer = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
 
         List<CartItem> cartItems = cartService.getCartItems(email);
-
         if (cartItems.isEmpty()) {
-            logger.warn("PlaceOrder failed - empty cart for: {}", email);
             throw new BadRequestException("Cart is empty. Add products before placing order");
         }
 
         BigDecimal total = cartService.calculateTotal(email);
 
+        // Apply coupon discount — ensure we never go below 0
+        if (discount == null) discount = BigDecimal.ZERO;
+        BigDecimal discountedTotal = total.subtract(discount)
+                .max(BigDecimal.ZERO)
+                .setScale(2, RoundingMode.HALF_UP);
+
         Order order = Order.builder()
                 .buyer(buyer)
-                .totalAmount(total)
+                .totalAmount(discountedTotal)
                 .status(Order.OrderStatus.PENDING)
                 .shippingAddress(dto.getShippingAddress())
                 .city(dto.getCity())
@@ -71,7 +67,8 @@ public class OrderService {
                 .map(cartItem -> {
                     Product product = cartItem.getProduct();
                     if (product.getStockQuantity() < cartItem.getQuantity()) {
-                        throw new BadRequestException("Insufficient stock for: " + product.getName());
+                        throw new BadRequestException(
+                                "Insufficient stock for: " + product.getName());
                     }
                     return OrderItem.builder()
                             .order(order)
@@ -87,18 +84,14 @@ public class OrderService {
         order.setOrderItems(orderItems);
         Order savedOrder = orderRepository.save(order);
 
-        // Reduce stock for each product
+        // Reduce stock
         cartItems.forEach(item ->
-                productRepository.findById(item.getProduct().getId()).ifPresent(p -> {
-                    p.setStockQuantity(p.getStockQuantity() - item.getQuantity());
-                    productRepository.save(p);
-                })
-        );
+                productService.reduceStock(item.getProduct().getId(), item.getQuantity()));
 
         // Create payment record
         Payment payment = Payment.builder()
                 .order(savedOrder)
-                .amount(total)
+                .amount(discountedTotal)
                 .status(Payment.PaymentStatus.PENDING)
                 .paymentMethod(dto.getPaymentMethod())
                 .build();
@@ -109,14 +102,15 @@ public class OrderService {
         // Notify buyer
         notificationService.sendOrderNotification(email, "PLACED", savedOrder.getId());
 
-        // Notify each seller whose product was ordered
+        // Notify sellers
         savedOrder.getOrderItems().forEach(item -> {
             String sellerEmail = item.getProduct().getSeller().getEmail();
             notificationService.sendNotification(
                     sellerEmail,
                     "New Order Received",
-                    "You received a new order #" + savedOrder.getId() +
-                            " for \"" + item.getProduct().getName() + "\" (Qty: " + item.getQuantity() + ")",
+                    "You received order #" + savedOrder.getId() +
+                            " for \"" + item.getProduct().getName() +
+                            "\" (Qty: " + item.getQuantity() + ")",
                     Notification.NotificationType.ORDER_PLACED
             );
         });
@@ -125,38 +119,34 @@ public class OrderService {
         return savedOrder;
     }
 
+    // ── Overload for backward compatibility (no coupon) ───────
+    @Transactional
+    public Order placeOrder(String email, CheckoutDTO dto) {
+        return placeOrder(email, dto, BigDecimal.ZERO);
+    }
+
     public List<OrderDTO> getOrderHistory(String email) {
         logger.info("GetOrderHistory called for: {}", email);
         User buyer = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
-
         return orderRepository.findByBuyerWithItems(buyer)
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+                .stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     public OrderDTO getOrderById(Long orderId, String email) {
         logger.info("GetOrderById called for orderId: {} by: {}", orderId, email);
-
         Order order = orderRepository.findByIdWithDetails(orderId)
-                .orElseThrow(() -> {
-                    logger.warn("Order not found: {}", orderId);
-                    return new ResourceNotFoundException("Order not found: " + orderId);
-                });
-
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
         return mapToDTO(order);
     }
 
     @Transactional
     public void cancelOrder(Long orderId, String email) {
         logger.info("CancelOrder called for orderId: {} by: {}", orderId, email);
-
         Order order = orderRepository.findByIdWithDetails(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
         if (order.getStatus() != Order.OrderStatus.PENDING) {
-            logger.warn("CancelOrder failed - order not in PENDING state: {}", orderId);
             throw new BadRequestException("Only PENDING orders can be cancelled");
         }
 
@@ -170,16 +160,14 @@ public class OrderService {
             productRepository.save(product);
         });
 
-        // Notify buyer
         notificationService.sendOrderNotification(email, "CANCELLED", orderId);
 
-        // Notify each seller
         order.getOrderItems().forEach(item -> {
             String sellerEmail = item.getProduct().getSeller().getEmail();
             notificationService.sendNotification(
-                    sellerEmail,
-                    "Order Cancelled",
-                    "Order #" + orderId + " for \"" + item.getProduct().getName() + "\" was cancelled by the buyer.",
+                    sellerEmail, "Order Cancelled",
+                    "Order #" + orderId + " for \"" + item.getProduct().getName() +
+                            "\" was cancelled by the buyer.",
                     Notification.NotificationType.ORDER_STATUS_UPDATED
             );
         });
@@ -190,30 +178,22 @@ public class OrderService {
     @Transactional
     public void updateOrderStatus(Long orderId, Order.OrderStatus status) {
         logger.info("UpdateOrderStatus called for orderId: {} status: {}", orderId, status);
-
         Order order = orderRepository.findByIdWithDetails(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
-
         order.setStatus(status);
         orderRepository.save(order);
-
-        // Notify buyer
-        notificationService.sendOrderNotification(order.getBuyer().getEmail(), status.name(), orderId);
-        logger.info("Order status updated to: {} for orderId: {}", status, orderId);
+        notificationService.sendOrderNotification(
+                order.getBuyer().getEmail(), status.name(), orderId);
     }
 
     public List<OrderDTO> getAllOrders() {
         logger.info("GetAllOrders called");
-
         return orderRepository.findAllWithDetails()
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+                .stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     public OrderDTO mapToDTO(Order order) {
         OrderDTO dto = new OrderDTO();
-
         dto.setId(order.getId());
         dto.setBuyerId(order.getBuyer().getId());
         dto.setBuyerName(order.getBuyer().getFirstName() + " " + order.getBuyer().getLastName());
@@ -237,7 +217,8 @@ public class OrderService {
                     itemDTO.setPrice(item.getPrice());
                     itemDTO.setMrp(item.getMrp());
                     itemDTO.setDiscountPercent(item.getDiscountPercent());
-                    itemDTO.setSubtotal(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+                    itemDTO.setSubtotal(item.getPrice()
+                            .multiply(BigDecimal.valueOf(item.getQuantity())));
                     return itemDTO;
                 })
                 .collect(Collectors.toList());
