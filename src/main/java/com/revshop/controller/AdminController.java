@@ -1,17 +1,22 @@
 package com.revshop.controller;
 
+import com.revshop.dto.CategoryDTO;
+import com.revshop.dto.CouponDTO;
+import com.revshop.dto.ProductDTO;
 import com.revshop.entity.Order;
 import com.revshop.service.*;
+import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import com.revshop.dto.CategoryDTO;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/admin")
@@ -20,20 +25,11 @@ public class AdminController {
 
     private static final Logger logger = LogManager.getLogger(AdminController.class);
 
-    @Autowired
-    private AdminService adminService;
-
-    @Autowired
-    private OrderService orderService;
-
-    @Autowired
-    private ProductService productService;
-
-    @Autowired
-    private CategoryService categoryService;
-
-    @Autowired
-    private ReviewService reviewService;
+    @Autowired private AdminService adminService;
+    @Autowired private OrderService orderService;
+    @Autowired private ProductService productService;
+    @Autowired private CategoryService categoryService;
+    @Autowired private CouponService couponService;
 
     // ── Dashboard ─────────────────────────────────────────────
     @GetMapping("/dashboard")
@@ -52,24 +48,18 @@ public class AdminController {
     }
 
     @PostMapping("/users/block/{userId}")
-    public String blockUser(
-            @PathVariable Long userId,
-            RedirectAttributes redirectAttributes) {
+    public String blockUser(@PathVariable Long userId, RedirectAttributes ra) {
         logger.info("Admin blocking userId: {}", userId);
         adminService.blockUser(userId);
-        redirectAttributes.addFlashAttribute("successMessage",
-                "User blocked successfully.");
+        ra.addFlashAttribute("successMessage", "User blocked successfully.");
         return "redirect:/admin/users";
     }
 
     @PostMapping("/users/unblock/{userId}")
-    public String unblockUser(
-            @PathVariable Long userId,
-            RedirectAttributes redirectAttributes) {
+    public String unblockUser(@PathVariable Long userId, RedirectAttributes ra) {
         logger.info("Admin unblocking userId: {}", userId);
         adminService.unblockUser(userId);
-        redirectAttributes.addFlashAttribute("successMessage",
-                "User unblocked successfully.");
+        ra.addFlashAttribute("successMessage", "User unblocked successfully.");
         return "redirect:/admin/users";
     }
 
@@ -77,18 +67,22 @@ public class AdminController {
     @GetMapping("/products")
     public String products(Model model) {
         logger.info("Admin viewing all products");
-        model.addAttribute("products", productService.getAllActiveProducts());
+        List<ProductDTO> products = productService.getAllActiveProducts();
+        long activeCount     = products.stream().filter(ProductDTO::isActive).count();
+        long lowStockCount   = products.stream().filter(p -> p.getStockQuantity() > 0 && p.getStockQuantity() <= 5).count();
+        long outOfStockCount = products.stream().filter(p -> p.getStockQuantity() == 0).count();
+        model.addAttribute("products", products);
+        model.addAttribute("activeCount", activeCount);
+        model.addAttribute("lowStockCount", lowStockCount);
+        model.addAttribute("outOfStockCount", outOfStockCount);
         return "admin/products";
     }
 
     @PostMapping("/products/delete/{productId}")
-    public String deleteProduct(
-            @PathVariable Long productId,
-            RedirectAttributes redirectAttributes) {
+    public String deleteProduct(@PathVariable Long productId, RedirectAttributes ra) {
         logger.info("Admin deleting productId: {}", productId);
         adminService.removeProduct(productId);
-        redirectAttributes.addFlashAttribute("successMessage",
-                "Product removed successfully.");
+        ra.addFlashAttribute("successMessage", "Product removed successfully.");
         return "redirect:/admin/products";
     }
 
@@ -100,7 +94,6 @@ public class AdminController {
         model.addAttribute("categories", categories);
         model.addAttribute("totalProductsAcrossCategories",
                 categories.stream().mapToLong(c -> c.getProducts() != null ? c.getProducts().size() : 0L).sum());
-        // FIX: categoryDTO must be in model so th:object="${categoryDTO}" in the form doesn't throw NPE
         model.addAttribute("categoryDTO", new CategoryDTO());
         return "admin/categories";
     }
@@ -109,7 +102,7 @@ public class AdminController {
     public String addCategory(
             @ModelAttribute("categoryDTO") CategoryDTO categoryDTO,
             BindingResult result,
-            RedirectAttributes redirectAttributes,
+            RedirectAttributes ra,
             Model model) {
         logger.info("Admin adding category: {}", categoryDTO.getName());
         if (result.hasErrors()) {
@@ -120,23 +113,37 @@ public class AdminController {
             return "admin/categories";
         }
         try {
-            categoryService.addCategory(categoryDTO.getName(), categoryDTO.getDescription());
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "Category added successfully.");
+            categoryService.addCategory(categoryDTO.getName(), categoryDTO.getDescription(),
+                    categoryDTO.isHasColors(), categoryDTO.isHasSizes());
+            ra.addFlashAttribute("successMessage", "Category '" + categoryDTO.getName() + "' added successfully.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/admin/categories";
+    }
+
+    // ── NEW: update variant flags on an existing category ─────
+    @PostMapping("/categories/update-variants/{id}")
+    public String updateCategoryVariants(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean hasColors,
+            @RequestParam(defaultValue = "false") boolean hasSizes,
+            RedirectAttributes ra) {
+        logger.info("Admin updating variants for categoryId: {} hasColors={} hasSizes={}", id, hasColors, hasSizes);
+        try {
+            categoryService.updateCategoryVariants(id, hasColors, hasSizes);
+            ra.addFlashAttribute("successMessage", "Variant settings updated.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/admin/categories";
     }
 
     @PostMapping("/categories/delete/{id}")
-    public String deleteCategory(
-            @PathVariable Long id,
-            RedirectAttributes redirectAttributes) {
+    public String deleteCategory(@PathVariable Long id, RedirectAttributes ra) {
         logger.info("Admin deleting categoryId: {}", id);
         categoryService.deleteCategory(id);
-        redirectAttributes.addFlashAttribute("successMessage",
-                "Category deleted successfully.");
+        ra.addFlashAttribute("successMessage", "Category deleted successfully.");
         return "redirect:/admin/categories";
     }
 
@@ -153,23 +160,73 @@ public class AdminController {
     public String updateOrderStatus(
             @PathVariable Long orderId,
             @RequestParam Order.OrderStatus status,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes ra) {
         logger.info("Admin updating orderId: {} to status: {}", orderId, status);
         orderService.updateOrderStatus(orderId, status);
-        redirectAttributes.addFlashAttribute("successMessage",
-                "Order status updated successfully.");
+        ra.addFlashAttribute("successMessage", "Order status updated successfully.");
         return "redirect:/admin/orders";
     }
 
     // ── Reviews ───────────────────────────────────────────────
     @PostMapping("/reviews/delete/{reviewId}")
-    public String deleteReview(
-            @PathVariable Long reviewId,
-            RedirectAttributes redirectAttributes) {
+    public String deleteReview(@PathVariable Long reviewId, RedirectAttributes ra) {
         logger.info("Admin deleting reviewId: {}", reviewId);
         adminService.removeReview(reviewId);
-        redirectAttributes.addFlashAttribute("successMessage",
-                "Review removed successfully.");
+        ra.addFlashAttribute("successMessage", "Review removed successfully.");
         return "redirect:/admin/products";
+    }
+
+    // ── Coupons ───────────────────────────────────────────────
+    @GetMapping("/coupons")
+    public String coupons(Model model) {
+        logger.info("Admin viewing coupons");
+        model.addAttribute("coupons", couponService.getAllCoupons());
+        model.addAttribute("couponDTO", new CouponDTO());
+        return "admin/coupons";
+    }
+
+    @PostMapping("/coupons/add")
+    public String addCoupon(
+            @Valid @ModelAttribute("couponDTO") CouponDTO couponDTO,
+            BindingResult result,
+            RedirectAttributes ra,
+            Model model) {
+        logger.info("Admin creating coupon: {}", couponDTO.getCode());
+        if (result.hasErrors()) {
+            model.addAttribute("coupons", couponService.getAllCoupons());
+            return "admin/coupons";
+        }
+        try {
+            couponService.createCoupon(couponDTO);
+            ra.addFlashAttribute("successMessage",
+                    "Coupon '" + couponDTO.getCode().toUpperCase() + "' created successfully.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/admin/coupons";
+    }
+
+    @PostMapping("/coupons/toggle/{id}")
+    public String toggleCoupon(@PathVariable Long id, RedirectAttributes ra) {
+        logger.info("Admin toggling couponId: {}", id);
+        try {
+            couponService.toggleCoupon(id);
+            ra.addFlashAttribute("successMessage", "Coupon status updated.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/admin/coupons";
+    }
+
+    @PostMapping("/coupons/delete/{id}")
+    public String deleteCoupon(@PathVariable Long id, RedirectAttributes ra) {
+        logger.info("Admin deleting couponId: {}", id);
+        try {
+            couponService.deleteCoupon(id);
+            ra.addFlashAttribute("successMessage", "Coupon deleted.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/admin/coupons";
     }
 }
