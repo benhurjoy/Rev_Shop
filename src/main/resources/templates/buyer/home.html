@@ -19,100 +19,57 @@
         h1,h2,h3,h4{font-family:'Playfair Display',serif;}
 
         /* ── Navbar ── */
-        .revshop-navbar{
-            background:linear-gradient(135deg,#0A1628,#1E3A5F);
-            border-bottom:2px solid var(--orange);
-            padding:0.75rem 0;position:sticky;top:0;z-index:1000;
-            box-shadow:0 4px 20px rgba(0,0,0,0.4);
-        }
+        .revshop-navbar{background:linear-gradient(135deg,#0A1628,#1E3A5F);border-bottom:2px solid var(--orange);padding:0.75rem 0;position:sticky;top:0;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
         .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;text-decoration:none;}
         .navbar-brand span{color:var(--orange);}
         .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 0.9rem!important;border-radius:8px;transition:all 0.3s;position:relative;}
         .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
-        .nav-badge{
-            background:var(--orange);color:white;border-radius:50%;
-            font-size:0.6rem;font-weight:700;
-            padding:2px 5px;position:absolute;top:4px;right:4px;
-            min-width:16px;text-align:center;line-height:1.4;
-        }
-
-        /* ── Avatar dropdown ── */
+        .nav-badge{background:var(--orange);color:white;border-radius:50%;font-size:0.6rem;font-weight:700;padding:2px 5px;position:absolute;top:4px;right:4px;min-width:16px;text-align:center;line-height:1.4;}
         .dropdown-item{color:var(--text-muted);transition:all 0.2s;}
         .dropdown-item:hover{background:rgba(255,107,53,0.1)!important;color:var(--orange)!important;}
         .dropdown-toggle::after{display:none;}
 
-        /* ── Search strip ── */
+        /* ── Search ── */
         .search-strip{background:var(--navy-mid);border-bottom:1px solid var(--border);padding:1rem 0;}
-        .search-bar{
-            background:var(--card-bg);border:1.5px solid var(--border);
-            border-radius:12px;display:flex;align-items:center;overflow:hidden;
-            transition:border-color 0.3s;
-        }
+        .search-bar{background:var(--card-bg);border:1.5px solid var(--border);border-radius:12px;display:flex;align-items:center;overflow:hidden;transition:border-color 0.3s;}
         .search-bar:focus-within{border-color:var(--orange);}
-        .search-bar input{
-            background:transparent;border:none;color:var(--text-light);
-            padding:0.75rem 1rem;flex:1;font-family:'DM Sans',sans-serif;
-            font-size:0.95rem;outline:none;
-        }
+        .search-bar input{background:transparent;border:none;color:var(--text-light);padding:0.75rem 1rem;flex:1;font-family:'DM Sans',sans-serif;font-size:0.95rem;outline:none;}
         .search-bar input::placeholder{color:var(--text-muted);}
-        .search-bar button{
-            background:linear-gradient(135deg,var(--orange),#e85d2b);
-            border:none;color:white;padding:0.75rem 1.3rem;
-            cursor:pointer;font-weight:600;transition:all 0.3s;
-            white-space:nowrap;
-        }
+        .search-bar button{background:linear-gradient(135deg,var(--orange),#e85d2b);border:none;color:white;padding:0.75rem 1.3rem;cursor:pointer;font-weight:600;transition:all 0.3s;white-space:nowrap;}
         .search-bar button:hover{background:linear-gradient(135deg,#e85d2b,#d14e22);}
 
         /* ── Category chips ── */
-        .cat-chip{
-            display:inline-flex;align-items:center;gap:5px;
-            background:var(--card-bg);border:1.5px solid var(--border);
-            border-radius:20px;padding:0.45rem 1rem;
-            color:var(--text-muted);font-size:0.82rem;font-weight:500;
-            cursor:pointer;transition:all 0.3s;text-decoration:none;white-space:nowrap;
-        }
-        .cat-chip:hover,.cat-chip.active{
-            background:rgba(255,107,53,0.12);
-            border-color:var(--orange);color:var(--orange);
-        }
+        .cat-chip{display:inline-flex;align-items:center;gap:5px;background:var(--card-bg);border:1.5px solid var(--border);border-radius:20px;padding:0.45rem 1rem;color:var(--text-muted);font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.3s;text-decoration:none;white-space:nowrap;}
+        .cat-chip:hover,.cat-chip.active{background:rgba(255,107,53,0.12);border-color:var(--orange);color:var(--orange);}
+
+        /* ── Filter Bar ── */
+        .filter-bar{background:var(--navy-mid);border:1px solid var(--border);border-radius:16px;padding:1rem 1.2rem;margin-bottom:1.5rem;}
+        .filter-label{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);font-weight:600;margin-bottom:0.4rem;}
+        .filter-select{background:var(--card-bg)!important;border:1.5px solid var(--border)!important;border-radius:10px!important;color:var(--text-light)!important;padding:0.5rem 0.9rem!important;font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;width:100%;cursor:pointer;}
+        .filter-select:focus{border-color:var(--orange)!important;box-shadow:0 0 0 2px rgba(255,107,53,0.15)!important;}
+        .filter-select option{background:var(--navy-mid);}
+        .price-range-wrap{position:relative;}
+        .price-range{width:100%;accent-color:var(--orange);cursor:pointer;}
+        .price-labels{display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-muted);margin-top:2px;}
+        .btn-filter-reset{background:rgba(255,107,53,0.08);border:1px solid var(--border);color:var(--text-muted);border-radius:10px;padding:0.5rem 1rem;font-size:0.82rem;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+        .btn-filter-reset:hover{border-color:var(--orange);color:var(--orange);}
+        .filter-toggle-btn{background:rgba(255,107,53,0.08);border:1.5px solid var(--border);color:var(--text-muted);border-radius:10px;padding:0.5rem 1rem;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+        .filter-toggle-btn:hover,.filter-toggle-btn.active{border-color:var(--orange);color:var(--orange);}
+        .stock-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;}
+        .stock-toggle input[type=checkbox]{accent-color:var(--orange);width:16px;height:16px;cursor:pointer;}
 
         /* ── Product cards ── */
-        .product-card{
-            background:var(--card-bg);border:1px solid var(--border);
-            border-radius:16px;overflow:hidden;
-            transition:all 0.35s;height:100%;
-            display:flex;flex-direction:column;
-        }
-        .product-card:hover{
-            transform:translateY(-6px);
-            box-shadow:0 20px 50px rgba(255,107,53,0.18);
-            border-color:var(--orange);
-        }
+        .product-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all 0.35s;height:100%;display:flex;flex-direction:column;}
+        .product-card:hover{transform:translateY(-6px);box-shadow:0 20px 50px rgba(255,107,53,0.18);border-color:var(--orange);}
         .img-wrap{position:relative;height:200px;overflow:hidden;flex-shrink:0;}
         .img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform 0.4s;}
         .product-card:hover .img-wrap img{transform:scale(1.07);}
-        .img-placeholder{
-            width:100%;height:200px;
-            background:linear-gradient(135deg,var(--navy-light),var(--card-bg));
-            display:flex;align-items:center;justify-content:center;
-            font-size:2.5rem;color:var(--text-muted);
-        }
-        .disc-badge{
-            position:absolute;top:10px;left:10px;
-            background:linear-gradient(135deg,var(--orange),#e85d2b);
-            color:white;font-size:0.68rem;font-weight:700;
-            padding:3px 8px;border-radius:6px;
-        }
+        .img-placeholder{width:100%;height:200px;background:linear-gradient(135deg,var(--navy-light),var(--card-bg));display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:var(--text-muted);}
+        .disc-badge{position:absolute;top:10px;left:10px;background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;font-size:0.68rem;font-weight:700;padding:3px 8px;border-radius:6px;}
+        .oos-badge{position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.7);color:#ff8fa3;font-size:0.68rem;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid rgba(255,143,163,0.3);}
         .wish-form{position:absolute;top:10px;right:10px;}
-        .wish-btn{
-            width:32px;height:32px;border-radius:50%;
-            background:rgba(10,22,40,0.8);border:1px solid var(--border);
-            display:flex;align-items:center;justify-content:center;
-            cursor:pointer;transition:all 0.3s;color:var(--text-muted);
-            padding:0;
-        }
+        .wish-btn{width:32px;height:32px;border-radius:50%;background:rgba(10,22,40,0.8);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;color:var(--text-muted);padding:0;}
         .wish-btn:hover{background:rgba(255,107,53,0.2);border-color:var(--orange);color:var(--orange);}
-
         .card-body{padding:1rem;flex:1;display:flex;flex-direction:column;}
         .p-cat{font-size:0.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--orange);font-weight:600;margin-bottom:0.25rem;}
         .p-name{font-weight:600;font-size:0.9rem;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:0.4rem;}
@@ -120,42 +77,27 @@
         .p-price{color:var(--orange);font-weight:700;font-size:1.05rem;}
         .p-mrp{color:var(--text-muted);font-size:0.75rem;text-decoration:line-through;}
         .card-actions{display:flex;gap:0.5rem;margin-top:auto;padding-top:0.75rem;}
-        .btn-cart{
-            background:linear-gradient(135deg,var(--orange),#e85d2b);
-            color:white;border:none;border-radius:8px;
-            padding:0.5rem 0.75rem;font-weight:600;font-size:0.82rem;
-            flex:1;cursor:pointer;transition:all 0.3s;
-        }
+        .btn-cart{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:8px;padding:0.5rem 0.75rem;font-weight:600;font-size:0.82rem;flex:1;cursor:pointer;transition:all 0.3s;}
         .btn-cart:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,107,53,0.4);color:white;}
         .btn-cart:disabled{opacity:0.5;cursor:not-allowed;}
-        .btn-view{
-            background:rgba(255,107,53,0.08);
-            border:1px solid var(--border);border-radius:8px;
-            padding:0.5rem 0.65rem;color:var(--text-muted);
-            display:flex;align-items:center;justify-content:center;
-            text-decoration:none;transition:all 0.3s;flex-shrink:0;
-        }
+        .btn-view{background:rgba(255,107,53,0.08);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.65rem;color:var(--text-muted);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:all 0.3s;flex-shrink:0;}
         .btn-view:hover{border-color:var(--orange);color:var(--orange);}
 
-        /* ── Alerts ── */
+        /* ── Result count chip ── */
+        .result-chip{background:rgba(255,107,53,0.08);border:1px solid var(--border);border-radius:8px;padding:3px 10px;font-size:0.78rem;color:var(--text-muted);}
+
+        /* ── No results ── */
+        .no-filter-results{display:none;text-align:center;padding:3rem 1rem;color:var(--text-muted);}
+        .no-filter-results i{font-size:3rem;opacity:0.2;display:block;margin-bottom:0.8rem;}
+
+        /* ── Alerts / Empty ── */
         .alert-rev{border-radius:10px;padding:0.8rem 1rem;display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;}
         .alert-success-rev{background:rgba(40,167,69,0.1);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;}
         .alert-error-rev{background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;}
-
-        /* ── Empty state ── */
         .empty-state{text-align:center;padding:4rem 2rem;color:var(--text-muted);}
         .empty-state i{font-size:3.5rem;opacity:0.2;display:block;margin-bottom:1rem;}
-
-        /* ── Footer ── */
         .rev-footer{background:var(--navy-mid);border-top:1px solid var(--border);padding:2rem 0;margin-top:4rem;text-align:center;color:var(--text-muted);font-size:0.85rem;}
-
-        /* ── Responsive ── */
-        @media(max-width:576px){
-            .img-wrap{height:160px;}
-            .img-placeholder{height:160px;}
-            .p-name{font-size:0.82rem;}
-            .btn-cart{font-size:0.75rem;padding:0.45rem 0.5rem;}
-        }
+        @media(max-width:576px){.img-wrap,.img-placeholder{height:160px;}.p-name{font-size:0.82rem;}.btn-cart{font-size:0.75rem;padding:0.45rem 0.5rem;}}
     </style>
 </head>
 <body>
@@ -170,90 +112,54 @@
         </button>
         <div class="collapse navbar-collapse" id="navMenu">
             <ul class="navbar-nav ms-auto align-items-center gap-1">
-
                 <li class="nav-item">
-                    <a class="nav-link" th:href="@{/buyer/wishlist}">
-                        <i class="bi bi-heart me-1"></i>Wishlist
-                    </a>
+                    <a class="nav-link" th:href="@{/buyer/wishlist}"><i class="bi bi-heart me-1"></i>Wishlist</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" th:href="@{/buyer/orders}">
-                        <i class="bi bi-bag me-1"></i>Orders
-                    </a>
+                    <a class="nav-link" th:href="@{/buyer/orders}"><i class="bi bi-bag me-1"></i>Orders</a>
                 </li>
                 <li class="nav-item position-relative">
                     <a class="nav-link" th:href="@{/buyer/notifications}">
                         <i class="bi bi-bell fs-5"></i>
-                        <span class="nav-badge"
-                              th:if="${unreadCount != null and unreadCount > 0}"
+                        <span class="nav-badge" th:if="${unreadCount != null and unreadCount > 0}"
                               th:text="${unreadCount}"></span>
                     </a>
                 </li>
                 <li class="nav-item position-relative">
                     <a class="nav-link" th:href="@{/buyer/cart}">
                         <i class="bi bi-cart3 fs-5"></i>
-                        <span class="nav-badge"
-                              th:if="${cartCount != null and cartCount > 0}"
+                        <span class="nav-badge" th:if="${cartCount != null and cartCount > 0}"
                               th:text="${cartCount}"></span>
                     </a>
                 </li>
-
-                <!-- ── Avatar dropdown ── -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 p-0 ps-2"
                        href="#" id="profileDropdown" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <div style="
-                            width:38px;height:38px;border-radius:50%;
-                            background:linear-gradient(135deg,var(--orange),#e85d2b);
-                            display:flex;align-items:center;justify-content:center;
-                            font-weight:700;font-size:0.85rem;color:white;
-                            border:2px solid rgba(255,107,53,0.4);
-                            cursor:pointer;flex-shrink:0;">
+                        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#e85d2b);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:white;border:2px solid rgba(255,107,53,0.4);cursor:pointer;flex-shrink:0;">
                             <span th:text="${currentUser != null} ? ${currentUser.initials} : 'U'">U</span>
                         </div>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end mt-2"
                         style="background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;min-width:210px;padding:0.5rem;box-shadow:0 12px 40px rgba(0,0,0,0.4);">
-                        <!-- User info -->
                         <li style="padding:0.75rem 1rem;border-bottom:1px solid var(--border);">
                             <div style="font-weight:600;color:var(--text-light);font-size:0.9rem;"
                                  th:text="${currentUser != null} ? ${currentUser.firstName} + ' ' + ${currentUser.lastName} : ''"></div>
                             <div style="color:var(--text-muted);font-size:0.78rem;margin-top:2px;"
                                  th:text="${currentUser != null} ? ${currentUser.email} : ''"></div>
                         </li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
-                               th:href="@{/buyer/profile}">
-                                <i class="bi bi-person-circle" style="color:var(--orange);"></i>
-                                My Profile
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
-                               th:href="@{/buyer/orders}">
-                                <i class="bi bi-bag-check" style="color:var(--orange);"></i>
-                                My Orders
-                            </a>
-                        </li>
+                        <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2" th:href="@{/buyer/profile}"><i class="bi bi-person-circle" style="color:var(--orange);"></i>My Profile</a></li>
+                        <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2" th:href="@{/buyer/orders}"><i class="bi bi-bag-check" style="color:var(--orange);"></i>My Orders</a></li>
                         <li><hr style="border-color:var(--border);margin:0.4rem 0;"></li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
-                               th:href="@{/auth/logout}"
-                               style="color:#ff8fa3!important;">
-                                <i class="bi bi-box-arrow-right"></i>
-                                Logout
-                            </a>
-                        </li>
+                        <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2" th:href="@{/auth/logout}" style="color:#ff8fa3!important;"><i class="bi bi-box-arrow-right"></i>Logout</a></li>
                     </ul>
                 </li>
-
             </ul>
         </div>
     </div>
 </nav>
 
-<!-- Search Strip -->
+<!-- Search -->
 <div class="search-strip">
     <div class="container">
         <form th:action="@{/buyer/home}" method="get">
@@ -261,9 +167,7 @@
                 <i class="bi bi-search ms-3" style="color:var(--text-muted);flex-shrink:0;"></i>
                 <input type="text" name="keyword" th:value="${keyword}"
                        placeholder="Search products, categories, brands..."/>
-                <button type="submit">
-                    <i class="bi bi-search me-1"></i>Search
-                </button>
+                <button type="submit"><i class="bi bi-search me-1"></i>Search</button>
             </div>
         </form>
     </div>
@@ -273,18 +177,15 @@
 
     <!-- Alerts -->
     <div th:if="${successMessage}" class="alert-rev alert-success-rev mb-3">
-        <i class="bi bi-check-circle-fill"></i>
-        <span th:text="${successMessage}"></span>
+        <i class="bi bi-check-circle-fill"></i><span th:text="${successMessage}"></span>
     </div>
     <div th:if="${errorMessage}" class="alert-rev alert-error-rev mb-3">
-        <i class="bi bi-exclamation-circle-fill"></i>
-        <span th:text="${errorMessage}"></span>
+        <i class="bi bi-exclamation-circle-fill"></i><span th:text="${errorMessage}"></span>
     </div>
 
-    <!-- Categories -->
-    <div class="d-flex gap-2 flex-wrap mb-4">
-        <a th:href="@{/buyer/home}"
-           class="cat-chip"
+    <!-- Category chips -->
+    <div class="d-flex gap-2 flex-wrap mb-3">
+        <a th:href="@{/buyer/home}" class="cat-chip"
            th:classappend="${keyword == null and selectedCategory == null} ? ' active' : ''">
             <i class="bi bi-grid-fill"></i> All
         </a>
@@ -295,23 +196,91 @@
            th:text="${cat.name}">Category</a>
     </div>
 
-    <!-- Section Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Section header + filter toggle -->
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
             <h4 style="margin:0;font-size:1.3rem;"
-                th:text="${keyword != null} ? 'Results for: &quot;' + ${keyword} + '&quot;' : 'All Products'">
-                Products
-            </h4>
-            <small style="color:var(--text-muted);"
-                   th:text="${products?.size() ?: 0} + ' products found'"></small>
+                th:text="${keyword != null} ? 'Results for: &quot;' + ${keyword} + '&quot;' : 'All Products'">Products</h4>
+            <small style="color:var(--text-muted);">
+                <span id="visibleCount" th:text="${(products?.size() ?: 0) + ' products found'}" ></span>
+            </small>
         </div>
-        <a th:if="${keyword != null}" th:href="@{/buyer/home}"
-           style="color:var(--orange);font-size:0.85rem;text-decoration:none;display:flex;align-items:center;gap:4px;">
-            <i class="bi bi-x-circle"></i>Clear
-        </a>
+        <div class="d-flex gap-2 align-items-center">
+            <a th:if="${keyword != null}" th:href="@{/buyer/home}"
+               style="color:var(--orange);font-size:0.85rem;text-decoration:none;display:flex;align-items:center;gap:4px;">
+                <i class="bi bi-x-circle"></i>Clear search
+            </a>
+            <button class="filter-toggle-btn" id="filterToggle" onclick="toggleFilters()">
+                <i class="bi bi-sliders"></i> Filters
+            </button>
+        </div>
     </div>
 
-    <!-- Empty State -->
+    <!-- Filter Bar (hidden by default, toggled) -->
+    <div class="filter-bar" id="filterBar" style="display:none;">
+        <div class="row g-3 align-items-end">
+
+            <!-- Sort -->
+            <div class="col-6 col-md-3">
+                <div class="filter-label"><i class="bi bi-sort-down me-1"></i>Sort By</div>
+                <select class="filter-select" id="sortSelect" onchange="applyFilters()">
+                    <option value="default">Default</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="rating-desc">Top Rated</option>
+                    <option value="discount-desc">Biggest Discount</option>
+                    <option value="name-asc">Name: A–Z</option>
+                </select>
+            </div>
+
+            <!-- Min rating -->
+            <div class="col-6 col-md-2">
+                <div class="filter-label"><i class="bi bi-star me-1"></i>Min Rating</div>
+                <select class="filter-select" id="ratingSelect" onchange="applyFilters()">
+                    <option value="0">All Ratings</option>
+                    <option value="4">4★ & above</option>
+                    <option value="3">3★ & above</option>
+                    <option value="2">2★ & above</option>
+                </select>
+            </div>
+
+            <!-- Max price slider -->
+            <div class="col-12 col-md-4">
+                <div class="filter-label">
+                    <i class="bi bi-currency-rupee me-1"></i>Max Price:
+                    <strong style="color:var(--orange);">₹<span id="priceDisplay">any</span></strong>
+                </div>
+                <input type="range" class="price-range" id="priceRange"
+                       min="0" max="100000" step="100" value="100000"
+                       oninput="updatePriceDisplay(this.value); applyFilters()"/>
+                <div class="price-labels">
+                    <span>₹0</span>
+                    <span id="priceMax">₹1,00,000</span>
+                </div>
+            </div>
+
+            <!-- In stock only -->
+            <div class="col-6 col-md-2">
+                <div class="filter-label"><i class="bi bi-box-seam me-1"></i>Availability</div>
+                <label class="stock-toggle">
+                    <input type="checkbox" id="inStockOnly" onchange="applyFilters()"/>
+                    <span style="font-size:0.85rem;color:var(--text-light);">In Stock Only</span>
+                </label>
+            </div>
+
+            <!-- Reset -->
+            <div class="col-6 col-md-1 text-end">
+                <button class="btn-filter-reset" onclick="resetFilters()">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- Active filter chips -->
+        <div id="activeFilters" class="d-flex gap-2 flex-wrap mt-2" style="display:none!important;"></div>
+    </div>
+
+    <!-- Empty state (server-side: no products at all) -->
     <div th:if="${products == null or products.isEmpty()}" class="empty-state">
         <i class="bi bi-search"></i>
         <h5 style="color:var(--text-light);">No products found</h5>
@@ -323,24 +292,31 @@
     </div>
 
     <!-- Products Grid -->
-    <div class="row g-3" th:if="${products != null and !products.isEmpty()}">
-        <div class="col-6 col-md-4 col-lg-3"
-             th:each="product : ${products}">
+    <div class="row g-3" id="productsGrid" th:if="${products != null and !products.isEmpty()}">
+        <div class="col-6 col-md-4 col-lg-3 product-col"
+             th:each="product : ${products}"
+             th:data-price="${product.price}"
+             th:data-rating="${product.averageRating != null ? product.averageRating : 0}"
+             th:data-discount="${product.discountPercent != null ? product.discountPercent : 0}"
+             th:data-name="${product.name}"
+             th:data-stock="${product.stockQuantity}">
             <div class="product-card">
                 <div class="img-wrap">
                     <img th:if="${product.imageUrl != null}"
                          th:src="${product.imageUrl}"
-                         th:alt="${product.name}"
-                         loading="lazy"/>
+                         th:alt="${product.name}" loading="lazy"/>
                     <div class="img-placeholder" th:unless="${product.imageUrl != null}">
                         <i class="bi bi-image"></i>
                     </div>
+
+                    <!-- FIX: show Out of Stock badge over discount badge when OOS -->
+                    <span class="oos-badge" th:if="${product.stockQuantity == 0}">Out of Stock</span>
                     <span class="disc-badge"
-                          th:if="${product.discountPercent != null and product.discountPercent > 0}"
+                          th:if="${product.stockQuantity > 0 and product.discountPercent != null and product.discountPercent > 0}"
                           th:text="${product.discountPercent} + '% OFF'"></span>
+
                     <form class="wish-form"
-                          th:action="@{/buyer/wishlist/add/{id}(id=${product.id})}"
-                          method="post">
+                          th:action="@{/buyer/wishlist/add/{id}(id=${product.id})}" method="post">
                         <button type="submit" class="wish-btn" title="Add to Wishlist">
                             <i class="bi bi-heart" style="font-size:0.85rem;"></i>
                         </button>
@@ -351,24 +327,25 @@
                     <div class="p-cat" th:text="${product.categoryName}"></div>
                     <div class="p-name" th:text="${product.name}">Name</div>
 
-                    <!-- Rating -->
+                    <!-- FIX: cast averageRating to int for star loop comparison -->
                     <div class="d-flex align-items-center gap-1 mb-2">
                         <span class="stars">
-                            <i th:each="i : ${#numbers.sequence(1,5)}"
-                               th:class="${i <= (product.averageRating ?: 0)} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
+                            <th:block th:with="rating=${product.averageRating != null ? product.averageRating.intValue() : 0}">
+                                <i th:each="i : ${#numbers.sequence(1,5)}"
+                                   th:class="${i <= rating} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
+                            </th:block>
                         </span>
                         <span style="color:var(--text-muted);font-size:0.7rem;"
-                              th:text="'(' + (product.totalReviews ?: 0) + ')'"></span>
+                              th:if="${product.totalReviews != null and product.totalReviews > 0}"
+                              th:text="'(' + ${product.totalReviews} + ')'"></span>
                     </div>
 
-                    <!-- Price -->
                     <div class="d-flex align-items-baseline gap-2 mb-1">
-                        <span class="p-price" th:text="'₹' + ${product.price}"></span>
+                        <span class="p-price" th:text="'₹' + ${#numbers.formatDecimal(product.price,1,2)}"></span>
                         <span class="p-mrp" th:if="${product.mrp != null}"
-                              th:text="'₹' + ${product.mrp}"></span>
+                              th:text="'₹' + ${#numbers.formatDecimal(product.mrp,1,2)}"></span>
                     </div>
 
-                    <!-- Actions -->
                     <div class="card-actions">
                         <form th:action="@{/buyer/cart/add}" method="post" style="flex:1;display:flex;">
                             <input type="hidden" name="productId" th:value="${product.id}"/>
@@ -387,6 +364,19 @@
             </div>
         </div>
     </div>
+
+    <!-- No results after client-side filtering -->
+    <div class="no-filter-results" id="noFilterResults">
+        <i class="bi bi-funnel"></i>
+        <p style="color:var(--text-light);font-weight:600;">No products match your filters</p>
+        <p style="font-size:0.85rem;">Try adjusting the price range, rating, or sort order.</p>
+        <button class="btn-filter-reset mt-2" onclick="resetFilters()">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+        </button>
+    </div>
+
+    <!-- Visible count bar -->
+    <div id="countBar" class="text-center mt-3" style="display:none;color:var(--text-muted);font-size:0.85rem;"></div>
 </div>
 
 <footer class="rev-footer">
@@ -397,5 +387,113 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ── Filter state ──────────────────────────────────────────
+    let filtersVisible = false;
+
+    function toggleFilters() {
+        filtersVisible = !filtersVisible;
+        document.getElementById('filterBar').style.display = filtersVisible ? 'block' : 'none';
+        document.getElementById('filterToggle').classList.toggle('active', filtersVisible);
+
+        // Calibrate max price from actual products on first open
+        if (filtersVisible) calibrateMaxPrice();
+    }
+
+    function calibrateMaxPrice() {
+        const cols  = document.querySelectorAll('.product-col');
+        let maxP = 0;
+        cols.forEach(c => {
+            const p = parseFloat(c.dataset.price) || 0;
+            if (p > maxP) maxP = p;
+        });
+        // Round up to next 1000
+        maxP = Math.ceil((maxP + 1) / 1000) * 1000;
+        const slider = document.getElementById('priceRange');
+        slider.max   = maxP;
+        slider.value = maxP;
+        document.getElementById('priceMax').textContent = '₹' + maxP.toLocaleString('en-IN');
+        document.getElementById('priceDisplay').textContent = 'any';
+    }
+
+    function updatePriceDisplay(val) {
+        const max = parseInt(document.getElementById('priceRange').max);
+        document.getElementById('priceDisplay').textContent =
+            parseInt(val) >= max ? 'any' : '₹' + parseInt(val).toLocaleString('en-IN');
+    }
+
+    function applyFilters() {
+        const sort      = document.getElementById('sortSelect').value;
+        const minRating = parseFloat(document.getElementById('ratingSelect').value) || 0;
+        const maxPrice  = parseInt(document.getElementById('priceRange').value);
+        const sliderMax = parseInt(document.getElementById('priceRange').max);
+        const inStock   = document.getElementById('inStockOnly').checked;
+
+        const grid = document.getElementById('productsGrid');
+        const cols = Array.from(document.querySelectorAll('.product-col'));
+
+        // Filter
+        let visible = 0;
+        cols.forEach(col => {
+            const price    = parseFloat(col.dataset.price)    || 0;
+            const rating   = parseFloat(col.dataset.rating)   || 0;
+            const stock    = parseInt(col.dataset.stock)      || 0;
+
+            const passPrice  = maxPrice >= sliderMax || price <= maxPrice;
+            const passRating = rating >= minRating;
+            const passStock  = !inStock || stock > 0;
+
+            if (passPrice && passRating && passStock) {
+                col.style.display = '';
+                visible++;
+            } else {
+                col.style.display = 'none';
+            }
+        });
+
+        // Sort visible columns
+        const visibleCols = cols.filter(c => c.style.display !== 'none');
+        visibleCols.sort((a, b) => {
+            switch(sort) {
+                case 'price-asc':     return (parseFloat(a.dataset.price)||0)    - (parseFloat(b.dataset.price)||0);
+                case 'price-desc':    return (parseFloat(b.dataset.price)||0)    - (parseFloat(a.dataset.price)||0);
+                case 'rating-desc':   return (parseFloat(b.dataset.rating)||0)   - (parseFloat(a.dataset.rating)||0);
+                case 'discount-desc': return (parseFloat(b.dataset.discount)||0) - (parseFloat(a.dataset.discount)||0);
+                case 'name-asc':      return (a.dataset.name||'').localeCompare(b.dataset.name||'');
+                default: return 0;
+            }
+        });
+        visibleCols.forEach(col => grid.appendChild(col));
+
+        // No-results message
+        document.getElementById('noFilterResults').style.display = visible === 0 ? 'block' : 'none';
+
+        // Count bar
+        const total = cols.length;
+        const bar   = document.getElementById('countBar');
+        const countSpan = document.getElementById('visibleCount');
+        if (visible < total) {
+            bar.style.display = 'block';
+            bar.textContent   = 'Showing ' + visible + ' of ' + total + ' products';
+            if (countSpan) countSpan.textContent = visible + ' of ' + total + ' products found';
+        } else {
+            bar.style.display = 'none';
+            if (countSpan) countSpan.textContent = total + ' products found';
+        }
+    }
+
+    function resetFilters() {
+        document.getElementById('sortSelect').value   = 'default';
+        document.getElementById('ratingSelect').value = '0';
+        document.getElementById('inStockOnly').checked = false;
+        const slider = document.getElementById('priceRange');
+        slider.value = slider.max;
+        document.getElementById('priceDisplay').textContent = 'any';
+
+        document.querySelectorAll('.product-col').forEach(c => c.style.display = '');
+        document.getElementById('noFilterResults').style.display = 'none';
+        document.getElementById('countBar').style.display        = 'none';
+    }
+</script>
 </body>
 </html>

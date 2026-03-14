@@ -9,145 +9,82 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
     <style>
-        :root{
-            --navy:#0A1628;--navy-mid:#112240;--navy-light:#1E3A5F;
-            --orange:#FF6B35;--gold:#FFB347;
-            --text-light:#E8EDF5;--text-muted:#8899AA;
-            --card-bg:#112240;--border:rgba(255,107,53,0.2);
-        }
+        :root{--navy:#0A1628;--navy-mid:#112240;--navy-light:#1E3A5F;--orange:#FF6B35;--gold:#FFB347;--text-light:#E8EDF5;--text-muted:#8899AA;--card-bg:#112240;--border:rgba(255,107,53,0.2);}
         *{box-sizing:border-box;margin:0;padding:0;}
         body{background:var(--navy);color:var(--text-light);font-family:'DM Sans',sans-serif;}
         h1,h2,h3,h4{font-family:'Playfair Display',serif;}
-
-        /* ── Navbar ── */
-        .revshop-navbar{
-            background:linear-gradient(135deg,#0A1628,#1E3A5F);
-            border-bottom:2px solid var(--orange);
-            padding:0.75rem 0;position:sticky;top:0;z-index:1000;
-            box-shadow:0 4px 20px rgba(0,0,0,0.4);
-        }
+        .revshop-navbar{background:linear-gradient(135deg,#0A1628,#1E3A5F);border-bottom:2px solid var(--orange);padding:0.75rem 0;position:sticky;top:0;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
         .navbar-brand{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--text-light)!important;text-decoration:none;}
         .navbar-brand span{color:var(--orange);}
-        .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s;position:relative;}
+        .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s;}
         .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
-
-        /* ── Breadcrumb ── */
         .breadcrumb-rev{background:var(--navy-mid);border-bottom:1px solid var(--border);padding:0.75rem 0;}
-        .breadcrumb-rev a{color:var(--text-muted);text-decoration:none;font-size:0.85rem;transition:color 0.2s;}
+        .breadcrumb-rev a{color:var(--text-muted);text-decoration:none;font-size:0.85rem;}
         .breadcrumb-rev a:hover{color:var(--orange);}
         .breadcrumb-rev span{color:var(--text-muted);font-size:0.85rem;margin:0 0.4rem;}
         .breadcrumb-rev .current{color:var(--text-light);font-size:0.85rem;}
-
-        /* ── Product image ── */
         .product-image-wrap{position:sticky;top:80px;}
-        .product-image-main{
-            width:100%;height:420px;object-fit:cover;
-            border-radius:20px;border:1px solid var(--border);display:block;
-        }
-        .product-image-placeholder{
-            width:100%;height:420px;border-radius:20px;
-            background:linear-gradient(135deg,var(--navy-light),var(--card-bg));
-            display:flex;align-items:center;justify-content:center;
-            font-size:5rem;color:var(--text-muted);border:1px solid var(--border);
-        }
-
-        /* ── Info card ── */
+        .product-image-main{width:100%;height:420px;object-fit:cover;border-radius:20px;border:1px solid var(--border);display:block;transition:opacity 0.3s;}
+        .product-image-main.fading{opacity:0;}
+        .product-image-placeholder{width:100%;height:420px;border-radius:20px;background:linear-gradient(135deg,var(--navy-light),var(--card-bg));display:flex;align-items:center;justify-content:center;font-size:5rem;color:var(--text-muted);border:1px solid var(--border);}
         .product-info-card{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:2rem;}
-        .product-category-tag{
-            background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.25);
-            border-radius:20px;padding:4px 14px;font-size:0.78rem;
-            color:var(--orange);font-weight:600;display:inline-block;margin-bottom:1rem;
-        }
+        .product-category-tag{background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.25);border-radius:20px;padding:4px 14px;font-size:0.78rem;color:var(--orange);font-weight:600;display:inline-block;margin-bottom:1rem;}
         .product-title{font-size:1.7rem;font-weight:700;color:var(--text-light);line-height:1.25;margin-bottom:0.6rem;}
         .stars{color:var(--gold);}
-        .price-main{font-size:2rem;font-weight:700;color:var(--orange);}
+        .price-main{font-size:2rem;font-weight:700;color:var(--orange);transition:all 0.25s;}
         .price-mrp{font-size:1rem;color:var(--text-muted);text-decoration:line-through;}
-        .discount-chip{
-            background:linear-gradient(135deg,var(--orange),#e85d2b);
-            color:white;font-size:0.75rem;font-weight:700;padding:4px 10px;border-radius:8px;
-        }
+        .discount-chip{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;font-size:0.75rem;font-weight:700;padding:4px 10px;border-radius:8px;}
         .stock-badge{border-radius:8px;padding:4px 12px;font-size:0.82rem;display:inline-flex;align-items:center;gap:5px;}
         .stock-ok{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;}
         .stock-low{background:rgba(255,179,71,0.12);border:1px solid rgba(255,179,71,0.3);color:var(--gold);}
         .stock-out{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;}
-
-        /* ── Divider ── */
         .rev-divider{border:none;border-top:1px solid var(--border);margin:1.2rem 0;}
-
-        /* ── Seller box ── */
-        .seller-box{
-            background:rgba(255,107,53,0.05);border:1px solid var(--border);
-            border-radius:10px;padding:0.8rem 1rem;
-            display:flex;align-items:center;gap:0.6rem;font-size:0.88rem;
-        }
-
-        /* ── Qty control ── */
+        .variant-group{margin-bottom:1rem;}
+        .variant-group-label{font-size:0.8rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:0.6rem;display:flex;align-items:center;gap:6px;}
+        .variant-group-label span.selected-val{color:var(--text-light);font-weight:700;text-transform:none;letter-spacing:0;margin-left:4px;}
+        .color-swatches{display:flex;flex-wrap:wrap;gap:8px;}
+        .color-swatch-btn{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all 0.2s;position:relative;outline:none;}
+        .color-swatch-btn:hover:not(.unavailable){transform:scale(1.1);}
+        .color-swatch-btn.active{border-color:var(--orange);box-shadow:0 0 0 2px rgba(255,107,53,0.35);}
+        .color-swatch-btn.unavailable{opacity:0.3;cursor:not-allowed;}
+        .color-swatch-btn[data-color="White"]{border-color:rgba(255,255,255,0.25)!important;}
+        .size-btns{display:flex;flex-wrap:wrap;gap:8px;}
+        .size-btn{background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,107,53,0.2);border-radius:10px;color:var(--text-muted);padding:6px 16px;font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;}
+        .size-btn:hover:not(.unavailable):not(.active){border-color:var(--orange);color:var(--text-light);}
+        .size-btn.active{background:rgba(255,107,53,0.15);border-color:var(--orange);color:var(--text-light);}
+        .size-btn.unavailable{opacity:0.3;cursor:not-allowed;text-decoration:line-through;}
+        .variant-prompt{background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.2);border-radius:10px;padding:0.7rem 1rem;font-size:0.85rem;color:var(--gold);display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;}
+        .seller-box{background:rgba(255,107,53,0.05);border:1px solid var(--border);border-radius:10px;padding:0.8rem 1rem;display:flex;align-items:center;gap:0.6rem;font-size:0.88rem;}
         .qty-control{display:inline-flex;align-items:center;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;}
         .qty-btn{background:var(--navy-light);border:none;color:var(--text-light);width:38px;height:42px;font-size:1.1rem;cursor:pointer;transition:all 0.2s;}
         .qty-btn:hover{background:var(--orange);color:white;}
         .qty-input{background:transparent;border:none;color:var(--text-light);text-align:center;width:48px;font-size:0.95rem;font-weight:600;}
         .qty-input:focus{outline:none;}
-
-        /* ── Buttons ── */
-        .btn-cart{
-            background:linear-gradient(135deg,var(--orange),#e85d2b);
-            color:white;border:none;border-radius:12px;
-            padding:0.85rem 1.8rem;font-weight:700;font-size:0.95rem;
-            transition:all 0.3s;box-shadow:0 6px 20px rgba(255,107,53,0.3);cursor:pointer;
-        }
-        .btn-cart:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,107,53,0.5);color:white;}
-        .btn-wish{
-            background:transparent;color:var(--orange);
-            border:1.5px solid var(--orange);border-radius:12px;
-            padding:0.85rem 1.5rem;font-weight:600;font-size:0.95rem;
-            transition:all 0.3s;cursor:pointer;
-        }
+        .btn-cart{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:12px;padding:0.85rem 1.8rem;font-weight:700;font-size:0.95rem;transition:all 0.3s;box-shadow:0 6px 20px rgba(255,107,53,0.3);cursor:pointer;}
+        .btn-cart:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,107,53,0.5);color:white;}
+        .btn-cart:disabled{opacity:0.45;cursor:not-allowed;transform:none;box-shadow:none;}
+        .btn-wish{background:transparent;color:var(--orange);border:1.5px solid var(--orange);border-radius:12px;padding:0.85rem 1.5rem;font-weight:600;font-size:0.95rem;transition:all 0.3s;cursor:pointer;}
         .btn-wish:hover{background:rgba(255,107,53,0.1);}
-
-        /* ── Alerts ── */
         .alert-rev{border-radius:10px;padding:0.8rem 1rem;display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;margin-bottom:1.2rem;}
         .alert-success-rev{background:rgba(40,167,69,0.1);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;}
         .alert-error-rev{background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;}
-
-        /* ── Reviews ── */
         .review-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:1.2rem;margin-bottom:0.8rem;}
-        .reviewer-avatar{
-            width:38px;height:38px;border-radius:50%;flex-shrink:0;
-            background:linear-gradient(135deg,var(--orange),#e85d2b);
-            display:flex;align-items:center;justify-content:center;
-            font-weight:700;font-size:0.9rem;color:white;
-        }
+        .reviewer-avatar{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--orange),#e85d2b);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;color:white;}
         .review-text{color:var(--text-muted);font-size:0.88rem;margin-top:0.5rem;line-height:1.6;}
         .write-review-box{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;}
-        .textarea-rev{
-            background:rgba(255,255,255,0.04);border:1.5px solid var(--border);
-            border-radius:10px;color:var(--text-light);
-            padding:0.75rem 1rem;width:100%;font-family:'DM Sans',sans-serif;
-            font-size:0.9rem;resize:none;outline:none;transition:border-color 0.3s;
-        }
+        .textarea-rev{background:rgba(255,255,255,0.04);border:1.5px solid var(--border);border-radius:10px;color:var(--text-light);padding:0.75rem 1rem;width:100%;font-family:'DM Sans',sans-serif;font-size:0.9rem;resize:none;outline:none;transition:border-color 0.3s;}
         .textarea-rev:focus{border-color:var(--orange);}
-
-        /* ── Footer ── */
         .rev-footer{background:var(--navy-mid);border-top:1px solid var(--border);padding:2rem 0;margin-top:4rem;text-align:center;color:var(--text-muted);font-size:0.85rem;}
-
-        @media(max-width:768px){
-            .product-image-wrap{position:static;}
-            .product-image-main,.product-image-placeholder{height:280px;}
-            .product-title{font-size:1.3rem;}
-            .price-main{font-size:1.6rem;}
-        }
+        @media(max-width:768px){.product-image-wrap{position:static;}.product-image-main,.product-image-placeholder{height:280px;}.product-title{font-size:1.3rem;}.price-main{font-size:1.6rem;}}
     </style>
 </head>
 <body>
 
-<!-- Navbar -->
 <nav class="revshop-navbar navbar navbar-expand-lg">
     <div class="container-fluid px-4">
         <a class="navbar-brand" th:href="@{/buyer/home}">Rev<span>Shop</span></a>
         <div class="d-flex gap-2 ms-auto align-items-center">
-            <a class="nav-link" th:href="@{/buyer/home}">
-                <i class="bi bi-arrow-left me-1"></i>Back to Shop
-            </a>
+            <a class="nav-link" th:href="@{/buyer/home}"><i class="bi bi-arrow-left me-1"></i>Back to Shop</a>
             <a class="nav-link" sec:authorize="hasRole('BUYER')" th:href="@{/buyer/cart}">
                 <i class="bi bi-cart3 me-1"></i>Cart
                 <span th:if="${cartCount != null and cartCount > 0}"
@@ -158,33 +95,24 @@
     </div>
 </nav>
 
-<!-- Breadcrumb -->
 <div class="breadcrumb-rev">
     <div class="container">
-        <a th:href="@{/buyer/home}">Home</a>
-        <span>/</span>
-        <a th:href="@{/buyer/home}">Shop</a>
-        <span>/</span>
+        <a th:href="@{/buyer/home}">Home</a><span>/</span>
+        <a th:href="@{/buyer/home}">Shop</a><span>/</span>
         <span class="current" th:text="${product.name}">Product</span>
     </div>
 </div>
 
 <div class="container py-4 py-md-5">
-
-    <!-- Alerts -->
-    <div th:if="${successMessage}" class="alert-rev alert-success-rev">
-        <i class="bi bi-check-circle-fill"></i><span th:text="${successMessage}"></span>
-    </div>
-    <div th:if="${errorMessage}" class="alert-rev alert-error-rev">
-        <i class="bi bi-exclamation-circle-fill"></i><span th:text="${errorMessage}"></span>
-    </div>
+    <div th:if="${successMessage}" class="alert-rev alert-success-rev"><i class="bi bi-check-circle-fill"></i><span th:text="${successMessage}"></span></div>
+    <div th:if="${errorMessage}"   class="alert-rev alert-error-rev">  <i class="bi bi-exclamation-circle-fill"></i><span th:text="${errorMessage}"></span></div>
 
     <div class="row g-4 g-lg-5">
-
-        <!-- Product Image -->
+        <!-- Image -->
         <div class="col-lg-5">
             <div class="product-image-wrap">
-                <img th:if="${product.imageUrl != null}"
+                <img id="mainProductImage"
+                     th:if="${product.imageUrl != null}"
                      th:src="${product.imageUrl}"
                      th:alt="${product.name}"
                      class="product-image-main"/>
@@ -194,87 +122,76 @@
             </div>
         </div>
 
-        <!-- Product Info -->
+        <!-- Info -->
         <div class="col-lg-7">
             <div class="product-info-card">
                 <span class="product-category-tag" th:text="${product.categoryName}">Category</span>
                 <h1 class="product-title" th:text="${product.name}">Product Name</h1>
 
-                <!-- Rating -->
                 <div class="d-flex align-items-center gap-2 mb-3">
                     <span class="stars">
                         <i th:each="i : ${#numbers.sequence(1,5)}"
                            th:class="${i <= (averageRating ?: 0)} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
                     </span>
-                    <span style="color:var(--gold);font-weight:600;font-size:0.9rem;"
-                          th:text="${averageRating ?: '0.0'}"></span>
-                    <span style="color:var(--text-muted);font-size:0.83rem;"
-                          th:text="'(' + ${product.totalReviews ?: 0} + ' reviews)'"></span>
+                    <span style="color:var(--gold);font-weight:600;font-size:0.9rem;" th:text="${averageRating ?: '0.0'}"></span>
+                    <span style="color:var(--text-muted);font-size:0.83rem;" th:text="'(' + ${product.totalReviews ?: 0} + ' reviews)'"></span>
                 </div>
 
                 <hr class="rev-divider"/>
 
-                <!-- Price -->
                 <div class="d-flex align-items-baseline gap-3 mb-3">
-                    <span class="price-main" th:text="'₹' + ${product.price}"></span>
-                    <span class="price-mrp" th:if="${product.mrp != null}"
-                          th:text="'₹' + ${product.mrp}"></span>
-                    <span class="discount-chip"
-                          th:if="${product.discountPercent != null and product.discountPercent > 0}"
+                    <span class="price-main" id="displayPrice" th:text="'₹' + ${product.price}"></span>
+                    <span class="price-mrp" th:if="${product.mrp != null}" th:text="'₹' + ${product.mrp}"></span>
+                    <span class="discount-chip" th:if="${product.discountPercent != null and product.discountPercent > 0}"
                           th:text="${product.discountPercent} + '% OFF'"></span>
                 </div>
 
-                <!-- Stock -->
-                <div class="mb-3">
+                <div class="mb-3" id="stockDisplay">
                     <span class="stock-badge stock-ok" th:if="${product.stockQuantity > 5}">
-                        <i class="bi bi-check-circle-fill"></i>
-                        In Stock (<span th:text="${product.stockQuantity}"></span> available)
+                        <i class="bi bi-check-circle-fill"></i>In Stock
                     </span>
-                    <span class="stock-badge stock-low"
-                          th:if="${product.stockQuantity > 0 and product.stockQuantity <= 5}">
-                        <i class="bi bi-exclamation-circle-fill"></i>
-                        Only <span th:text="${product.stockQuantity}"></span> left!
+                    <span class="stock-badge stock-low" th:if="${product.stockQuantity > 0 and product.stockQuantity <= 5}">
+                        <i class="bi bi-exclamation-circle-fill"></i>Only <span th:text="${product.stockQuantity}"></span> left!
                     </span>
                     <span class="stock-badge stock-out" th:if="${product.stockQuantity == 0}">
                         <i class="bi bi-x-circle-fill"></i>Out of Stock
                     </span>
                 </div>
 
+                <div id="variantSelectors"></div>
+
                 <hr class="rev-divider"/>
 
-                <!-- Description -->
                 <p style="color:var(--text-muted);font-size:0.93rem;line-height:1.75;margin-bottom:1.3rem;"
                    th:text="${product.description}"></p>
 
-                <!-- Seller -->
                 <div class="seller-box mb-4">
                     <i class="bi bi-shop" style="color:var(--orange);font-size:1rem;"></i>
                     <span style="color:var(--text-muted);">Sold by</span>
                     <strong style="color:var(--text-light);" th:text="${product.sellerName}">Seller</strong>
                 </div>
 
-                <!-- Add to Cart — Buyer only, in stock -->
-                <div sec:authorize="hasRole('BUYER')" th:if="${product.stockQuantity > 0}">
-                    <form th:action="@{/buyer/cart/add}" method="post">
-                        <input type="hidden" name="productId" th:value="${product.id}"/>
+                <!-- Add to Cart — buyer only -->
+                <div sec:authorize="hasRole('BUYER')">
+                    <form th:action="@{/buyer/cart/add}" method="post" id="cartForm">
+                        <input type="hidden" name="productId"  th:value="${product.id}"/>
+                        <input type="hidden" name="variantId"  id="selectedVariantId" value=""/>
                         <div class="d-flex align-items-center gap-3 mb-4">
                             <span style="color:var(--text-muted);font-size:0.88rem;">Quantity:</span>
                             <div class="qty-control">
                                 <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
                                 <input type="number" name="quantity" id="qtyInput"
-                                       class="qty-input" value="1" min="1"
-                                       th:max="${product.stockQuantity}"/>
+                                       class="qty-input" value="1" min="1" max="99"/>
                                 <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
                             </div>
                         </div>
                         <div class="d-flex gap-3 flex-wrap">
-                            <button type="submit" class="btn-cart">
+                            <button type="submit" class="btn-cart" id="addToCartBtn">
                                 <i class="bi bi-cart-plus me-2"></i>Add to Cart
                             </button>
                         </div>
                     </form>
 
-                    <!-- Wishlist -->
                     <form th:if="${!isInWishlist}"
                           th:action="@{/buyer/wishlist/add/{id}(id=${product.id})}"
                           method="post" class="mt-3">
@@ -288,14 +205,6 @@
                     </div>
                 </div>
 
-                <!-- Out of stock message for buyers -->
-                <div sec:authorize="hasRole('BUYER')" th:if="${product.stockQuantity == 0}" class="mt-2">
-                    <button disabled class="btn-cart w-100" style="opacity:0.5;cursor:not-allowed;">
-                        <i class="bi bi-x-circle me-2"></i>Out of Stock
-                    </button>
-                </div>
-
-                <!-- Login prompt for anonymous -->
                 <div sec:authorize="isAnonymous()" class="mt-3">
                     <a th:href="@{/auth/login}"
                        style="background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:12px;padding:0.9rem 2rem;font-weight:700;text-decoration:none;display:block;text-align:center;">
@@ -306,130 +215,377 @@
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════
-         Reviews Section
-         ═══════════════════════════════════════════════════════ -->
+    <!-- Reviews -->
     <div class="mt-5">
         <h3 style="font-size:1.4rem;margin-bottom:1.5rem;">
             Customer Reviews
             <span style="color:var(--text-muted);font-size:0.95rem;font-family:'DM Sans',sans-serif;"
                   th:text="'(' + ${reviews?.size() ?: 0} + ')'"></span>
         </h3>
-
-        <!-- ── Write Review block (Buyer only) ── -->
         <div sec:authorize="hasRole('BUYER')" class="mb-4">
-
-            <!-- Case 1: Already reviewed -->
-            <div th:if="${hasReviewed}"
-                 style="color:var(--text-muted);font-size:0.88rem;padding:0.9rem 1rem;background:rgba(255,107,53,0.05);border-radius:10px;border:1px solid var(--border);">
-                <i class="bi bi-check-circle me-2" style="color:var(--orange);"></i>
-                You have already reviewed this product.
+            <div th:if="${hasReviewed and myReview != null}">
+                <div class="review-card mb-2" id="myReviewDisplay">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="reviewer-avatar" th:text="${#strings.substring(myReview.buyerName,0,1).toUpperCase()}">U</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:600;color:var(--text-light);font-size:0.88rem;">
+                                <span th:text="${myReview.buyerName}"></span>
+                                <span style="background:rgba(255,107,53,0.12);color:var(--orange);font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px;">Your Review</span>
+                            </div>
+                            <div class="stars" style="font-size:0.82rem;">
+                                <i th:each="i : ${#numbers.sequence(1,5)}" th:class="${i <= myReview.rating} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button onclick="toggleEditForm()" type="button" style="background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);color:var(--orange);border-radius:8px;padding:5px 12px;font-size:0.8rem;cursor:pointer;"><i class="bi bi-pencil me-1"></i>Edit</button>
+                            <form th:action="@{/buyer/review/delete/{id}(id=${myReview.id})}" method="post" onsubmit="return confirm('Delete your review?')">
+                                <input type="hidden" name="productId" th:value="${product.id}"/>
+                                <button type="submit" style="background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:8px;padding:5px 12px;font-size:0.8rem;cursor:pointer;"><i class="bi bi-trash me-1"></i>Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                    <p class="review-text" th:text="${myReview.comment}"></p>
+                </div>
+                <div class="write-review-box" id="editReviewForm" style="display:none;">
+                    <h6 style="color:var(--orange);margin-bottom:1rem;font-size:0.95rem;font-weight:700;"><i class="bi bi-pencil-square me-2"></i>Edit Your Review</h6>
+                    <form th:action="@{/buyer/review/edit}" method="post">
+                        <input type="hidden" name="reviewId"  th:value="${myReview.id}"/>
+                        <input type="hidden" name="productId" th:value="${product.id}"/>
+                        <div class="mb-3">
+                            <label style="color:var(--text-muted);font-size:0.83rem;display:block;margin-bottom:0.5rem;">Your Rating</label>
+                            <div class="d-flex gap-1">
+                                <th:block th:each="i : ${#numbers.sequence(1,5)}">
+                                    <input type="radio" name="rating" th:value="${i}" th:id="'editStar' + ${i}" th:checked="${i == myReview.rating}" style="display:none;"/>
+                                    <label th:for="'editStar' + ${i}" th:style="${i <= myReview.rating} ? 'font-size:2rem;color:var(--gold);cursor:pointer;line-height:1;' : 'font-size:2rem;color:var(--text-muted);cursor:pointer;line-height:1;'" class="edit-star-label">★</label>
+                                </th:block>
+                            </div>
+                        </div>
+                        <div class="mb-3"><textarea name="comment" rows="3" class="textarea-rev" th:text="${myReview.comment}" placeholder="Update your experience..."></textarea></div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" style="background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:10px;padding:0.6rem 1.5rem;font-weight:600;cursor:pointer;font-size:0.9rem;"><i class="bi bi-check-lg me-2"></i>Save Changes</button>
+                            <button type="button" onclick="toggleEditForm()" style="background:transparent;border:1.5px solid var(--border);color:var(--text-muted);border-radius:10px;padding:0.6rem 1.2rem;font-size:0.9rem;cursor:pointer;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-
-            <!-- Case 2: Not reviewed + HAS purchased → show form -->
             <div th:if="${!hasReviewed and hasPurchased}" class="write-review-box">
-                <h6 style="color:var(--orange);margin-bottom:1rem;font-size:0.95rem;font-weight:700;">
-                    <i class="bi bi-pencil-square me-2"></i>Write a Review
-                </h6>
+                <h6 style="color:var(--orange);margin-bottom:1rem;font-size:0.95rem;font-weight:700;"><i class="bi bi-pencil-square me-2"></i>Write a Review</h6>
                 <form th:action="@{/buyer/review/add}" method="post">
                     <input type="hidden" name="productId" th:value="${product.id}"/>
                     <div class="mb-3">
                         <label style="color:var(--text-muted);font-size:0.83rem;display:block;margin-bottom:0.5rem;">Your Rating</label>
                         <div class="d-flex gap-1">
                             <th:block th:each="i : ${#numbers.sequence(1,5)}">
-                                <input type="radio" name="rating" th:value="${i}"
-                                       th:id="'star' + ${i}" style="display:none;"/>
-                                <label th:for="'star' + ${i}"
-                                       style="font-size:2rem;color:var(--text-muted);cursor:pointer;line-height:1;"
-                                       class="star-label">★</label>
+                                <input type="radio" name="rating" th:value="${i}" th:id="'star' + ${i}" style="display:none;"/>
+                                <label th:for="'star' + ${i}" style="font-size:2rem;color:var(--text-muted);cursor:pointer;line-height:1;" class="star-label">★</label>
                             </th:block>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <textarea name="comment" rows="3"
-                                  class="textarea-rev"
-                                  placeholder="Share your experience with this product..."></textarea>
-                    </div>
-                    <button type="submit"
-                            style="background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:10px;padding:0.6rem 1.5rem;font-weight:600;cursor:pointer;font-size:0.9rem;">
-                        <i class="bi bi-send me-2"></i>Submit Review
-                    </button>
+                    <div class="mb-3"><textarea name="comment" rows="3" class="textarea-rev" placeholder="Share your experience..."></textarea></div>
+                    <button type="submit" style="background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:10px;padding:0.6rem 1.5rem;font-weight:600;cursor:pointer;font-size:0.9rem;"><i class="bi bi-send me-2"></i>Submit Review</button>
                 </form>
             </div>
-
-            <!-- Case 3: Not reviewed + has NOT purchased → locked -->
-            <div th:if="${!hasReviewed and !hasPurchased}"
-                 style="padding:1rem 1.2rem;background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.25);border-radius:12px;display:flex;align-items:center;gap:0.75rem;">
+            <div th:if="${!hasReviewed and !hasPurchased}" style="padding:1rem 1.2rem;background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.25);border-radius:12px;display:flex;align-items:center;gap:0.75rem;">
                 <i class="bi bi-lock-fill" style="color:var(--gold);font-size:1.2rem;flex-shrink:0;"></i>
                 <div>
                     <div style="color:var(--text-light);font-size:0.88rem;font-weight:600;">Purchase required to review</div>
-                    <div style="color:var(--text-muted);font-size:0.8rem;margin-top:2px;">
-                        Only buyers who have received this product can leave a review.
-                    </div>
+                    <div style="color:var(--text-muted);font-size:0.8rem;margin-top:2px;">Only buyers who have received this product can leave a review.</div>
                 </div>
             </div>
-
         </div>
-        <!-- ── End Write Review block ── -->
-
-        <!-- Reviews List -->
         <div th:if="${reviews != null and !reviews.isEmpty()}">
             <div class="review-card" th:each="review : ${reviews}">
                 <div class="d-flex align-items-center gap-3 mb-2">
-                    <div class="reviewer-avatar"
-                         th:text="${#strings.substring(review.buyerName,0,1).toUpperCase()}">U</div>
+                    <div class="reviewer-avatar" th:text="${#strings.substring(review.buyerName,0,1).toUpperCase()}">U</div>
                     <div style="flex:1;min-width:0;">
-                        <div style="font-weight:600;color:var(--text-light);font-size:0.88rem;"
-                             th:text="${review.buyerName}">Buyer</div>
+                        <div style="font-weight:600;color:var(--text-light);font-size:0.88rem;" th:text="${review.buyerName}">Buyer</div>
                         <div class="stars" style="font-size:0.82rem;">
-                            <i th:each="i : ${#numbers.sequence(1,5)}"
-                               th:class="${i <= review.rating} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
+                            <i th:each="i : ${#numbers.sequence(1,5)}" th:class="${i <= review.rating} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
                         </div>
                     </div>
-                    <div style="color:var(--text-muted);font-size:0.73rem;white-space:nowrap;"
-                         th:text="${#temporals.format(review.createdAt,'dd MMM yyyy')}"></div>
+                    <div style="color:var(--text-muted);font-size:0.73rem;white-space:nowrap;" th:text="${#temporals.format(review.createdAt,'dd MMM yyyy')}"></div>
                 </div>
                 <p class="review-text" th:text="${review.comment}"></p>
             </div>
         </div>
-
-        <!-- No reviews empty state -->
-        <div th:if="${reviews == null or reviews.isEmpty()}"
-             style="color:var(--text-muted);text-align:center;padding:2.5rem;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;">
+        <div th:if="${reviews == null or reviews.isEmpty()}" style="color:var(--text-muted);text-align:center;padding:2.5rem;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;">
             <i class="bi bi-chat-square-text" style="font-size:2.5rem;opacity:0.25;display:block;margin-bottom:0.8rem;"></i>
             <p style="margin:0;font-size:0.9rem;">No reviews yet. Be the first to review!</p>
         </div>
     </div>
-
 </div>
 
 <footer class="rev-footer">
-    <p style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--text-light);margin-bottom:0.3rem;">
-        Rev<span style="color:var(--orange);">Shop</span>
-    </p>
+    <p style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--text-light);margin-bottom:0.3rem;">Rev<span style="color:var(--orange);">Shop</span></p>
     <p>© 2026 RevShop. All rights reserved.</p>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script th:inline="javascript">
+    const VARIANTS     = /*[[${product.variants}]]*/ [];
+    const BASE_PRICE   = /*[[${product.price}]]*/ 0;
+    const BASE_IMAGE   = /*[[${product.imageUrl}]]*/ null;
+    const HAS_VARIANTS = VARIANTS && VARIANTS.length > 0;
+</script>
+
 <script>
-    function changeQty(delta) {
+    // ── Qty ────────────────────────────────────────────────────────────────────
+    function changeQty(delta){
         const input = document.getElementById('qtyInput');
-        if (!input) return;
+        if(!input) return;
         const val = parseInt(input.value) + delta;
         const max = parseInt(input.max) || 99;
-        if (val >= 1 && val <= max) input.value = val;
+        if(val >= 1 && val <= max) input.value = val;
     }
 
-    // Star rating highlight
+    // ── Variant state ──────────────────────────────────────────────────────────
+    let selectedColor   = null;
+    let selectedSize    = null;
+    let selectedVariant = null;
+
+    // Derived once on load — never recomputed
+    const ALL_COLORS = [...new Set(VARIANTS.map(v => v.color).filter(Boolean))];
+    const ALL_SIZES  = [...new Set(VARIANTS.map(v => v.size).filter(Boolean))];
+    const NEED_COLOR = ALL_COLORS.length > 0;
+    const NEED_SIZE  = ALL_SIZES.length  > 0;
+
+    // ── Build UI ───────────────────────────────────────────────────────────────
+    function buildVariantUI(){
+        if(!HAS_VARIANTS) return;
+
+        const container = document.getElementById('variantSelectors');
+        container.innerHTML = '';
+
+        // Color swatches
+        if(NEED_COLOR){
+            const grp = document.createElement('div');
+            grp.className = 'variant-group';
+            grp.innerHTML = `
+                <div class="variant-group-label">
+                    <i class="bi bi-circle-half me-1"></i>Color
+                    <span class="selected-val" id="selectedColorLabel"></span>
+                </div>
+                <div class="color-swatches" id="colorSwatches"></div>`;
+            container.appendChild(grp);
+
+            ALL_COLORS.forEach(color => {
+                const hasStock = VARIANTS.some(v => v.color === color && v.stockQuantity > 0);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'color-swatch-btn' + (hasStock ? '' : ' unavailable');
+                btn.dataset.color = color;
+                btn.title = color;
+                btn.style.background = color;
+                if(hasStock){
+                    btn.addEventListener('click', () => selectColor(color));
+                }
+                grp.querySelector('#colorSwatches').appendChild(btn);
+            });
+        }
+
+        // Size buttons placeholder
+        if(NEED_SIZE){
+            const grp = document.createElement('div');
+            grp.className = 'variant-group';
+            grp.innerHTML = `
+                <div class="variant-group-label">
+                    <i class="bi bi-rulers me-1"></i>Size
+                    <span class="selected-val" id="selectedSizeLabel"></span>
+                </div>
+                <div class="size-btns" id="sizeBtns"></div>`;
+            container.appendChild(grp);
+        }
+
+        // Prompt
+        const parts = [];
+        if(NEED_COLOR) parts.push('a color');
+        if(NEED_SIZE)  parts.push('a size');
+        const prompt = document.createElement('div');
+        prompt.className = 'variant-prompt';
+        prompt.id = 'variantPrompt';
+        prompt.innerHTML = `<i class="bi bi-hand-index-thumb"></i> <span>Please select ${parts.join(' and ')} to continue</span>`;
+        container.appendChild(prompt);
+
+        // If only sizes (no colors), render sizes immediately
+        if(!NEED_COLOR && NEED_SIZE) renderSizes(null);
+
+        updateCartButton();
+    }
+
+    // ── Select color ───────────────────────────────────────────────────────────
+    function selectColor(color){
+        selectedColor   = color;
+        selectedSize    = null;
+        selectedVariant = null;
+
+        // Highlight swatch
+        document.querySelectorAll('.color-swatch-btn').forEach(btn =>
+            btn.classList.toggle('active', btn.dataset.color === color));
+        const lbl = document.getElementById('selectedColorLabel');
+        if(lbl) lbl.textContent = '— ' + color;
+
+        if(!NEED_SIZE){
+            // No sizes — resolve variant immediately right here
+            selectedVariant = VARIANTS.find(v => v.color === color && v.stockQuantity > 0) || null;
+            applyVariant(selectedVariant);
+        } else {
+            renderSizes(color);
+        }
+
+        // updateCartButton AFTER selectedVariant is assigned
+        updateCartButton();
+    }
+
+    // ── Render size buttons for chosen color ───────────────────────────────────
+    function renderSizes(color){
+        const wrap = document.getElementById('sizeBtns');
+        if(!wrap) return;
+        wrap.innerHTML = '';
+
+        ALL_SIZES.forEach(size => {
+            const variant = color
+                ? VARIANTS.find(v => v.color === color && v.size === size)
+                : VARIANTS.find(v => v.size === size);
+            const available = variant && variant.stockQuantity > 0;
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'size-btn' + (available ? '' : ' unavailable');
+            btn.textContent = size;
+            btn.dataset.size = size;
+            if(available){
+                btn.addEventListener('click', () => selectSize(size));
+            }
+            wrap.appendChild(btn);
+        });
+    }
+
+    // ── Select size ────────────────────────────────────────────────────────────
+    function selectSize(size){
+        selectedSize = size;
+
+        document.querySelectorAll('.size-btn').forEach(btn =>
+            btn.classList.toggle('active', btn.dataset.size === size));
+        const lbl = document.getElementById('selectedSizeLabel');
+        if(lbl) lbl.textContent = '— ' + size;
+
+        selectedVariant = VARIANTS.find(v =>
+            (NEED_COLOR ? v.color === selectedColor : true) && v.size === size
+        ) || null;
+
+        applyVariant(selectedVariant);
+        updateCartButton();
+    }
+
+    // ── Apply variant to UI ────────────────────────────────────────────────────
+    function applyVariant(variant){
+        if(!variant) return;
+
+        // Price
+        const price = variant.resolvedPrice || variant.priceOverride || BASE_PRICE;
+        const priceEl = document.getElementById('displayPrice');
+        if(priceEl) priceEl.textContent = '₹' + parseFloat(price).toFixed(2);
+
+        // Stock badge
+        updateStockBadge(variant.stockQuantity);
+
+        // Max qty
+        const qtyInput = document.getElementById('qtyInput');
+        if(qtyInput){
+            qtyInput.max = variant.stockQuantity;
+            if(parseInt(qtyInput.value) > variant.stockQuantity)
+                qtyInput.value = Math.max(1, variant.stockQuantity);
+        }
+
+        // Image with fade
+        const imgEl = document.getElementById('mainProductImage');
+        const newSrc = variant.imageUrl || BASE_IMAGE;
+        if(imgEl && newSrc){
+            imgEl.classList.add('fading');
+            setTimeout(() => { imgEl.src = newSrc; imgEl.classList.remove('fading'); }, 200);
+        }
+
+        // Hide prompt
+        const prompt = document.getElementById('variantPrompt');
+        if(prompt) prompt.style.display = 'none';
+    }
+
+    // ── Stock badge ────────────────────────────────────────────────────────────
+    function updateStockBadge(stock){
+        const el = document.getElementById('stockDisplay');
+        if(!el) return;
+        if(stock > 5){
+            el.innerHTML = `<span class="stock-badge stock-ok"><i class="bi bi-check-circle-fill"></i>In Stock (${stock} available)</span>`;
+        } else if(stock > 0){
+            el.innerHTML = `<span class="stock-badge stock-low"><i class="bi bi-exclamation-circle-fill"></i>Only ${stock} left!</span>`;
+        } else {
+            el.innerHTML = `<span class="stock-badge stock-out"><i class="bi bi-x-circle-fill"></i>Out of Stock</span>`;
+        }
+    }
+
+    // ── Cart button state ──────────────────────────────────────────────────────
+    function updateCartButton(){
+        const btn = document.getElementById('addToCartBtn');
+        if(!btn) return;
+        if(!HAS_VARIANTS) return; // no variants — always enabled
+
+        const colorOk   = !NEED_COLOR || selectedColor   !== null;
+        const sizeOk    = !NEED_SIZE  || selectedSize     !== null;
+        const variantOk = selectedVariant !== null && selectedVariant.stockQuantity > 0;
+        const ready     = colorOk && sizeOk && variantOk;
+
+        btn.disabled = !ready;
+
+        if(ready){
+            btn.innerHTML = '<i class="bi bi-cart-plus me-2"></i>Add to Cart';
+            document.getElementById('selectedVariantId').value = selectedVariant.id || '';
+        } else {
+            const missing = [];
+            if(NEED_COLOR && !selectedColor) missing.push('color');
+            if(NEED_SIZE  && !selectedSize)  missing.push('size');
+            const label = missing.length ? `Select ${missing.join(' & ')} first` : 'Out of Stock';
+            btn.innerHTML = `<i class="bi bi-hand-index-thumb me-2"></i>${label}`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', buildVariantUI);
+
+    // ── Review helpers ─────────────────────────────────────────────────────────
+    function toggleEditForm(){
+        const form    = document.getElementById('editReviewForm');
+        const display = document.getElementById('myReviewDisplay');
+        if(!form) return;
+        const showing = form.style.display !== 'none';
+        form.style.display    = showing ? 'none'  : 'block';
+        if(display) display.style.opacity = showing ? '1' : '0.4';
+    }
+
+    // Edit-review star hover
+    const editLabels = document.querySelectorAll('.edit-star-label');
+    const editRadios = document.querySelectorAll('input[id^="editStar"]');
+    editLabels.forEach((lbl, idx) => {
+        lbl.addEventListener('mouseover', () =>
+            editLabels.forEach((l, i) => l.style.color = i <= idx ? 'var(--gold)' : 'var(--text-muted)'));
+        lbl.addEventListener('mouseout', () => {
+            const c = [...editRadios].findIndex(r => r.checked);
+            editLabels.forEach((l, i) => l.style.color = i <= c ? 'var(--gold)' : 'var(--text-muted)');
+        });
+        lbl.addEventListener('click', () => {
+            editRadios[idx].checked = true;
+            editLabels.forEach((l, i) => l.style.color = i <= idx ? 'var(--gold)' : 'var(--text-muted)');
+        });
+    });
+
+    // Write-review star hover
     const labels = document.querySelectorAll('.star-label');
     const radios  = document.querySelectorAll('input[name="rating"]');
     labels.forEach((lbl, idx) => {
-        lbl.addEventListener('mouseover', () => {
-            labels.forEach((l, i) => l.style.color = i <= idx ? 'var(--gold)' : 'var(--text-muted)');
-        });
+        lbl.addEventListener('mouseover', () =>
+            labels.forEach((l, i) => l.style.color = i <= idx ? 'var(--gold)' : 'var(--text-muted)'));
         lbl.addEventListener('mouseout', () => {
-            const checked = [...radios].findIndex(r => r.checked);
-            labels.forEach((l, i) => l.style.color = i <= checked ? 'var(--gold)' : 'var(--text-muted)');
+            const c = [...radios].findIndex(r => r.checked);
+            labels.forEach((l, i) => l.style.color = i <= c ? 'var(--gold)' : 'var(--text-muted)');
         });
         lbl.addEventListener('click', () => {
             radios[idx].checked = true;
