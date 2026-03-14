@@ -48,13 +48,18 @@ public class ProductService {
         User seller = getUserByEmail(sellerEmail);
         Category category = getCategoryById(dto.getCategoryId());
 
+        // FIX: Use the stock value from the DTO instead of hardcoding 0.
+        // For non-variant products the seller enters stock directly;
+        // for variant products syncStockFromVariants() will overwrite this below.
+        int initialStock = (dto.getStockQuantity() != null) ? dto.getStockQuantity() : 0;
+
         Product product = Product.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
                 .price(dto.getPrice())
                 .mrp(dto.getMrp())
                 .discountPercent(dto.getDiscountPercent() != null ? dto.getDiscountPercent() : 0)
-                .stockQuantity(0)
+                .stockQuantity(initialStock)
                 .imageUrl(dto.getImageUrl())
                 .active(true)
                 .deleted(false)
@@ -70,9 +75,16 @@ public class ProductService {
             }
         }
 
-        product.syncStockFromVariants();
+        // FIX: Only sync stock from variants when variants actually exist.
+        // Previously syncStockFromVariants() was called unconditionally, which
+        // reset stockQuantity to 0 for no-variant products.
+        if (product.getVariants() != null && !product.getVariants().isEmpty()) {
+            product.syncStockFromVariants();
+        }
+        // else: stockQuantity already set correctly from dto above — leave it alone.
+
         Product saved = productRepository.save(product);
-        logger.info("Product added successfully: {}", saved.getId());
+        logger.info("Product added successfully: id={}, stock={}", saved.getId(), saved.getStockQuantity());
         return saved;
     }
 
@@ -106,9 +118,19 @@ public class ProductService {
             }
         }
 
-        product.syncStockFromVariants();
+        // FIX: Same as addProduct — only auto-sum when variants are present.
+        // Otherwise apply the stock value the seller submitted in the edit form.
+        if (product.getVariants() != null && !product.getVariants().isEmpty()) {
+            product.syncStockFromVariants();
+        } else {
+            // No variants → honour the seller's manually entered stock value.
+            if (dto.getStockQuantity() != null) {
+                product.setStockQuantity(dto.getStockQuantity());
+            }
+        }
+
         Product updated = productRepository.save(product);
-        logger.info("Product updated successfully: {}", productId);
+        logger.info("Product updated: id={}, stock={}", productId, updated.getStockQuantity());
         return updated;
     }
 
@@ -183,13 +205,14 @@ public class ProductService {
             if (variant.getStockQuantity() < quantity) throw new RuntimeException("Insufficient stock");
             variant.setStockQuantity(variant.getStockQuantity() - quantity);
             variantRepository.save(variant);
+            // Re-sync total from variants after reduction
+            product.syncStockFromVariants();
         } else {
-            // No variant — reduce base product stock
+            // No variant — reduce base product stock directly
             if (product.getStockQuantity() < quantity) throw new RuntimeException("Insufficient stock");
+            product.setStockQuantity(product.getStockQuantity() - quantity);
         }
 
-        // Keep product-level stock in sync
-        product.syncStockFromVariants();
         int updatedStock = product.getStockQuantity();
         productRepository.save(product);
 

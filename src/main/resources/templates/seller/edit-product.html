@@ -58,6 +58,8 @@
         .vimg-thumb.hidden{display:none;}
         .no-v-msg{color:var(--text-muted);font-size:0.84rem;text-align:center;padding:1.5rem 0;opacity:0.55;}
         .has-img-badge{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;border-radius:6px;font-size:0.7rem;padding:2px 6px;white-space:nowrap;}
+        /* Applied to the stock field only when in variant (auto-sum) mode */
+        .stock-autosum{background:rgba(255,255,255,0.03)!important;cursor:not-allowed;}
         @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;padding:1rem;}}
     </style>
 </head>
@@ -163,12 +165,19 @@
                                         th:data-has-sizes="${cat.hasSizes}"></option>
                             </select>
                         </div>
+
+                        <!--
+                            FIX: Stock field has TWO modes:
+                            - NON-VARIANT mode: fully editable input — user can type/edit stock freely.
+                            - VARIANT mode: readonly + auto-summed from variant rows via JS.
+                            The label and hint text also update to reflect the current mode.
+                        -->
                         <div class="col-md-6">
-                            <label class="form-label">Total Stock</label>
-                            <input type="number" class="form-control" th:field="*{stockQuantity}" readonly
-                                   style="background:rgba(255,255,255,0.03)!important;cursor:not-allowed;"
-                                   title="Automatically calculated as sum of all variant stocks"/>
-                            <div style="color:var(--text-muted);font-size:0.75rem;margin-top:0.3rem;">Sum of all variant stocks</div>
+                            <label class="form-label" id="stockLabel">Stock Quantity</label>
+                            <input type="number" class="form-control" th:field="*{stockQuantity}"
+                                   id="stockInput" min="0"/>
+                            <div style="color:var(--text-muted);font-size:0.75rem;margin-top:0.3rem;"
+                                 id="stockHint">Units available for sale</div>
                         </div>
                     </div>
 
@@ -245,20 +254,22 @@
 
 <script>
     // ── Price / Discount ───────────────────────────────────────────────────────
-    const mrpInput=document.getElementById('mrpInput'),priceInput=document.getElementById('priceInput'),
-          discountInput=document.getElementById('discountInput'),priceWarning=document.getElementById('priceWarning');
+    const mrpInput    = document.getElementById('mrpInput');
+    const priceInput  = document.getElementById('priceInput');
+    const discountInput = document.getElementById('discountInput');
+    const priceWarning  = document.getElementById('priceWarning');
 
     function calcDiscount(){
-        const p=parseFloat(priceInput.value),m=parseFloat(mrpInput.value);
+        const p=parseFloat(priceInput.value), m=parseFloat(mrpInput.value);
         if(!p||!m){discountInput.value=0;priceWarning.classList.remove('show');return;}
         if(p>=m){discountInput.value=0;priceWarning.classList.add('show');priceInput.style.borderColor='rgba(220,53,69,0.6)';}
         else{discountInput.value=Math.round((m-p)/m*100);priceWarning.classList.remove('show');priceInput.style.borderColor='rgba(255,107,53,0.2)';}
     }
-    mrpInput.addEventListener('input',calcDiscount);
-    priceInput.addEventListener('input',calcDiscount);
+    mrpInput.addEventListener('input', calcDiscount);
+    priceInput.addEventListener('input', calcDiscount);
     calcDiscount();
 
-    // ── FIX: single submit listener handles BOTH validation AND serialization ──
+    // ── Submit: validate then serialize ───────────────────────────────────────
     document.getElementById('editForm').addEventListener('submit', function(e) {
         const p=parseFloat(priceInput.value), m=parseFloat(mrpInput.value);
         if(p && m && p >= m){
@@ -270,60 +281,103 @@
         serializeVariants();
     });
 
-    // ── Category ───────────────────────────────────────────────────────────────
-    const categorySelect=document.getElementById('categorySelect');
-    const variantSection=document.getElementById('variantSection');
-    let hasColors=INIT_HAS_COLORS, hasSizes=INIT_HAS_SIZES;
+    // ── Category & stock field mode ────────────────────────────────────────────
+    const categorySelect = document.getElementById('categorySelect');
+    const variantSection = document.getElementById('variantSection');
+    const stockInput     = document.getElementById('stockInput');
+    const stockLabel     = document.getElementById('stockLabel');
+    const stockHint      = document.getElementById('stockHint');
+
+    let hasColors = INIT_HAS_COLORS;
+    let hasSizes  = INIT_HAS_SIZES;
+
+    /**
+     * FIX: setStockMode switches the stock field between two behaviours:
+     *   useVariants=true  → readonly, auto-summed, cursor:not-allowed
+     *   useVariants=false → editable, user enters stock directly
+     */
+    function setStockMode(useVariants){
+        if(useVariants){
+            stockInput.readOnly = true;
+            stockInput.classList.add('stock-autosum');
+            stockInput.style.cursor = 'not-allowed';
+            stockLabel.textContent = 'Total Stock';
+            stockHint.textContent  = 'Auto-calculated — sum of all variant stocks';
+            recalcTotalStock(); // seed the value from any existing variant rows
+        } else {
+            stockInput.readOnly = false;
+            stockInput.classList.remove('stock-autosum');
+            stockInput.style.cursor = '';
+            stockLabel.textContent = 'Stock Quantity';
+            stockHint.textContent  = 'Units available for sale';
+        }
+    }
 
     function updateVariantVisibility(){
-        const opt=categorySelect.options[categorySelect.selectedIndex];
-        hasColors=opt&&opt.dataset.hasColors==='true';
-        hasSizes =opt&&opt.dataset.hasSizes==='true';
-        variantSection.style.display=(hasColors||hasSizes)?'':'none';
-        document.getElementById('thColor').style.display=hasColors?'':'none';
-        document.getElementById('thSize').style.display =hasSizes ?'':'none';
-        document.querySelectorAll('.variant-row-tr').forEach(tr=>{
-            const c=tr.querySelector('.td-color'),s=tr.querySelector('.td-size');
-            if(c)c.style.display=hasColors?'':'none';
-            if(s)s.style.display=hasSizes ?'':'none';
+        const opt = categorySelect.options[categorySelect.selectedIndex];
+        hasColors = opt && opt.dataset.hasColors === 'true';
+        hasSizes  = opt && opt.dataset.hasSizes  === 'true';
+        const useVariants = hasColors || hasSizes;
+
+        variantSection.style.display = useVariants ? '' : 'none';
+        setStockMode(useVariants);
+
+        document.getElementById('thColor').style.display = hasColors ? '' : 'none';
+        document.getElementById('thSize').style.display  = hasSizes  ? '' : 'none';
+        document.querySelectorAll('.variant-row-tr').forEach(tr => {
+            const c = tr.querySelector('.td-color'), s = tr.querySelector('.td-size');
+            if(c) c.style.display = hasColors ? '' : 'none';
+            if(s) s.style.display = hasSizes  ? '' : 'none';
         });
     }
-    categorySelect.addEventListener('change',updateVariantVisibility);
+    categorySelect.addEventListener('change', updateVariantVisibility);
 
     // ── Variant table ──────────────────────────────────────────────────────────
-    let rowIdx=0;
-    const variantImages={};
+    let rowIdx = 0;
+    const variantImages = {};
+
+    /** Sums all variant stock inputs and writes the total into the product stock field. */
+    function recalcTotalStock(){
+        let total = 0;
+        document.querySelectorAll('.stock-input').forEach(inp => {
+            total += (parseInt(inp.value, 10) || 0);
+        });
+        stockInput.value = total;
+    }
 
     function addVariantRow(existing){
-        document.getElementById('noVariantsRow').style.display='none';
-        const idx=rowIdx++;
-        const tbody=document.getElementById('variantsTbody');
-        const tr=document.createElement('tr');
-        tr.className='variant-row-tr';
-        tr.dataset.idx=idx;
-        tr.dataset.variantId=existing&&existing.id ? existing.id : '';
+        document.getElementById('noVariantsRow').style.display = 'none';
+        const idx   = rowIdx++;
+        const tbody = document.getElementById('variantsTbody');
+        const tr    = document.createElement('tr');
+        tr.className = 'variant-row-tr';
+        tr.dataset.idx       = idx;
+        tr.dataset.variantId = existing && existing.id ? existing.id : '';
 
-        const colorVal = existing&&existing.color         ? existing.color         : '';
-        const sizeVal  = existing&&existing.size          ? existing.size          : '';
-        const stockVal = existing&&existing.stockQuantity !== undefined ? existing.stockQuantity : 0;
-        const priceVal = existing&&existing.priceOverride ? existing.priceOverride : '';
-        const skuVal   = existing&&existing.skuCode       ? existing.skuCode       : '';
-        const existImg = existing&&existing.imageUrl      ? existing.imageUrl      : null;
+        const colorVal = existing && existing.color         ? existing.color         : '';
+        const sizeVal  = existing && existing.size          ? existing.size          : '';
+        const stockVal = existing && existing.stockQuantity !== undefined ? existing.stockQuantity : 0;
+        const priceVal = existing && existing.priceOverride ? existing.priceOverride : '';
+        const skuVal   = existing && existing.skuCode       ? existing.skuCode       : '';
+        const existImg = existing && existing.imageUrl      ? existing.imageUrl      : null;
         const dotBg    = colorVal || '#888';
 
-        tr.innerHTML=`
-          <td class="td-color" style="display:${hasColors?'':'none'}">
+        tr.innerHTML = `
+          <td class="td-color" style="display:${hasColors ? '' : 'none'}">
             <div style="display:flex;align-items:center;gap:6px;">
               <span class="color-dot" id="dot_${idx}" style="background:${dotBg};"></span>
               <input type="text" class="form-control sm color-input" value="${colorVal}"
                      placeholder="e.g. Red" oninput="updateDot(this,${idx})" style="width:90px;"/>
             </div>
           </td>
-          <td class="td-size" style="display:${hasSizes?'':'none'}">
+          <td class="td-size" style="display:${hasSizes ? '' : 'none'}">
             <input type="text" class="form-control sm size-input" value="${sizeVal}"
                    placeholder="e.g. M" style="width:72px;"/>
           </td>
-          <td><input type="number" class="form-control sm stock-input" value="${stockVal}" min="0" style="width:72px;"/></td>
+          <td>
+            <input type="number" class="form-control sm stock-input" value="${stockVal}"
+                   min="0" style="width:72px;" oninput="recalcTotalStock()"/>
+          </td>
           <td>
             <input type="number" class="form-control sm price-input" value="${priceVal}"
                    placeholder="—" step="0.01" min="0" style="width:90px;"/>
@@ -348,73 +402,77 @@
           <td><button type="button" class="btn-rm" onclick="removeRow(this)"><i class="bi bi-trash"></i></button></td>`;
 
         tbody.appendChild(tr);
+        recalcTotalStock(); // keep total in sync after adding a row
     }
 
     function removeRow(btn){
-        const tr=btn.closest('tr');
+        const tr = btn.closest('tr');
         delete variantImages[parseInt(tr.dataset.idx)];
         tr.remove();
         if(!document.querySelectorAll('.variant-row-tr').length)
-            document.getElementById('noVariantsRow').style.display='';
+            document.getElementById('noVariantsRow').style.display = '';
+        recalcTotalStock();
     }
 
-    function updateDot(input,idx){
-        const dot=document.getElementById('dot_'+idx);
-        if(!dot)return;
-        const tmp=document.createElement('div');
-        tmp.style.color=input.value;
+    function updateDot(input, idx){
+        const dot = document.getElementById('dot_' + idx);
+        if(!dot) return;
+        const tmp = document.createElement('div');
+        tmp.style.color = input.value;
         document.body.appendChild(tmp);
-        const rgb=getComputedStyle(tmp).color;
+        const rgb = getComputedStyle(tmp).color;
         document.body.removeChild(tmp);
-        dot.style.background=(rgb!=='rgb(0, 0, 0)'||input.value.toLowerCase()==='black')?input.value:'#888';
+        dot.style.background = (rgb !== 'rgb(0, 0, 0)' || input.value.toLowerCase() === 'black') ? input.value : '#888';
     }
 
-    function previewVImg(input,idx){
-        const file=input.files[0];
-        if(!file)return;
-        variantImages[idx]=file;
-        let th=document.getElementById('vthumb_'+idx);
-        const tx=document.getElementById('vtxt_'+idx);
+    function previewVImg(input, idx){
+        const file = input.files[0];
+        if(!file) return;
+        variantImages[idx] = file;
+        let th = document.getElementById('vthumb_' + idx);
+        const tx = document.getElementById('vtxt_' + idx);
         if(!th){
-            th=document.createElement('img');
-            th.id='vthumb_'+idx;
-            th.className='vimg-thumb';
-            th.alt='';
-            input.parentElement.insertBefore(th,input);
+            th = document.createElement('img');
+            th.id = 'vthumb_' + idx;
+            th.className = 'vimg-thumb';
+            th.alt = '';
+            input.parentElement.insertBefore(th, input);
         }
-        th.src=URL.createObjectURL(file);
+        th.src = URL.createObjectURL(file);
         th.classList.remove('hidden');
-        if(tx)tx.style.display='none';
+        if(tx) tx.style.display = 'none';
     }
 
-    // FIX: no longer called via onclick — called inside the submit listener above
     function serializeVariants(){
-        const rows=document.querySelectorAll('.variant-row-tr'), payload=[];
-        rows.forEach(tr=>{
-            const ce=tr.querySelector('.color-input'),se=tr.querySelector('.size-input'),
-                  ste=tr.querySelector('.stock-input'),pe=tr.querySelector('.price-input'),ske=tr.querySelector('.sku-input');
+        const rows = document.querySelectorAll('.variant-row-tr'), payload = [];
+        rows.forEach(tr => {
+            const ce  = tr.querySelector('.color-input'),
+                  se  = tr.querySelector('.size-input'),
+                  ste = tr.querySelector('.stock-input'),
+                  pe  = tr.querySelector('.price-input'),
+                  ske = tr.querySelector('.sku-input');
             payload.push({
                 id:            tr.dataset.variantId || null,
                 color:         ce  ? ce.value.trim()  || null : null,
                 size:          se  ? se.value.trim()  || null : null,
                 stockQuantity: ste ? (parseInt(ste.value, 10) || 0) : 0,
-                priceOverride: pe && pe.value.trim()  ? parseFloat(pe.value) : null,
+                priceOverride: pe && pe.value.trim() ? parseFloat(pe.value) : null,
                 skuCode:       ske ? ske.value.trim() || null : null
             });
         });
-        document.getElementById('variantsJson').value=JSON.stringify(payload);
+        document.getElementById('variantsJson').value = JSON.stringify(payload);
 
-        Object.entries(variantImages).forEach(([idx,file])=>{
-            const inp=document.createElement('input');
-            inp.type='file'; inp.name='variantImage_'+idx; inp.style.display='none';
-            const dt=new DataTransfer(); dt.items.add(file); inp.files=dt.files;
+        Object.entries(variantImages).forEach(([idx, file]) => {
+            const inp = document.createElement('input');
+            inp.type = 'file'; inp.name = 'variantImage_' + idx; inp.style.display = 'none';
+            const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files;
             document.getElementById('editForm').appendChild(inp);
         });
     }
 
     // ── Bootstrap on page load ─────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function(){
-        updateVariantVisibility();
+        // Set up variant rows first, then apply correct mode based on category
         if(EXISTING_VARIANTS && EXISTING_VARIANTS.length > 0){
             EXISTING_VARIANTS.forEach(v => addVariantRow(v));
         }
@@ -422,9 +480,9 @@
     });
 
     function previewImg(event){
-        const preview=document.getElementById('newPreview');
-        preview.src=URL.createObjectURL(event.target.files[0]);
-        preview.style.display='block';
+        const preview = document.getElementById('newPreview');
+        preview.src = URL.createObjectURL(event.target.files[0]);
+        preview.style.display = 'block';
     }
 </script>
 </body>

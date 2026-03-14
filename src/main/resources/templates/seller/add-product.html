@@ -58,6 +58,8 @@
         .vimg-label input[type=file]{display:none;}
         .vimg-thumb{width:34px;height:34px;object-fit:cover;border-radius:6px;border:1px solid var(--border);display:none;}
         .no-v-msg{color:var(--text-muted);font-size:0.84rem;text-align:center;padding:1.5rem 0;opacity:0.55;}
+        /* READ-ONLY style used only for auto-summed stock in variant mode */
+        .stock-readonly{background:rgba(255,255,255,0.03)!important;cursor:not-allowed;}
         @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;padding:1rem;}}
     </style>
 </head>
@@ -153,7 +155,13 @@
                             <div class="text-danger" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></div>
                         </div>
 
-                        <!-- FIX: plain stock field — visible for no-variant categories, hidden when variants are used -->
+                        <!--
+                            FIX: Stock field wrapper.
+                            - In NON-variant mode: fully editable, user types stock directly.
+                            - In VARIANT mode: hidden (stock is the sum of variant rows, handled server-side).
+                            - We NO LONGER zero this out on every updateVariantVisibility() call —
+                              only zero it when the user switches FROM non-variant TO variant mode.
+                        -->
                         <div class="col-md-6" id="stockFieldWrap">
                             <label class="form-label">Stock Quantity *</label>
                             <input type="number" class="form-control" th:field="*{stockQuantity}"
@@ -264,6 +272,9 @@
     const variantSection = document.getElementById('variantSection');
     const stockFieldWrap = document.getElementById('stockFieldWrap');
     const stockInput     = document.getElementById('stockInput');
+
+    // Track previous mode so we only zero-out stock when SWITCHING TO variant mode
+    let wasVariantMode = false;
     let hasColors = false, hasSizes = false;
 
     function updateVariantVisibility(){
@@ -272,12 +283,16 @@
         hasSizes  = opt && opt.dataset.hasSizes  === 'true';
         const useVariants = hasColors || hasSizes;
 
-        // Show variant table OR plain stock field — never both
-        variantSection.style.display  = useVariants ? '' : 'none';
-        stockFieldWrap.style.display  = useVariants ? 'none' : '';
+        // FIX: Only zero out stock when TRANSITIONING into variant mode,
+        // not on every render (which was wiping user-entered stock on load).
+        if(useVariants && !wasVariantMode){
+            stockInput.value = 0;
+        }
+        wasVariantMode = useVariants;
 
-        // Clear plain stock when switching to variant mode (variants own the stock)
-        if(useVariants) stockInput.value = 0;
+        // Show variant table OR plain stock field — never both
+        variantSection.style.display = useVariants ? '' : 'none';
+        stockFieldWrap.style.display = useVariants ? 'none' : '';
 
         document.getElementById('thColor').style.display = hasColors ? '' : 'none';
         document.getElementById('thSize').style.display  = hasSizes  ? '' : 'none';
@@ -288,7 +303,7 @@
         });
     }
     categorySelect.addEventListener('change', updateVariantVisibility);
-    updateVariantVisibility(); // run on load
+    updateVariantVisibility(); // run on load — wasVariantMode starts false so no zeroing
 
     // ── Variant table ──────────────────────────────────────────────────────────
     let rowIdx = 0;
