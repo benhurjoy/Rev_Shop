@@ -3,6 +3,8 @@ package com.revshop.dto;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class ProductDTO {
@@ -26,7 +28,7 @@ public class ProductDTO {
     @Max(value = 100, message = "Discount cannot exceed 100%")
     private Integer discountPercent;
 
-    @Min(value = 0, message = "Stock cannot be negative")
+    // Derived — sum of variant stocks
     private Integer stockQuantity;
 
     private String imageUrl;
@@ -38,7 +40,16 @@ public class ProductDTO {
     private String categoryName;
     private Long sellerId;
     private String sellerName;
-    private String sellerEmail;      // ← THIS WAS MISSING
+    private String sellerEmail;
+
     private Double averageRating;
     private Long totalReviews;
+
+    // Category flags — drive UI show/hide
+    private boolean categoryHasColors;
+    private boolean categoryHasSizes;
+
+    // ── Variants ───────────────────────────────────────────────
+    private List<ProductVariantDTO> variants = new ArrayList<>();
+    // ──────────────────────────────────────────────────────────
 }
