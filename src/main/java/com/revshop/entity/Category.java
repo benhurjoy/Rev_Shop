@@ -15,13 +15,29 @@ import java.util.List;
 public class Category {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "categories_seq")
+    @SequenceGenerator(name = "categories_seq", sequenceName = "categories_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false, unique = true)
     private String name;
 
     private String description;
+
+    // ── NEW: variant flags ─────────────────────────────────────
+    // Boolean (wrapper) so existing NULL rows don't throw on hydration.
+    // isHasColors() / isHasSizes() helper methods below default nulls to false.
+    @Column(name = "has_colors")
+    @Builder.Default
+    private Boolean hasColors = false;
+
+    @Column(name = "has_sizes")
+    @Builder.Default
+    private Boolean hasSizes = false;
+
+    public boolean isHasColors() { return Boolean.TRUE.equals(hasColors); }
+    public boolean isHasSizes()  { return Boolean.TRUE.equals(hasSizes);  }
+    // ──────────────────────────────────────────────────────────
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
