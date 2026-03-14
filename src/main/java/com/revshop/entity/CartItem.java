@@ -25,6 +25,13 @@ public class CartItem {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    // FIX: nullable — null means product has no variants (e.g. plain Electronics).
+    // When set, this distinguishes "Red / Size M" from "Blue / Size L" of the
+    // same product so they appear as separate cart rows.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "variant_id", nullable = true)
+    private ProductVariant variant;
+
     @Column(nullable = false)
     @Builder.Default
     private Integer quantity = 1;

@@ -177,7 +177,8 @@ public class BuyerController {
         model.addAttribute("reviews", reviewService.getReviewsByProduct(productId));
         model.addAttribute("averageRating", reviewService.getAverageRating(productId));
         model.addAttribute("hasReviewed", reviewService.hasAlreadyReviewed(email, productId));
-        model.addAttribute("hasPurchased", reviewService.hasPurchasedProduct(email, productId)); // ← NEW
+        model.addAttribute("hasPurchased", reviewService.hasPurchasedProduct(email, productId));
+        model.addAttribute("myReview", reviewService.getReviewByBuyer(email, productId)); // ← NEW
         model.addAttribute("isInWishlist", wishlistService.isInWishlist(email, productId));
         model.addAttribute("cartCount", cartService.getCartItemCount(email));
         model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
@@ -213,14 +214,17 @@ public class BuyerController {
     @PostMapping("/cart/add")
     public String addToCart(
             @RequestParam Long productId,
+            // FIX: accept optional variantId from the product detail form.
+            // null = no-variant product; non-null = specific size/color selected.
+            @RequestParam(required = false) Long variantId,
             @RequestParam(defaultValue = "1") Integer quantity,
             @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes) {
 
         String email = userDetails.getUsername();
-        logger.info("AddToCart by: {} productId: {} qty: {}", email, productId, quantity);
+        logger.info("AddToCart by:{} productId:{} variantId:{} qty:{}", email, productId, variantId, quantity);
         try {
-            cartService.addToCart(email, productId, quantity);
+            cartService.addToCart(email, productId, variantId, quantity);
             redirectAttributes.addFlashAttribute("successMessage", "Product added to cart!");
         } catch (Exception e) {
             logger.error("AddToCart failed: {}", e.getMessage());
@@ -350,6 +354,48 @@ public class BuyerController {
         return "redirect:/buyer/product/" + productId;
     }
 
+    // ── Edit Review ── NEW ────────────────────────────────────
+    @PostMapping("/review/edit")
+    public String editReview(
+            @RequestParam Long reviewId,
+            @RequestParam Long productId,
+            @RequestParam Integer rating,
+            @RequestParam(required = false) String comment,
+            @AuthenticationPrincipal UserDetails userDetails,
+            RedirectAttributes redirectAttributes) {
+
+        String email = userDetails.getUsername();
+        logger.info("EditReview by: {} reviewId: {}", email, reviewId);
+        try {
+            reviewService.editReview(reviewId, email, rating, comment);
+            redirectAttributes.addFlashAttribute("successMessage", "Review updated successfully!");
+        } catch (Exception e) {
+            logger.error("EditReview failed: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/buyer/product/" + productId;
+    }
+
+    // ── Delete Review ── NEW ──────────────────────────────────
+    @PostMapping("/review/delete/{reviewId}")
+    public String deleteReview(
+            @PathVariable Long reviewId,
+            @RequestParam Long productId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            RedirectAttributes redirectAttributes) {
+
+        String email = userDetails.getUsername();
+        logger.info("DeleteReview by: {} reviewId: {}", email, reviewId);
+        try {
+            reviewService.deleteReviewByBuyer(reviewId, email);
+            redirectAttributes.addFlashAttribute("successMessage", "Review deleted.");
+        } catch (Exception e) {
+            logger.error("DeleteReview failed: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/buyer/product/" + productId;
+    }
+
     // ── Notifications ─────────────────────────────────────────
     @GetMapping("/notifications")
     public String notifications(
@@ -379,4 +425,7 @@ public class BuyerController {
         notificationService.markAllAsRead(email);
         return "redirect:/buyer/notifications";
     }
+
+
+
 }
