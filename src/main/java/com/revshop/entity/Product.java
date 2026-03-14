@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -21,10 +23,10 @@ public class Product {
     @Column(nullable = false)
     private String name;
 
-    // Oracle VARCHAR2 max is 4000 chars — length=2000 is safe
     @Column(length = 2000)
     private String description;
 
+    // Base price shown before a variant is selected
     @Column(nullable = false)
     private BigDecimal price;
 
@@ -35,13 +37,20 @@ public class Product {
     @Builder.Default
     private Integer discountPercent = 0;
 
+    // Total stock = sum of all variant stocks (kept in sync)
     @Column(nullable = false)
     @Builder.Default
     private Integer stockQuantity = 0;
 
     private String imageUrl;
 
-    // Oracle: boolean -> NUMBER(1,0). Removed MySQL-specific columnDefinition.
+    // ── Variants ───────────────────────────────────────────────
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL,
+            orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<ProductVariant> variants = new ArrayList<>();
+    // ──────────────────────────────────────────────────────────
+
     @Column(nullable = false)
     @Builder.Default
     private boolean active = true;
@@ -59,9 +68,6 @@ public class Product {
 
     private LocalDateTime updatedAt;
 
-    // !! CHANGED: Removed columnDefinition = "boolean default false"
-    // Oracle does not support "boolean" as a column type.
-    // Hibernate will map this to NUMBER(1,0) DEFAULT 0 via OracleDialect.
     @Column(nullable = false)
     @Builder.Default
     private boolean deleted = false;
@@ -79,5 +85,13 @@ public class Product {
 
     public String getCategoryName() {
         return category != null ? category.getName() : "";
+    }
+
+    /** Recalculates stockQuantity as the sum of all active variant stocks. */
+    public void syncStockFromVariants() {
+        this.stockQuantity = variants.stream()
+                .filter(ProductVariant::isActive)
+                .mapToInt(ProductVariant::getStockQuantity)
+                .sum();
     }
 }
