@@ -16,21 +16,16 @@
         .nav-link{color:var(--text-muted)!important;font-weight:500;padding:0.5rem 1rem!important;border-radius:8px;transition:all 0.3s;}
         .nav-link:hover{color:var(--text-light)!important;background:rgba(255,107,53,0.15);}
 
-        /* Sidebar */
         .sidebar{background:var(--card-bg);border-right:1px solid var(--border);min-height:calc(100vh - 66px);width:230px;position:fixed;top:66px;left:0;padding:1.5rem 0;}
         .sidebar-link{display:flex;align-items:center;gap:10px;padding:0.75rem 1.5rem;color:var(--text-muted);text-decoration:none;font-weight:500;font-size:0.9rem;border-left:3px solid transparent;transition:all 0.3s;}
         .sidebar-link:hover,.sidebar-link.active{color:var(--orange);background:rgba(255,107,53,0.08);border-left-color:var(--orange);}
-        .sidebar-link i{font-size:1rem;}
 
-        /* Main */
         .main{margin-left:230px;padding:2rem;}
         .page-hdr{margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid var(--border);}
 
-        /* Cards */
         .section-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
         .section-hdr{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.8rem;}
 
-        /* Add form card */
         .add-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;}
         .form-label{color:var(--text-muted);font-size:0.83rem;font-weight:500;margin-bottom:0.4rem;}
         .form-control{background:rgba(255,255,255,0.05)!important;border:1.5px solid rgba(255,107,53,0.2)!important;border-radius:12px!important;color:var(--text-light)!important;padding:0.75rem 1rem!important;font-family:'DM Sans',sans-serif;transition:all 0.3s;}
@@ -38,40 +33,49 @@
         .form-control::placeholder{color:var(--text-muted)!important;}
         .text-danger{color:#ff8fa3!important;font-size:0.8rem;}
 
-        /* Table */
         .rev-table{color:var(--text-light);}
         .rev-table thead th{background:var(--navy-light);color:var(--orange);font-weight:600;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px;border:none;padding:1rem;}
         .rev-table tbody tr{border-bottom:1px solid rgba(255,107,53,0.06);transition:background 0.2s;}
         .rev-table tbody tr:hover{background:rgba(255,107,53,0.04);}
         .rev-table tbody td{padding:0.9rem 1rem;border:none;vertical-align:middle;}
 
-        /* Category icon bubble */
         .cat-icon{width:38px;height:38px;border-radius:10px;background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.2);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--orange);}
 
-        /* Buttons */
         .btn-add{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:12px;padding:0.7rem 1.5rem;font-weight:700;font-size:0.9rem;transition:all 0.3s;box-shadow:0 4px 15px rgba(255,107,53,0.3);cursor:pointer;}
         .btn-add:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,107,53,0.5);color:white;}
         .btn-sm-danger{background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:8px;padding:4px 12px;font-size:0.78rem;cursor:pointer;transition:all 0.2s;}
         .btn-sm-danger:hover{background:rgba(220,53,69,0.2);}
 
-        /* Search */
         .search-input{background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,107,53,0.2);border-radius:10px;color:var(--text-light);padding:0.5rem 1rem;font-family:'DM Sans',sans-serif;outline:none;transition:all 0.3s;width:200px;}
         .search-input:focus{border-color:var(--orange);}
         .search-input::placeholder{color:var(--text-muted);}
 
-        /* Alerts */
         .alert-success-rev{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;border-radius:10px;padding:0.8rem 1rem;}
         .alert-error-rev{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:10px;padding:0.8rem 1rem;}
 
-        /* Product count badge */
         .product-count{background:rgba(255,107,53,0.1);color:var(--orange);border:1px solid rgba(255,107,53,0.2);border-radius:20px;padding:3px 12px;font-size:0.78rem;font-weight:600;}
+
+        /* ── Toggle switch ── */
+        .toggle-wrap{display:flex;align-items:center;gap:6px;}
+        .toggle-label{font-size:0.75rem;color:var(--text-muted);white-space:nowrap;}
+        .tog{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0;}
+        .tog input{opacity:0;width:0;height:0;position:absolute;}
+        .tog-slider{position:absolute;inset:0;background:rgba(255,255,255,0.1);border:1px solid rgba(255,107,53,0.25);border-radius:20px;cursor:pointer;transition:all 0.25s;}
+        .tog-slider:before{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:var(--text-muted);bottom:2px;left:2px;transition:all 0.25s;}
+        .tog input:checked + .tog-slider{background:rgba(255,107,53,0.25);border-color:var(--orange);}
+        .tog input:checked + .tog-slider:before{background:var(--orange);transform:translateX(16px);}
+
+        .variant-cell{display:flex;flex-direction:column;gap:8px;}
+
+        /* Slider ON state driven by JS (used in Add form where checkbox is hidden) */
+        .tog-slider.tog-on{background:rgba(255,107,53,0.25)!important;border-color:var(--orange)!important;}
+        .tog-slider.tog-on:before{background:var(--orange)!important;transform:translateX(16px)!important;}
 
         @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;padding:1rem;}}
     </style>
 </head>
 <body>
 
-<!-- Navbar -->
 <nav class="revshop-navbar navbar">
     <div class="container-fluid px-4">
         <a class="navbar-brand" th:href="@{/}">Rev<span>Shop</span></a>
@@ -86,33 +90,29 @@
     </div>
 </nav>
 
-<!-- Sidebar -->
 <div class="sidebar">
     <div style="padding:1rem 1.5rem 0.5rem;">
-        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;
-                    color:var(--text-muted);font-weight:600;">Admin Panel</div>
+        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;">Admin Panel</div>
     </div>
     <a th:href="@{/admin/dashboard}"  class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
     <a th:href="@{/admin/users}"      class="sidebar-link"><i class="bi bi-people"></i> Users</a>
     <a th:href="@{/admin/products}"   class="sidebar-link"><i class="bi bi-box-seam"></i> Products</a>
     <a th:href="@{/admin/orders}"     class="sidebar-link"><i class="bi bi-bag-check"></i> Orders</a>
     <a th:href="@{/admin/categories}" class="sidebar-link active"><i class="bi bi-grid"></i> Categories</a>
+    <a th:href="@{/admin/coupons}"    class="sidebar-link"><i class="bi bi-ticket-perforated"></i> Coupons</a>
     <hr style="border-color:var(--border);margin:1rem 1.5rem;"/>
     <a th:href="@{/auth/logout}"      class="sidebar-link"><i class="bi bi-box-arrow-right"></i> Logout</a>
 </div>
 
-<!-- Main Content -->
 <div class="main">
 
-    <!-- Page Header -->
     <div class="page-hdr">
         <h2>Categories</h2>
         <p style="color:var(--text-muted);margin:0;font-size:0.9rem;">
-            Add, view, and delete product categories
+            Add, view, configure variant options, and delete product categories
         </p>
     </div>
 
-    <!-- Alerts -->
     <div th:if="${successMessage}" class="alert-success-rev mb-4">
         <i class="bi bi-check-circle me-2"></i><span th:text="${successMessage}"></span>
     </div>
@@ -122,38 +122,79 @@
 
     <div class="row g-4">
 
-        <!-- Left: Add Category Form -->
+        <!-- ── Left: Add Category Form ── -->
         <div class="col-lg-4">
             <div class="add-card">
                 <h5 class="mb-1" style="font-size:1rem;">
-                    <i class="bi bi-plus-circle me-2" style="color:var(--orange);"></i>
-                    Add New Category
+                    <i class="bi bi-plus-circle me-2" style="color:var(--orange);"></i>Add New Category
                 </h5>
                 <p style="color:var(--text-muted);font-size:0.83rem;margin-bottom:1.5rem;">
                     Categories help buyers browse and filter products easily.
                 </p>
 
                 <form th:action="@{/admin/categories/add}"
-                      th:object="${categoryDTO}"
-                      method="post">
+                      th:object="${categoryDTO}" method="post">
 
                     <div class="mb-3">
                         <label class="form-label">Category Name *</label>
-                        <input type="text" class="form-control"
-                               th:field="*{name}"
+                        <input type="text" class="form-control" th:field="*{name}"
                                placeholder="e.g. Electronics, Fashion, Home Decor"/>
-                        <div class="text-danger"
-                             th:if="${#fields.hasErrors('name')}"
+                        <div class="text-danger" th:if="${#fields.hasErrors('name')}"
                              th:errors="*{name}"></div>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control"
-                                  th:field="*{description}"
-                                  rows="3"
+                        <textarea class="form-control" th:field="*{description}" rows="3"
                                   placeholder="Brief description (optional)..."
                                   style="resize:none;"></textarea>
+                    </div>
+
+                    <!--
+                        FIX: Use hidden inputs + checkbox pattern so unchecked = false is
+                        always submitted. The hidden input sends "false" first; if the
+                        checkbox is checked it overrides with "true". Spring's Boolean
+                        binding then correctly receives true or false in all cases.
+                    -->
+                    <div class="mb-4" style="background:rgba(255,107,53,0.04);border:1px solid var(--border);border-radius:12px;padding:1rem;">
+                        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.8px;color:var(--orange);font-weight:700;margin-bottom:0.75rem;">
+                            <i class="bi bi-palette2 me-1"></i>Product Variants
+                        </div>
+                        <div class="d-flex flex-column gap-3">
+                            <!--
+                                FIX: th:field handles correct hidden+checkbox submission.
+                                BUT th:field renders a hidden input before the .tog span,
+                                which breaks the CSS sibling selector (input:checked + .tog-slider).
+                                Solution: put th:field on a visually-hidden real checkbox,
+                                then use a separate visible fake checkbox (the .tog span)
+                                that is kept in sync via JavaScript. On form submit,
+                                the hidden real checkbox carries the correct value.
+                            -->
+                            <label class="toggle-wrap" style="cursor:pointer;" onclick="syncToggle('hasColors')">
+                                <span class="tog" id="tog_hasColors">
+                                    <!-- Visible slider — driven by JS, not CSS :checked -->
+                                    <span class="tog-slider" id="slider_hasColors"></span>
+                                </span>
+                                <!-- Real checkbox — visually hidden, carries the actual value -->
+                                <input type="checkbox" th:field="*{hasColors}"
+                                       id="hasColors" style="display:none;"
+                                       onchange="updateSlider('hasColors')"/>
+                                <span class="toggle-label" style="color:var(--text-light);font-size:0.87rem;">
+                                    Enable <strong>Color</strong> field for products
+                                </span>
+                            </label>
+                            <label class="toggle-wrap" style="cursor:pointer;" onclick="syncToggle('hasSizes')">
+                                <span class="tog" id="tog_hasSizes">
+                                    <span class="tog-slider" id="slider_hasSizes"></span>
+                                </span>
+                                <input type="checkbox" th:field="*{hasSizes}"
+                                       id="hasSizes" style="display:none;"
+                                       onchange="updateSlider('hasSizes')"/>
+                                <span class="toggle-label" style="color:var(--text-light);font-size:0.87rem;">
+                                    Enable <strong>Size</strong> field for products
+                                </span>
+                            </label>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn-add w-100">
@@ -163,29 +204,20 @@
             </div>
 
             <!-- Stats mini card -->
-            <div style="background:var(--card-bg);border:1px solid var(--border);
-                        border-radius:14px;padding:1.2rem 1.5rem;">
-                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;
-                            color:var(--text-muted);font-weight:600;margin-bottom:0.8rem;">
-                    Summary
-                </div>
-                <div style="display:flex;justify-content:space-between;
-                            padding:0.5rem 0;border-bottom:1px solid rgba(255,107,53,0.08);
-                            font-size:0.88rem;">
+            <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.5rem;">
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;margin-bottom:0.8rem;">Summary</div>
+                <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid rgba(255,107,53,0.08);font-size:0.88rem;">
                     <span style="color:var(--text-muted);">Total Categories</span>
-                    <strong style="color:var(--orange);"
-                            th:text="${categories?.size() ?: 0}">0</strong>
+                    <strong style="color:var(--orange);" th:text="${categories?.size() ?: 0}">0</strong>
                 </div>
-                <div style="display:flex;justify-content:space-between;
-                            padding:0.5rem 0;font-size:0.88rem;">
+                <div style="display:flex;justify-content:space-between;padding:0.5rem 0;font-size:0.88rem;">
                     <span style="color:var(--text-muted);">Total Products</span>
-                    <strong style="color:var(--text-light);"
-                            th:text="${totalProductsAcrossCategories ?: 0}">0</strong>
+                    <strong style="color:var(--text-light);" th:text="${totalProductsAcrossCategories ?: 0}">0</strong>
                 </div>
             </div>
         </div>
 
-        <!-- Right: Categories Table -->
+        <!-- ── Right: Categories Table ── -->
         <div class="col-lg-8">
             <div class="section-card">
                 <div class="section-hdr">
@@ -198,24 +230,22 @@
                            placeholder="Search categories..." onkeyup="filterCategories()"/>
                 </div>
 
-                <!-- Empty state -->
                 <div th:if="${categories == null or categories.isEmpty()}"
                      style="text-align:center;padding:3rem;color:var(--text-muted);">
-                    <i class="bi bi-grid"
-                       style="font-size:3rem;opacity:0.2;display:block;margin-bottom:1rem;"></i>
+                    <i class="bi bi-grid" style="font-size:3rem;opacity:0.2;display:block;margin-bottom:1rem;"></i>
                     <p>No categories yet. Add your first category!</p>
                 </div>
 
-                <!-- Table -->
                 <div class="table-responsive"
                      th:if="${categories != null and !categories.isEmpty()}">
                     <table class="table rev-table mb-0" id="catTable">
                         <thead>
                         <tr>
                             <th>#</th>
-                            <th>Category Name</th>
+                            <th>Category</th>
                             <th>Description</th>
                             <th>Products</th>
+                            <th>Variants</th>
                             <th>Created</th>
                             <th>Actions</th>
                         </tr>
@@ -223,40 +253,88 @@
                         <tbody>
                         <tr th:each="cat, iter : ${categories}">
 
-                            <!-- Row Number -->
                             <td style="color:var(--text-muted);font-size:0.82rem;width:48px;"
                                 th:text="${iter.index + 1}">1</td>
 
-                            <!-- Category Name + Icon -->
                             <td>
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="cat-icon">
-                                        <i class="bi bi-grid-fill"></i>
-                                    </div>
+                                    <div class="cat-icon"><i class="bi bi-grid-fill"></i></div>
                                     <div>
-                                        <div style="font-weight:600;font-size:0.92rem;"
-                                             th:text="${cat.name}">Category</div>
-                                        <div style="color:var(--text-muted);font-size:0.74rem;"
-                                             th:text="'ID: ' + ${cat.id}"></div>
+                                        <div style="font-weight:600;font-size:0.92rem;" th:text="${cat.name}">Category</div>
+                                        <div style="color:var(--text-muted);font-size:0.74rem;" th:text="'ID: ' + ${cat.id}"></div>
                                     </div>
                                 </div>
                             </td>
 
-                            <!-- Description -->
-                            <td style="color:var(--text-muted);font-size:0.83rem;max-width:200px;">
+                            <td style="color:var(--text-muted);font-size:0.83rem;max-width:160px;">
                                 <span th:if="${cat.description != null and !cat.description.isEmpty()}"
-                                      th:text="${#strings.abbreviate(cat.description, 60)}"></span>
+                                      th:text="${#strings.abbreviate(cat.description, 50)}"></span>
                                 <span th:unless="${cat.description != null and !cat.description.isEmpty()}"
-                                      style="font-style:italic;opacity:0.5;">No description</span>
+                                      style="font-style:italic;opacity:0.5;">—</span>
                             </td>
 
-                            <!-- Product Count -->
                             <td>
                                 <span class="product-count"
                                       th:text="${cat.products.size()} + ' products'"></span>
                             </td>
 
-                            <!-- Created Date — FIXED -->
+                            <!--
+                                FIX: Each toggle is its OWN separate mini-form posting to
+                                update-variants. This means toggling Color doesn't
+                                accidentally submit a stale value for Size and vice versa.
+
+                                Each form also carries a hidden input for the OTHER flag
+                                so the endpoint always receives both values and can't
+                                accidentally null-out the untouched one.
+
+                                The hidden input before the checkbox ensures the field is
+                                always submitted (false when unchecked, true when checked).
+                            -->
+                            <td>
+                                <div class="variant-cell">
+
+                                    <!-- Color toggle — its own form -->
+                                    <form th:action="@{/admin/categories/update-variants/{id}(id=${cat.id})}"
+                                          method="post" style="margin:0;">
+                                        <!-- Always send the current value of hasSizes so it isn't lost -->
+                                        <input type="hidden" name="hasSizes"
+                                               th:value="${cat.isHasSizes()}"/>
+                                        <label class="toggle-wrap" style="cursor:pointer;"
+                                               th:title="${cat.isHasColors()} ? 'Color ON — click to disable' : 'Color OFF — click to enable'">
+                                            <span class="tog">
+                                                <!-- hidden sends false; checkbox overrides to true when checked -->
+                                                <input type="hidden"   name="hasColors" value="false"/>
+                                                <input type="checkbox" name="hasColors" value="true"
+                                                       th:checked="${cat.isHasColors()}"
+                                                       onchange="this.form.submit()"/>
+                                                <span class="tog-slider"></span>
+                                            </span>
+                                            <span class="toggle-label">Color</span>
+                                        </label>
+                                    </form>
+
+                                    <!-- Size toggle — its own form -->
+                                    <form th:action="@{/admin/categories/update-variants/{id}(id=${cat.id})}"
+                                          method="post" style="margin:0;">
+                                        <!-- Always send the current value of hasColors so it isn't lost -->
+                                        <input type="hidden" name="hasColors"
+                                               th:value="${cat.isHasColors()}"/>
+                                        <label class="toggle-wrap" style="cursor:pointer;"
+                                               th:title="${cat.isHasSizes()} ? 'Size ON — click to disable' : 'Size OFF — click to enable'">
+                                            <span class="tog">
+                                                <input type="hidden"   name="hasSizes" value="false"/>
+                                                <input type="checkbox" name="hasSizes" value="true"
+                                                       th:checked="${cat.isHasSizes()}"
+                                                       onchange="this.form.submit()"/>
+                                                <span class="tog-slider"></span>
+                                            </span>
+                                            <span class="toggle-label">Size</span>
+                                        </label>
+                                    </form>
+
+                                </div>
+                            </td>
+
                             <td style="color:var(--text-muted);font-size:0.82rem;">
                                 <span th:if="${cat.createdAt != null}"
                                       th:text="${#temporals.format(cat.createdAt, 'dd MMM yyyy')}"></span>
@@ -264,7 +342,6 @@
                                       style="font-style:italic;opacity:0.5;">—</span>
                             </td>
 
-                            <!-- Delete Action -->
                             <td>
                                 <form th:action="@{/admin/categories/delete/{id}(id=${cat.id})}"
                                       method="post"
@@ -272,8 +349,8 @@
                                     <button type="submit" class="btn-sm-danger"
                                             th:disabled="${cat.products.size() > 0}"
                                             th:title="${cat.products.size() > 0} ?
-                                                           'Cannot delete: has ' + ${cat.products.size()} + ' products' :
-                                                           'Delete category'">
+                                                'Cannot delete: has ' + ${cat.products.size()} + ' products' :
+                                                'Delete category'">
                                         <i class="bi bi-trash me-1"></i>Delete
                                     </button>
                                 </form>
@@ -284,15 +361,12 @@
                 </div>
             </div>
 
-            <!-- Note -->
-            <div style="margin-top:1rem;padding:0.8rem 1.2rem;
-                        background:rgba(255,179,71,0.06);
-                        border:1px solid rgba(255,179,71,0.2);
-                        border-radius:10px;
-                        color:var(--text-muted);font-size:0.82rem;">
+            <div style="margin-top:1rem;padding:0.8rem 1.2rem;background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.2);border-radius:10px;color:var(--text-muted);font-size:0.82rem;">
                 <i class="bi bi-info-circle me-2" style="color:var(--gold);"></i>
-                Categories with existing products cannot be deleted. Reassign or delete
-                their products first.
+                Toggle <strong style="color:var(--text-light);">Color</strong> or
+                <strong style="color:var(--text-light);">Size</strong> on a category to make
+                those fields appear when a seller adds or edits a product in that category.
+                Categories with existing products cannot be deleted.
             </div>
         </div>
     </div>
@@ -300,6 +374,39 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // ── Add-form toggle helpers ───────────────────────────────────────────────
+    // th:field renders the checkbox hidden (display:none) so the CSS :checked
+    // selector can't drive the visual slider. Instead we manually toggle an
+    // .active class on the slider and sync it with the real hidden checkbox.
+
+    function updateSlider(fieldName) {
+        const cb     = document.getElementById(fieldName);
+        const slider = document.getElementById('slider_' + fieldName);
+        if (!cb || !slider) return;
+        if (cb.checked) {
+            slider.style.background      = 'rgba(255,107,53,0.25)';
+            slider.style.borderColor     = 'var(--orange)';
+            slider.style.setProperty('--thumb-color', 'var(--orange)');
+            slider.classList.add('tog-on');
+        } else {
+            slider.style.background  = 'rgba(255,255,255,0.1)';
+            slider.style.borderColor = 'rgba(255,107,53,0.25)';
+            slider.classList.remove('tog-on');
+        }
+    }
+
+    function syncToggle(fieldName) {
+        const cb = document.getElementById(fieldName);
+        if (!cb) return;
+        cb.checked = !cb.checked;
+        updateSlider(fieldName);
+    }
+
+    // Seed visual state on page load (e.g. after validation error re-render)
+    document.addEventListener('DOMContentLoaded', function() {
+        ['hasColors', 'hasSizes'].forEach(updateSlider);
+    });
+
     function filterCategories() {
         const q = document.getElementById('catSearch').value.toLowerCase();
         document.querySelectorAll('#catTable tbody tr').forEach(row => {
