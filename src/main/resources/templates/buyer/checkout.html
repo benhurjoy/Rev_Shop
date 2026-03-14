@@ -38,15 +38,21 @@
         .summary-row{display:flex;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid rgba(255,107,53,0.08);font-size:0.9rem;}
         .summary-row:last-child{border:none;}
         .summary-total{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--orange);}
+
+        /* ── Cart mini items in order summary ── */
         .cart-mini-item{display:flex;gap:0.8rem;align-items:center;padding:0.7rem 0;border-bottom:1px solid rgba(255,107,53,0.06);}
-        .cart-mini-img{width:42px;height:42px;border-radius:8px;object-fit:cover;border:1px solid var(--border);}
-        .cart-mini-ph{width:42px;height:42px;border-radius:8px;background:var(--navy-light);display:flex;align-items:center;justify-content:center;color:var(--text-muted);flex-shrink:0;}
+        .cart-mini-item:last-child{border-bottom:none;}
+        .cart-mini-img{width:48px;height:48px;border-radius:10px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;}
+        .cart-mini-ph{width:48px;height:48px;border-radius:10px;background:var(--navy-light);display:flex;align-items:center;justify-content:center;color:var(--text-muted);flex-shrink:0;font-size:1.1rem;}
+
+        /* Variant badges in summary */
+        .v-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.18);border-radius:5px;padding:1px 6px;font-size:0.68rem;color:var(--orange);margin-right:3px;}
+        .color-dot-xs{width:8px;height:8px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);display:inline-block;flex-shrink:0;}
+
         .btn-place{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:14px;padding:1rem;font-weight:700;font-size:1rem;width:100%;transition:all 0.3s;box-shadow:0 6px 20px rgba(255,107,53,0.35);margin-top:1rem;}
         .btn-place:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,107,53,0.5);color:white;}
         .alert-error-rev{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:10px;padding:0.8rem 1rem;}
         .alert-success-rev{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;border-radius:10px;padding:0.8rem 1rem;}
-
-        /* ── Coupon ── */
         .coupon-input{background:rgba(255,255,255,0.05)!important;border:1.5px solid rgba(255,107,53,0.2)!important;border-radius:12px!important;color:var(--text-light)!important;padding:0.75rem 1rem!important;font-family:'DM Sans',sans-serif;transition:all 0.3s;flex:1;outline:none;text-transform:uppercase;letter-spacing:1px;}
         .coupon-input:focus{border-color:var(--orange)!important;box-shadow:0 0 0 3px rgba(255,107,53,0.15)!important;}
         .coupon-input::placeholder{color:var(--text-muted)!important;text-transform:none;letter-spacing:normal;}
@@ -55,7 +61,6 @@
         .coupon-applied-badge{background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.3);border-radius:12px;padding:0.9rem 1.1rem;display:flex;align-items:center;justify-content:space-between;}
         .btn-remove-coupon{background:none;border:none;color:#ff8fa3;font-size:0.82rem;cursor:pointer;padding:0;transition:color 0.2s;}
         .btn-remove-coupon:hover{color:#ff4d6d;}
-        /* ── Available coupons list ── */
         .available-coupons{margin-top:1.1rem;}
         .available-coupons-title{font-size:0.78rem;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);font-weight:600;margin-bottom:0.6rem;}
         .coupon-chip{display:flex;align-items:center;justify-content:space-between;background:rgba(255,107,53,0.05);border:1px dashed rgba(255,107,53,0.3);border-radius:10px;padding:0.65rem 0.9rem;margin-bottom:0.5rem;cursor:pointer;transition:all 0.2s;gap:0.8rem;}
@@ -87,7 +92,6 @@
         </div>
     </div>
 
-    <!-- Flash alerts -->
     <div th:if="${successMessage}" class="alert-success-rev mb-4">
         <i class="bi bi-check-circle me-2"></i><span th:text="${successMessage}"></span>
     </div>
@@ -100,14 +104,13 @@
         <!-- Left: Coupon + Address + Payment -->
         <div class="col-lg-7">
 
-            <!-- ── Coupon Section ──────────────────────────────── -->
+            <!-- Coupon Section -->
             <div class="section-card">
                 <h5 class="mb-3">
                     <i class="bi bi-ticket-perforated me-2" style="color:var(--orange);"></i>
                     Have a Coupon?
                 </h5>
 
-                <!-- Coupon already applied -->
                 <div th:if="${appliedCoupon != null and appliedCoupon != ''}"
                      class="coupon-applied-badge">
                     <div class="d-flex align-items-center gap-2">
@@ -129,7 +132,6 @@
                     </form>
                 </div>
 
-                <!-- Coupon input (shown when no coupon applied) -->
                 <div th:unless="${appliedCoupon != null and appliedCoupon != ''}">
                     <form th:action="@{/buyer/checkout/apply-coupon}" method="post">
                         <div class="d-flex gap-2">
@@ -141,7 +143,6 @@
                         </div>
                     </form>
 
-                    <!-- Available coupons list -->
                     <div class="available-coupons"
                          th:if="${availableCoupons != null and !availableCoupons.isEmpty()}">
                         <div class="available-coupons-title">
@@ -152,14 +153,12 @@
                             <div>
                                 <div class="coupon-chip-code" th:text="${c.code}"></div>
                                 <div class="coupon-chip-desc">
-                                    <!-- Percentage type -->
                                     <span th:if="${c.discountType.name() == 'PERCENTAGE'}">
                                         <strong th:text="${c.discountValue} + '%'"></strong> off
                                         <span th:if="${c.minimumOrderAmount != null and c.minimumOrderAmount > 0}">
                                             on orders above ₹<span th:text="${c.minimumOrderAmount}"></span>
                                         </span>
                                     </span>
-                                    <!-- Fixed type -->
                                     <span th:if="${c.discountType.name() == 'FIXED'}">
                                         Flat ₹<strong th:text="${c.discountValue}"></strong> off
                                         <span th:if="${c.minimumOrderAmount != null and c.minimumOrderAmount > 0}">
@@ -178,7 +177,7 @@
                 </div>
             </div>
 
-            <!-- ── Delivery Address + Payment (one form) ─────── -->
+            <!-- Delivery Address + Payment -->
             <div class="section-card">
                 <h5 class="mb-4">
                     <i class="bi bi-geo-alt me-2" style="color:var(--orange);"></i>
@@ -188,7 +187,6 @@
                 <form th:action="@{/buyer/checkout}" th:object="${checkoutDTO}"
                       method="post" id="checkoutForm">
 
-                    <!-- Carry coupon state into order submission -->
                     <input type="hidden" name="appliedCoupon"
                            th:value="${appliedCoupon != null ? appliedCoupon : ''}"/>
                     <input type="hidden" name="discount"
@@ -274,20 +272,58 @@
 
                 <div class="mb-3">
                     <div class="cart-mini-item" th:each="item : ${cartItems}">
-                        <img th:if="${item.product.imageUrl != null}"
+
+                        <!--
+                            FIX: Show the variant image when available so "Red shirt"
+                            and "Blue shirt" show their respective images in the summary.
+                            Priority: variant image → product image → placeholder icon.
+                        -->
+                        <img th:if="${item.variant != null and item.variant.imageUrl != null}"
+                             th:src="${item.variant.imageUrl}"
+                             class="cart-mini-img" th:alt="${item.product.name}"/>
+                        <img th:if="${(item.variant == null or item.variant.imageUrl == null) and item.product.imageUrl != null}"
                              th:src="${item.product.imageUrl}"
                              class="cart-mini-img" th:alt="${item.product.name}"/>
-                        <div class="cart-mini-ph" th:unless="${item.product.imageUrl != null}">
+                        <div class="cart-mini-ph"
+                             th:if="${(item.variant == null or item.variant.imageUrl == null) and item.product.imageUrl == null}">
                             <i class="bi bi-image"></i>
                         </div>
-                        <div class="flex-grow-1">
-                            <div style="font-size:0.85rem;font-weight:500;"
+
+                        <div class="flex-grow-1" style="min-width:0;">
+                            <div style="font-size:0.85rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
                                  th:text="${item.product.name}"></div>
-                            <div style="color:var(--text-muted);font-size:0.78rem;"
+
+                            <!--
+                                FIX: Show Color / Size badges so the buyer can clearly see
+                                which variant they're ordering (e.g. "Red · M" vs "Blue · L").
+                            -->
+                            <div th:if="${item.variant != null}" style="margin:3px 0;">
+                                <span class="v-badge"
+                                      th:if="${item.variant.color != null and !item.variant.color.isEmpty()}">
+                                    <span class="color-dot-xs"
+                                          th:style="'background:' + ${item.variant.color}"></span>
+                                    <span th:text="${item.variant.color}"></span>
+                                </span>
+                                <span class="v-badge"
+                                      th:if="${item.variant.size != null and !item.variant.size.isEmpty()}">
+                                    <span th:text="${item.variant.size}"></span>
+                                </span>
+                            </div>
+
+                            <div style="color:var(--text-muted);font-size:0.76rem;"
                                  th:text="'Qty: ' + ${item.quantity}"></div>
                         </div>
-                        <div style="color:var(--orange);font-weight:600;font-size:0.9rem;"
-                             th:text="'₹' + ${#numbers.formatDecimal(item.product.price, 1, 2)}"></div>
+
+                        <!--
+                            FIX: Show variant price override when set,
+                            otherwise fall back to product base price.
+                        -->
+                        <div style="color:var(--orange);font-weight:600;font-size:0.88rem;white-space:nowrap;flex-shrink:0;">
+                            <span th:if="${item.variant != null and item.variant.priceOverride != null}"
+                                  th:text="'₹' + ${#numbers.formatDecimal(item.variant.priceOverride, 1, 2)}"></span>
+                            <span th:unless="${item.variant != null and item.variant.priceOverride != null}"
+                                  th:text="'₹' + ${#numbers.formatDecimal(item.product.price, 1, 2)}"></span>
+                        </div>
                     </div>
                 </div>
 
@@ -296,7 +332,6 @@
                     <span th:text="'₹' + ${#numbers.formatDecimal(total, 1, 2)}"></span>
                 </div>
 
-                <!-- Coupon discount row — only when applied -->
                 <div class="summary-row" th:if="${discount != null and discount > 0}">
                     <span style="color:#75f5a0;">
                         <i class="bi bi-tag-fill me-1"></i>
@@ -334,9 +369,6 @@
         document.querySelector('#' + id + ' input[type=radio]').checked = true;
     }
 
-    // Click a coupon chip → fill the input and submit the apply form automatically
-    // Uses data-code attribute to avoid Thymeleaf 3.1 security restriction on
-    // string expressions inside th:onclick event handlers
     function applyCouponCode(el) {
         const code  = el.getAttribute('data-code');
         const input = document.getElementById('couponCodeInput');

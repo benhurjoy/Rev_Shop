@@ -3,12 +3,14 @@ package com.revshop.service;
 import com.revshop.entity.Cart;
 import com.revshop.entity.CartItem;
 import com.revshop.entity.Product;
+import com.revshop.entity.ProductVariant;
 import com.revshop.entity.User;
 import com.revshop.exception.BadRequestException;
 import com.revshop.exception.ResourceNotFoundException;
 import com.revshop.repository.CartItemRepository;
 import com.revshop.repository.CartRepository;
 import com.revshop.repository.ProductRepository;
+import com.revshop.repository.ProductVariantRepository;
 import com.revshop.repository.UserRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,20 +29,12 @@ public class CartService {
 
     private static final Logger logger = LogManager.getLogger(CartService.class);
 
-    @Autowired
-    private CartRepository cartRepository;
+    @Autowired private CartRepository cartRepository;
+    @Autowired private CartItemRepository cartItemRepository;
+    @Autowired private ProductRepository productRepository;
+    @Autowired private ProductVariantRepository variantRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private CartItemRepository cartItemRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    // FIX: REQUIRES_NEW forces a brand-new writable transaction every time,
-    // even if the caller already has a readOnly transaction active.
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Cart getOrCreateCart(String email) {
         logger.info("GetOrCreateCart called for: {}", email);
@@ -53,84 +47,109 @@ public class CartService {
                 });
     }
 
+    // FIX: old signature kept for backward compatibility (wishlist move-to-cart etc.)
     @Transactional
     public void addToCart(String email, Long productId, Integer quantity) {
-        logger.info("AddToCart called for email: {} productId: {} qty: {}", email, productId, quantity);
+        addToCart(email, productId, null, quantity);
+    }
 
-        if (quantity <= 0) {
-            logger.warn("Invalid quantity: {} for email: {}", quantity, email);
-            throw new BadRequestException("Quantity must be greater than 0");
-        }
+    // FIX: new variant-aware method.
+    // variantId = null  → no-variant product (plain stock)
+    // variantId = <id>  → specific size/color — creates a SEPARATE cart row
+    //                     from other variants of the same product.
+    @Transactional
+    public void addToCart(String email, Long productId, Long variantId, Integer quantity) {
+        logger.info("AddToCart email:{} productId:{} variantId:{} qty:{}",
+                email, productId, variantId, quantity);
+
+        if (quantity <= 0) throw new BadRequestException("Quantity must be greater than 0");
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> {
-                    logger.warn("Product not found: {}", productId);
-                    return new ResourceNotFoundException("Product not found: " + productId);
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
-        if (product.getStockQuantity() <= 0) {
-            logger.warn("Product out of stock: {}", productId);
-            throw new BadRequestException("Product is out of stock");
-        }
+        // Resolve the variant (may be null for non-variant products)
+        ProductVariant variant = null;
+        if (variantId != null) {
+            variant = variantRepository.findById(variantId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Variant not found: " + variantId));
 
-        if (quantity > product.getStockQuantity()) {
-            logger.warn("Requested qty {} exceeds stock {} for product: {}", quantity, product.getStockQuantity(), productId);
-            throw new BadRequestException("Only " + product.getStockQuantity() + " items available");
+            // Stock check against the specific variant
+            if (variant.getStockQuantity() <= 0)
+                throw new BadRequestException("This variant is out of stock");
+            if (quantity > variant.getStockQuantity())
+                throw new BadRequestException("Only " + variant.getStockQuantity() + " items available for this variant");
+        } else {
+            // Stock check against the product total
+            if (product.getStockQuantity() <= 0)
+                throw new BadRequestException("Product is out of stock");
+            if (quantity > product.getStockQuantity())
+                throw new BadRequestException("Only " + product.getStockQuantity() + " items available");
         }
 
         Cart cart = getOrCreateCart(email);
-        Optional<CartItem> existing = cartItemRepository.findByCartAndProduct(cart, product);
+
+        // FIX: look up existing item by (cart + product + variant).
+        // Previously findByCartAndProduct matched ANY variant of the same product,
+        // so adding Size S and Size M would just increment quantity on one row.
+        // Now each (product, variant) combination gets its own distinct cart row.
+        Optional<CartItem> existing =
+                cartItemRepository.findByCartAndProductAndVariant(cart, product, variant);
 
         if (existing.isPresent()) {
             CartItem item = existing.get();
-            item.setQuantity(item.getQuantity() + quantity);
+            int newQty = item.getQuantity() + quantity;
+
+            // Re-validate combined quantity against stock
+            int availableStock = (variant != null)
+                    ? variant.getStockQuantity()
+                    : product.getStockQuantity();
+            if (newQty > availableStock)
+                throw new BadRequestException("Only " + availableStock + " items available");
+
+            item.setQuantity(newQty);
             cartItemRepository.save(item);
-            logger.info("Cart item quantity updated for productId: {}", productId);
+            logger.info("Cart item quantity updated for productId:{} variantId:{}", productId, variantId);
         } else {
             CartItem item = CartItem.builder()
                     .cart(cart)
                     .product(product)
+                    .variant(variant)
                     .quantity(quantity)
                     .build();
             cartItemRepository.save(item);
-            logger.info("New cart item added for productId: {}", productId);
+            logger.info("New cart item added for productId:{} variantId:{}", productId, variantId);
         }
     }
 
     @Transactional
     public void removeFromCart(String email, Long cartItemId) {
-        logger.info("RemoveFromCart called for email: {} cartItemId: {}", email, cartItemId);
+        logger.info("RemoveFromCart email:{} cartItemId:{}", email, cartItemId);
         CartItem item = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> {
-                    logger.warn("CartItem not found: {}", cartItemId);
-                    return new ResourceNotFoundException("Cart item not found: " + cartItemId);
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found: " + cartItemId));
         cartItemRepository.delete(item);
-        logger.info("Cart item removed: {}", cartItemId);
     }
 
     @Transactional
     public void updateQuantity(String email, Long cartItemId, Integer quantity) {
-        logger.info("UpdateQuantity called for cartItemId: {} qty: {}", cartItemId, quantity);
+        logger.info("UpdateQuantity cartItemId:{} qty:{}", cartItemId, quantity);
 
-        if (quantity <= 0) {
-            logger.warn("Invalid quantity: {}", quantity);
-            throw new BadRequestException("Quantity must be greater than 0");
-        }
+        if (quantity <= 0) throw new BadRequestException("Quantity must be greater than 0");
 
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item not found: " + cartItemId));
 
-        if (quantity > item.getProduct().getStockQuantity()) {
-            throw new BadRequestException("Only " + item.getProduct().getStockQuantity() + " items available");
-        }
+        // FIX: validate against variant stock when a variant is present
+        int availableStock = (item.getVariant() != null)
+                ? item.getVariant().getStockQuantity()
+                : item.getProduct().getStockQuantity();
+
+        if (quantity > availableStock)
+            throw new BadRequestException("Only " + availableStock + " items available");
 
         item.setQuantity(quantity);
         cartItemRepository.save(item);
-        logger.info("Cart item quantity updated to: {} for cartItemId: {}", quantity, cartItemId);
     }
 
-    // FIX: added @Transactional so it doesn't inherit readOnly from class level
     @Transactional
     public List<CartItem> getCartItems(String email) {
         logger.info("GetCartItems called for: {}", email);
@@ -138,24 +157,22 @@ public class CartService {
         return cartItemRepository.findByCartWithProduct(cart);
     }
 
-    // FIX: added @Transactional so it doesn't inherit readOnly from class level
     @Transactional
     public BigDecimal calculateTotal(String email) {
         logger.info("CalculateTotal called for: {}", email);
         List<CartItem> items = getCartItems(email);
+        if (items.isEmpty()) return BigDecimal.ZERO;
 
-        if (items.isEmpty()) {
-            logger.warn("Cart is empty for: {}", email);
-            return BigDecimal.ZERO;
-        }
-
-        BigDecimal total = items.stream()
-                .map(item -> item.getProduct().getPrice()
-                        .multiply(BigDecimal.valueOf(item.getQuantity())))
+        return items.stream()
+                .map(item -> {
+                    // FIX: use variant price override if present, else base product price
+                    BigDecimal unitPrice = (item.getVariant() != null
+                            && item.getVariant().getPriceOverride() != null)
+                            ? item.getVariant().getPriceOverride()
+                            : item.getProduct().getPrice();
+                    return unitPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        logger.info("Cart total calculated: {} for: {}", total, email);
-        return total;
     }
 
     @Transactional
@@ -163,13 +180,10 @@ public class CartService {
         logger.info("ClearCart called for: {}", email);
         Cart cart = getOrCreateCart(email);
         cartItemRepository.deleteByCart(cart);
-        logger.info("Cart cleared for: {}", email);
     }
 
-    // FIX: added @Transactional so it doesn't inherit readOnly from class level
     @Transactional
     public int getCartItemCount(String email) {
-        logger.info("GetCartItemCount called for: {}", email);
         return getCartItems(email).size();
     }
 

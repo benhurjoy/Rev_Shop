@@ -214,14 +214,17 @@ public class BuyerController {
     @PostMapping("/cart/add")
     public String addToCart(
             @RequestParam Long productId,
+            // FIX: accept optional variantId from the product detail form.
+            // null = no-variant product; non-null = specific size/color selected.
+            @RequestParam(required = false) Long variantId,
             @RequestParam(defaultValue = "1") Integer quantity,
             @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes) {
 
         String email = userDetails.getUsername();
-        logger.info("AddToCart by: {} productId: {} qty: {}", email, productId, quantity);
+        logger.info("AddToCart by:{} productId:{} variantId:{} qty:{}", email, productId, variantId, quantity);
         try {
-            cartService.addToCart(email, productId, quantity);
+            cartService.addToCart(email, productId, variantId, quantity);
             redirectAttributes.addFlashAttribute("successMessage", "Product added to cart!");
         } catch (Exception e) {
             logger.error("AddToCart failed: {}", e.getMessage());
@@ -423,6 +426,6 @@ public class BuyerController {
         return "redirect:/buyer/notifications";
     }
 
-    // ── PASTE YOUR REMAINING METHODS HERE (checkout etc.) ────
+
 
 }
