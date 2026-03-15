@@ -31,6 +31,9 @@ class CartServiceTest {
     private ProductRepository productRepository;
 
     @Mock
+    private ProductVariantRepository variantRepository;
+
+    @Mock
     private UserRepository userRepository;
 
     @InjectMocks
@@ -43,6 +46,7 @@ class CartServiceTest {
 
     @BeforeEach
     void setUp() {
+
         mockBuyer = User.builder()
                 .id(1L)
                 .email("buyer@test.com")
@@ -68,12 +72,14 @@ class CartServiceTest {
                 .id(1L)
                 .cart(mockCart)
                 .product(mockProduct)
+                .variant(null)
                 .quantity(2)
                 .build();
     }
 
     @Test
     void getOrCreateCart_ExistingCart_ShouldReturnExisting() {
+
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
         when(cartRepository.findByUser(mockBuyer)).thenReturn(Optional.of(mockCart));
 
@@ -81,11 +87,13 @@ class CartServiceTest {
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
+
         verify(cartRepository, never()).save(any());
     }
 
     @Test
     void getOrCreateCart_NoExistingCart_ShouldCreateNew() {
+
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
         when(cartRepository.findByUser(mockBuyer)).thenReturn(Optional.empty());
         when(cartRepository.save(any(Cart.class))).thenReturn(mockCart);
@@ -93,39 +101,47 @@ class CartServiceTest {
         Cart result = cartService.getOrCreateCart("buyer@test.com");
 
         assertNotNull(result);
+
         verify(cartRepository).save(any(Cart.class));
     }
 
     @Test
     void addToCart_NewItem_ShouldSaveCartItem() {
+
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
         when(cartRepository.findByUser(mockBuyer)).thenReturn(Optional.of(mockCart));
         when(productRepository.findById(1L)).thenReturn(Optional.of(mockProduct));
-        when(cartItemRepository.findByCartAndProduct(mockCart, mockProduct))
+
+        when(cartItemRepository.findByCartAndProductAndVariant(mockCart, mockProduct, null))
                 .thenReturn(Optional.empty());
 
-        assertDoesNotThrow(() -> cartService.addToCart("buyer@test.com", 1L, 2));
+        assertDoesNotThrow(() ->
+                cartService.addToCart("buyer@test.com", 1L, 2));
 
         verify(cartItemRepository).save(any(CartItem.class));
     }
 
     @Test
     void addToCart_ExistingItem_ShouldUpdateQuantity() {
+
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
         when(cartRepository.findByUser(mockBuyer)).thenReturn(Optional.of(mockCart));
         when(productRepository.findById(1L)).thenReturn(Optional.of(mockProduct));
-        when(cartItemRepository.findByCartAndProduct(mockCart, mockProduct))
+
+        when(cartItemRepository.findByCartAndProductAndVariant(mockCart, mockProduct, null))
                 .thenReturn(Optional.of(mockCartItem));
 
-        assertDoesNotThrow(() -> cartService.addToCart("buyer@test.com", 1L, 3));
+        assertDoesNotThrow(() ->
+                cartService.addToCart("buyer@test.com", 1L, 3));
 
         verify(cartItemRepository).save(any(CartItem.class));
     }
 
     @Test
     void addToCart_OutOfStock_ShouldThrowException() {
-        // Service checks quantity > 0, then findById, then stock — throws before getUserByEmail
+
         mockProduct.setStockQuantity(0);
+
         when(productRepository.findById(1L)).thenReturn(Optional.of(mockProduct));
 
         assertThrows(Exception.class,
@@ -134,22 +150,27 @@ class CartServiceTest {
 
     @Test
     void calculateTotal_WithItems_ShouldReturnCorrectTotal() {
+
         mockCart.getCartItems().add(mockCartItem);
+
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
         when(cartRepository.findByUser(mockBuyer)).thenReturn(Optional.of(mockCart));
-        when(cartItemRepository.findByCartWithProduct(mockCart)).thenReturn(List.of(mockCartItem));
+        when(cartItemRepository.findByCartWithProduct(mockCart))
+                .thenReturn(List.of(mockCartItem));
 
         BigDecimal total = cartService.calculateTotal("buyer@test.com");
 
         assertNotNull(total);
-        assertTrue(total.compareTo(BigDecimal.ZERO) >= 0);
+        assertTrue(total.compareTo(BigDecimal.ZERO) > 0);
     }
 
     @Test
     void getCartItemCount_EmptyCart_ShouldReturnZero() {
+
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
         when(cartRepository.findByUser(mockBuyer)).thenReturn(Optional.of(mockCart));
-        when(cartItemRepository.findByCartWithProduct(mockCart)).thenReturn(new ArrayList<>());
+        when(cartItemRepository.findByCartWithProduct(mockCart))
+                .thenReturn(new ArrayList<>());
 
         int count = cartService.getCartItemCount("buyer@test.com");
 
@@ -158,10 +179,12 @@ class CartServiceTest {
 
     @Test
     void clearCart_ShouldDeleteAllItems() {
+
         when(userRepository.findByEmail("buyer@test.com")).thenReturn(Optional.of(mockBuyer));
         when(cartRepository.findByUser(mockBuyer)).thenReturn(Optional.of(mockCart));
 
-        assertDoesNotThrow(() -> cartService.clearCart("buyer@test.com"));
+        assertDoesNotThrow(() ->
+                cartService.clearCart("buyer@test.com"));
 
         verify(cartItemRepository).deleteByCart(mockCart);
     }
