@@ -303,7 +303,6 @@
                                                th:title="${cat.isHasColors()} ? 'Color ON — click to disable' : 'Color OFF — click to enable'">
                                             <span class="tog">
                                                 <!-- hidden sends false; checkbox overrides to true when checked -->
-                                                <input type="hidden"   name="hasColors" value="false"/>
                                                 <input type="checkbox" name="hasColors" value="true"
                                                        th:checked="${cat.isHasColors()}"
                                                        onchange="this.form.submit()"/>
@@ -322,7 +321,6 @@
                                         <label class="toggle-wrap" style="cursor:pointer;"
                                                th:title="${cat.isHasSizes()} ? 'Size ON — click to disable' : 'Size OFF — click to enable'">
                                             <span class="tog">
-                                                <input type="hidden"   name="hasSizes" value="false"/>
                                                 <input type="checkbox" name="hasSizes" value="true"
                                                        th:checked="${cat.isHasSizes()}"
                                                        onchange="this.form.submit()"/>
