@@ -37,6 +37,9 @@
         .empty-cart i{font-size:5rem;opacity:0.15;display:block;margin-bottom:1rem;}
         .alert-success-rev{background:rgba(40,167,69,0.12);border:1px solid rgba(40,167,69,0.3);color:#75f5a0;border-radius:10px;padding:0.8rem 1rem;}
         .alert-error-rev{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:10px;padding:0.8rem 1rem;}
+        /* Variant badge */
+        .variant-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);border-radius:6px;padding:2px 8px;font-size:0.74rem;color:var(--orange);margin-right:4px;}
+        .color-dot-sm{width:10px;height:10px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);display:inline-block;}
     </style>
 </head>
 <body>
@@ -82,20 +85,57 @@
         <div class="col-lg-8">
             <div class="cart-item" th:each="item : ${cartItems}">
                 <div class="d-flex gap-3 align-items-start">
-                    <img th:if="${item.product.imageUrl != null}"
+
+                    <!--
+                        FIX: Show variant image if available, otherwise product image.
+                        Each variant can have its own image (e.g. Red shirt vs Blue shirt).
+                    -->
+                    <img th:if="${item.variant != null and item.variant.imageUrl != null}"
+                         th:src="${item.variant.imageUrl}"
+                         class="item-img" th:alt="${item.product.name}"/>
+                    <img th:if="${item.variant == null or item.variant.imageUrl == null}"
+                         th:unless="${item.product.imageUrl == null}"
                          th:src="${item.product.imageUrl}"
                          class="item-img" th:alt="${item.product.name}"/>
-                    <div class="item-img-ph" th:unless="${item.product.imageUrl != null}">
+                    <div class="item-img-ph"
+                         th:if="${(item.variant == null or item.variant.imageUrl == null) and item.product.imageUrl == null}">
                         <i class="bi bi-image"></i>
                     </div>
 
                     <div class="flex-grow-1">
                         <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.2rem;"
                              th:text="${item.product.name}"></div>
-                        <div style="color:var(--text-muted);font-size:0.8rem;margin-bottom:0.7rem;"
+                        <div style="color:var(--text-muted);font-size:0.8rem;margin-bottom:0.5rem;"
                              th:text="${item.product.categoryName}"></div>
-                        <div style="color:var(--orange);font-weight:700;font-size:1rem;margin-bottom:0.8rem;"
-                             th:text="'₹' + ${#numbers.formatDecimal(item.product.price, 1, 2)}"></div>
+
+                        <!--
+                            FIX: Show Color and/or Size badges when a variant is selected.
+                            This is what makes "Size S" and "Size M" visually distinct
+                            in the cart even though they're the same product.
+                        -->
+                        <div th:if="${item.variant != null}" style="margin-bottom:0.6rem;">
+                            <span class="variant-badge"
+                                  th:if="${item.variant.color != null and !item.variant.color.isEmpty()}">
+                                <span class="color-dot-sm" th:style="'background:' + ${item.variant.color}"></span>
+                                <span th:text="${item.variant.color}"></span>
+                            </span>
+                            <span class="variant-badge"
+                                  th:if="${item.variant.size != null and !item.variant.size.isEmpty()}">
+                                <i class="bi bi-rulers" style="font-size:0.7rem;"></i>
+                                <span th:text="${item.variant.size}"></span>
+                            </span>
+                        </div>
+
+                        <!--
+                            FIX: Show variant price override if set, otherwise base product price.
+                            Each variant can have its own price (e.g. XL costs more than S).
+                        -->
+                        <div style="color:var(--orange);font-weight:700;font-size:1rem;margin-bottom:0.8rem;">
+                            <span th:if="${item.variant != null and item.variant.priceOverride != null}"
+                                  th:text="'₹' + ${#numbers.formatDecimal(item.variant.priceOverride, 1, 2)}"></span>
+                            <span th:unless="${item.variant != null and item.variant.priceOverride != null}"
+                                  th:text="'₹' + ${#numbers.formatDecimal(item.product.price, 1, 2)}"></span>
+                        </div>
 
                         <div class="d-flex align-items-center gap-3 flex-wrap">
                             <!-- Quantity -->
@@ -106,7 +146,7 @@
                                             onclick="this.form.quantity.value=Math.max(1,parseInt(this.form.quantity.value)-1);this.form.submit()">−</button>
                                     <input type="number" name="quantity" class="qty-val"
                                            th:value="${item.quantity}" min="1"
-                                           th:max="${item.product.stockQuantity}"
+                                           th:max="${item.variant != null ? item.variant.stockQuantity : item.product.stockQuantity}"
                                            onchange="this.form.submit()"/>
                                     <button type="button" class="qty-btn"
                                             onclick="this.form.quantity.value=Math.min(this.form.quantity.max,parseInt(this.form.quantity.value)+1);this.form.submit()">+</button>
@@ -120,11 +160,13 @@
                                 </button>
                             </form>
 
-                            <!-- FIX: was item.product.price.multiply(new java.math.BigDecimal(item.quantity))
-                                 Thymeleaf 3.1 blocks Java class instantiation in templates.
-                                 Use the built-in #numbers utility instead. -->
-                            <span style="margin-left:auto;color:var(--text-light);font-weight:700;"
-                                  th:text="'₹' + ${#numbers.formatDecimal(item.product.price * item.quantity, 1, 2)}"></span>
+                            <!-- FIX: line total uses variant price override when present -->
+                            <span style="margin-left:auto;color:var(--text-light);font-weight:700;">
+                                <span th:if="${item.variant != null and item.variant.priceOverride != null}"
+                                      th:text="'₹' + ${#numbers.formatDecimal(item.variant.priceOverride * item.quantity, 1, 2)}"></span>
+                                <span th:unless="${item.variant != null and item.variant.priceOverride != null}"
+                                      th:text="'₹' + ${#numbers.formatDecimal(item.product.price * item.quantity, 1, 2)}"></span>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -139,7 +181,6 @@
                     <span style="color:var(--text-muted);">
                         Subtotal (<span th:text="${cartItems.size()}"></span> items)
                     </span>
-                    <!-- FIX: use pre-computed ${total} from controller -->
                     <span th:text="'₹' + ${#numbers.formatDecimal(total, 1, 2)}"></span>
                 </div>
                 <div class="summary-row">
@@ -148,14 +189,10 @@
                 </div>
                 <div class="summary-row">
                     <span style="color:var(--text-muted);">Tax (18% GST)</span>
-                    <!-- FIX: was total.multiply(new java.math.BigDecimal('0.18'))... — blocked in Thymeleaf 3.1
-                         Now uses pre-computed ${gst} passed from BuyerController.viewCart() -->
                     <span th:text="'₹' + ${#numbers.formatDecimal(gst, 1, 2)}"></span>
                 </div>
                 <div class="summary-row mt-2">
                     <span style="font-weight:700;">Total</span>
-                    <!-- FIX: was total.multiply(new java.math.BigDecimal('1.18'))... — blocked in Thymeleaf 3.1
-                         Now uses pre-computed ${grandTotal} passed from BuyerController.viewCart() -->
                     <span class="summary-total"
                           th:text="'₹' + ${#numbers.formatDecimal(grandTotal, 1, 2)}"></span>
                 </div>
@@ -167,9 +204,7 @@
                     <i class="bi bi-arrow-left me-2"></i>Continue Shopping
                 </a>
 
-                <!-- Security note -->
-                <div class="text-center mt-3"
-                     style="color:var(--text-muted);font-size:0.78rem;">
+                <div class="text-center mt-3" style="color:var(--text-muted);font-size:0.78rem;">
                     <i class="bi bi-shield-check me-1" style="color:var(--orange);"></i>
                     Secure checkout with 256-bit SSL
                 </div>

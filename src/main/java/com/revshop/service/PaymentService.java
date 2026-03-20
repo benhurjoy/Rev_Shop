@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 public class PaymentService {
@@ -36,6 +38,8 @@ public class PaymentService {
     @Value("${razorpay.key.secret:test_secret}")
     private String razorpayKeySecret;
 
+    // ── Existing: create Razorpay order from a saved DB Order ─
+    // (kept for backward compatibility, still used by COD fallback etc.)
     public String createRazorpayOrder(Long orderId) {
         logger.info("CreateRazorpayOrder called for orderId: {}", orderId);
         try {
@@ -46,7 +50,7 @@ public class PaymentService {
 
             JSONObject options = new JSONObject();
             options.put("amount", order.getTotalAmount()
-                    .multiply(java.math.BigDecimal.valueOf(100)).intValue());
+                    .multiply(BigDecimal.valueOf(100)).intValue());
             options.put("currency", "INR");
             options.put("receipt", "order_" + orderId);
 
@@ -67,6 +71,36 @@ public class PaymentService {
         }
     }
 
+    // ── NEW: create a Razorpay order purely from an amount ────
+    // Used by the fixed flow: we create the Razorpay payment order
+    // BEFORE saving a DB Order, so pressing "Go Back" never leaves
+    // a phantom PENDING order in the database.
+    public String createRazorpayOrderForAmount(BigDecimal grandTotal) {
+        logger.info("CreateRazorpayOrderForAmount called for amount: {}", grandTotal);
+        try {
+            int amountInPaise = grandTotal
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(0, RoundingMode.HALF_UP)
+                    .intValue();
+
+            RazorpayClient client = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
+            JSONObject options = new JSONObject();
+            options.put("amount",   amountInPaise);
+            options.put("currency", "INR");
+            options.put("receipt",  "rcpt_" + System.currentTimeMillis());
+
+            com.razorpay.Order rzpOrder = client.orders.create(options);
+            String rzpOrderId = rzpOrder.get("id");
+            logger.info("Razorpay order created for amount ₹{}: {}", grandTotal, rzpOrderId);
+            return rzpOrderId;
+
+        } catch (RazorpayException e) {
+            logger.error("Razorpay order creation failed: {}", e.getMessage());
+            throw new PaymentException("Could not initiate payment. Please try again.");
+        }
+    }
+
+    // ── Existing: verify signature ────────────────────────────
     public boolean verifyRazorpayPayment(String razorpayOrderId,
                                          String razorpayPaymentId,
                                          String razorpaySignature) {
@@ -85,12 +119,25 @@ public class PaymentService {
         }
     }
 
+    // ── NEW: verify signature — throws on failure (no boolean) ─
+    // Used by the callback in the new flow so we can rely on exceptions
+    // instead of checking a return value.
+    public void verifyRazorpaySignature(String razorpayOrderId,
+                                        String razorpayPaymentId,
+                                        String razorpaySignature) {
+        if (!verifyRazorpayPayment(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
+            throw new PaymentException("Invalid payment signature");
+        }
+    }
+
+    // ── Existing: process payment (COD / Razorpay record) ─────
     @Transactional
     public Payment processPayment(Order order, Payment.PaymentMethod method) {
         logger.info("ProcessPayment called for orderId: {} method: {}", order.getId(), method);
         try {
             Payment payment = paymentRepository.findByOrder(order)
-                    .orElseThrow(() -> new PaymentException("Payment record not found for order: " + order.getId()));
+                    .orElseThrow(() -> new PaymentException(
+                            "Payment record not found for order: " + order.getId()));
 
             if (method == Payment.PaymentMethod.COD) {
                 payment.setStatus(Payment.PaymentStatus.PENDING);
@@ -108,14 +155,16 @@ public class PaymentService {
         }
     }
 
+    // ── Existing: old 3-arg confirmPayment (signature-based) ──
+    // Kept so nothing else breaks. Used internally when payment
+    // record already exists (old flow).
     @Transactional
     public void confirmPayment(String razorpayOrderId,
                                String razorpayPaymentId,
                                String razorpaySignature) {
-        logger.info("ConfirmPayment called for razorpayOrderId: {}", razorpayOrderId);
+        logger.info("ConfirmPayment (old) called for razorpayOrderId: {}", razorpayOrderId);
 
         if (!verifyRazorpayPayment(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
-            logger.error("Payment verification failed for orderId: {}", razorpayOrderId);
             throw new PaymentException("Invalid payment signature");
         }
 
@@ -131,14 +180,43 @@ public class PaymentService {
         payment.getOrder().setStatus(Order.OrderStatus.PROCESSING);
         orderRepository.save(payment.getOrder());
 
-        logger.info("Payment confirmed successfully for razorpayOrderId: {}", razorpayOrderId);
+        logger.info("Payment confirmed (old) for razorpayOrderId: {}", razorpayOrderId);
     }
 
+    // ── NEW: confirmPayment by DB orderId ─────────────────────
+    // Used in the new callback flow: order is created first, then
+    // this links the Razorpay payment IDs to that order's payment record.
+    @Transactional
+    public void confirmPayment(String razorpayOrderId,
+                               String razorpayPaymentId,
+                               Long dbOrderId) {
+        logger.info("ConfirmPayment (new) called for dbOrderId: {}", dbOrderId);
+
+        Payment payment = paymentRepository.findByOrder_Id(dbOrderId)
+                .orElseThrow(() -> new PaymentException(
+                        "Payment record not found for order: " + dbOrderId));
+
+        payment.setRazorpayOrderId(razorpayOrderId);
+        payment.setRazorpayPaymentId(razorpayPaymentId);
+        payment.setStatus(Payment.PaymentStatus.SUCCESS);
+        payment.setPaidAt(java.time.LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        Order order = payment.getOrder();
+        order.setStatus(Order.OrderStatus.PROCESSING);
+        orderRepository.save(order);
+
+        logger.info("Payment confirmed (new) for dbOrderId: {}, rzpPaymentId: {}",
+                dbOrderId, razorpayPaymentId);
+    }
+
+    // ── Existing ──────────────────────────────────────────────
     public Payment getPaymentByOrder(Long orderId) {
         logger.info("GetPaymentByOrder called for orderId: {}", orderId);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new PaymentException("Order not found: " + orderId));
         return paymentRepository.findByOrder(order)
-                .orElseThrow(() -> new PaymentException("Payment not found for order: " + orderId));
+                .orElseThrow(() -> new PaymentException(
+                        "Payment not found for order: " + orderId));
     }
 }

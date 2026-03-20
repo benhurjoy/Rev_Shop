@@ -1,5 +1,6 @@
 package com.revshop.service;
 
+
 import com.revshop.entity.Category;
 import com.revshop.exception.ResourceNotFoundException;
 import com.revshop.repository.CategoryRepository;
@@ -19,8 +20,16 @@ public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    // ── Original 2-arg method — kept so nothing else breaks ───
     @Transactional
     public Category addCategory(String name, String description) {
+        return addCategory(name, description, false, false);
+    }
+
+    // ── NEW 4-arg method used by AdminController ───────────────
+    @Transactional
+    public Category addCategory(String name, String description,
+                                boolean hasColors, boolean hasSizes) {
         logger.info("AddCategory called for: {}", name);
         if (categoryRepository.existsByName(name)) {
             logger.warn("Category already exists: {}", name);
@@ -29,10 +38,25 @@ public class CategoryService {
         Category category = Category.builder()
                 .name(name)
                 .description(description)
+                .hasColors(hasColors)
+                .hasSizes(hasSizes)
                 .build();
         Category saved = categoryRepository.save(category);
         logger.info("Category added successfully: {}", saved.getId());
         return saved;
+    }
+
+    // ── NEW: update variant flags on an existing category ──────
+    @Transactional
+    public void updateCategoryVariants(Long id, boolean hasColors, boolean hasSizes) {
+        logger.info("UpdateCategoryVariants called for id: {} hasColors={} hasSizes={}",
+                id, hasColors, hasSizes);
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + id));
+        category.setHasColors(hasColors);
+        category.setHasSizes(hasSizes);
+        categoryRepository.save(category);
+        logger.info("Category variants updated for id: {}", id);
     }
 
     public List<Category> getAllCategories() {

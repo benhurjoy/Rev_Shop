@@ -94,6 +94,9 @@
     <a th:href="@{/admin/products}"   class="sidebar-link active"><i class="bi bi-box-seam"></i> Products</a>
     <a th:href="@{/admin/orders}"     class="sidebar-link"><i class="bi bi-bag-check"></i> Orders</a>
     <a th:href="@{/admin/categories}" class="sidebar-link"><i class="bi bi-grid"></i> Categories</a>
+    <a th:href="@{/admin/coupons}" class="sidebar-link">
+        <i class="bi bi-ticket-perforated"></i> Coupons
+    </a>
     <hr style="border-color:var(--border);margin:1rem 1.5rem;"/>
     <a th:href="@{/auth/logout}"      class="sidebar-link"><i class="bi bi-box-arrow-right"></i> Logout</a>
 </div>
@@ -237,7 +240,7 @@
                             <span style="font-size:0.85rem;font-weight:600;"
                                   th:text="${product.averageRating != null} ? ${#numbers.formatDecimal(product.averageRating,1,1)} : '—'"></span>
                             <span style="color:var(--text-muted);font-size:0.75rem;"
-                                  th:text="'(' + (product.totalReviews ?: 0) + ')'"></span>
+                                  th:text="'(' + ${product.totalReviews ?: 0} + ')'"></span>
                         </div>
                     </td>
 

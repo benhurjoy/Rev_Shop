@@ -119,7 +119,6 @@ public class NotificationService {
                 message = "Your order #" + orderId + " status updated to: " + orderStatus;
         }
 
-        // Use self-proxy so @Transactional(REQUIRES_NEW) on sendNotification is applied
         self.sendNotification(email, title, message, type);
     }
 
@@ -129,7 +128,16 @@ public class NotificationService {
         String title = "Low Stock Alert";
         String message = "Your product \"" + productName
                 + "\" is running low. Only " + remaining + " items left in stock!";
-        // Use self-proxy so @Transactional(REQUIRES_NEW) on sendNotification is applied
         self.sendNotification(sellerEmail, title, message, Notification.NotificationType.LOW_STOCK);
+    }
+
+    // ── NEW: Notify buyer that a wishlisted product is running low ──
+    @Async
+    public void sendWishlistLowStockAlert(String buyerEmail, String productName, int remaining) {
+        logger.info("SendWishlistLowStockAlert called for buyer: {} product: {}", buyerEmail, productName);
+        String title = "Wishlist Item Running Low";
+        String message = "\"" + productName + "\" on your wishlist is almost out of stock! "
+                + "Only " + remaining + " left — grab it before it's gone.";
+        self.sendNotification(buyerEmail, title, message, Notification.NotificationType.LOW_STOCK);
     }
 }

@@ -24,6 +24,7 @@
         .form-control,.form-select{background:rgba(255,255,255,0.05)!important;border:1.5px solid rgba(255,107,53,0.2)!important;border-radius:12px!important;color:var(--text-light)!important;padding:0.75rem 1rem!important;font-family:'DM Sans',sans-serif;transition:all 0.3s;}
         .form-control:focus,.form-select:focus{border-color:var(--orange)!important;box-shadow:0 0 0 3px rgba(255,107,53,0.15)!important;background:rgba(255,255,255,0.08)!important;}
         .form-control::placeholder{color:var(--text-muted)!important;}
+        .form-control.sm{padding:0.4rem 0.65rem!important;font-size:0.84rem!important;border-radius:8px!important;}
         .form-select option{background:var(--navy-mid);}
         textarea.form-control{resize:vertical;min-height:100px;}
         .btn-submit{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:12px;padding:0.85rem 2rem;font-weight:700;font-size:1rem;transition:all 0.3s;box-shadow:0 6px 20px rgba(255,107,53,0.35);}
@@ -31,179 +32,193 @@
         .btn-cancel{background:var(--navy-light);color:var(--text-light);border:1px solid var(--border);border-radius:12px;padding:0.85rem 2rem;font-weight:600;font-size:1rem;transition:all 0.3s;text-decoration:none;}
         .btn-cancel:hover{background:rgba(255,107,53,0.1);border-color:var(--orange);color:var(--orange);}
         .text-danger{color:#ff8fa3!important;font-size:0.8rem;}
-        /* Image Upload */
         .upload-area{border:2px dashed rgba(255,107,53,0.3);border-radius:16px;padding:2rem;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;}
         .upload-area:hover{border-color:var(--orange);background:rgba(255,107,53,0.05);}
         .upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
         .upload-area i{font-size:2.5rem;color:var(--orange);opacity:0.6;margin-bottom:0.5rem;display:block;}
         #imagePreview{width:100%;height:180px;object-fit:cover;border-radius:12px;display:none;margin-top:1rem;border:1px solid var(--border);}
         .alert-error-rev{background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);color:#ff8fa3;border-radius:10px;padding:0.8rem 1rem;}
-        .dropdown-item{color:var(--text-muted);transition:all 0.2s;}
+        .dropdown-item{color:var(--text-muted);}
         .dropdown-item:hover{background:rgba(255,107,53,0.1)!important;color:var(--orange)!important;}
         .dropdown-toggle::after{display:none;}
+        .price-warning{display:none;color:#ff8fa3;font-size:0.8rem;margin-top:0.4rem;}
+        .price-warning.show{display:block;}
+        .variant-section{border:1.5px solid rgba(255,107,53,0.25);border-radius:16px;padding:1.5rem;margin-top:1.5rem;background:rgba(255,107,53,0.03);}
+        .variant-label{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.8px;color:var(--orange);font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:6px;}
+        .variants-table{width:100%;border-collapse:separate;border-spacing:0 5px;}
+        .variants-table thead th{color:var(--text-muted);font-size:0.73rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;padding:0 8px 8px;border-bottom:1px solid var(--border);white-space:nowrap;}
+        .variant-row-tr td{padding:3px 6px;vertical-align:middle;}
+        .color-dot{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,0.15);display:inline-block;flex-shrink:0;transition:background 0.2s;}
+        .btn-add-variant{background:rgba(255,107,53,0.08);border:1.5px dashed rgba(255,107,53,0.4);color:var(--orange);border-radius:10px;padding:0.5rem 1.2rem;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.3s;width:100%;margin-top:10px;}
+        .btn-add-variant:hover{background:rgba(255,107,53,0.16);border-style:solid;}
+        .btn-rm{background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.2);color:#ff8fa3;border-radius:7px;padding:3px 8px;font-size:0.78rem;cursor:pointer;}
+        .btn-rm:hover{background:rgba(220,53,69,0.22);}
+        .vimg-label{display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:var(--text-muted);font-size:0.78rem;padding:4px 8px;border:1px solid var(--border);border-radius:8px;transition:all 0.2s;}
+        .vimg-label:hover{border-color:var(--orange);color:var(--orange);}
+        .vimg-label input[type=file]{display:none;}
+        .vimg-thumb{width:34px;height:34px;object-fit:cover;border-radius:6px;border:1px solid var(--border);display:none;}
+        .no-v-msg{color:var(--text-muted);font-size:0.84rem;text-align:center;padding:1.5rem 0;opacity:0.55;}
+        /* READ-ONLY style used only for auto-summed stock in variant mode */
+        .stock-readonly{background:rgba(255,255,255,0.03)!important;cursor:not-allowed;}
         @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;padding:1rem;}}
     </style>
 </head>
 <body>
-
-<!-- Navbar -->
 <nav class="revshop-navbar navbar">
     <div class="container-fluid px-4">
         <a class="navbar-brand" th:href="@{/}">Rev<span>Shop</span></a>
         <div class="ms-auto d-flex align-items-center gap-2">
-            <a th:href="@{/seller/products}" class="nav-link">
-                <i class="bi bi-arrow-left me-1"></i>Back to Products
-            </a>
-            <!-- Avatar Dropdown -->
+            <a th:href="@{/seller/products}" class="nav-link"><i class="bi bi-arrow-left me-1"></i>Back to Products</a>
             <div class="dropdown">
-                <a class="nav-link dropdown-toggle d-flex align-items-center p-0 ps-1"
-                   href="#" id="profileDrop" role="button"
-                   data-bs-toggle="dropdown" aria-expanded="false">
-                    <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#e85d2b);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:white;border:2px solid rgba(255,107,53,0.4);cursor:pointer;">
+                <a class="nav-link dropdown-toggle d-flex align-items-center p-0 ps-1" href="#" role="button" data-bs-toggle="dropdown">
+                    <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#e85d2b);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:white;border:2px solid rgba(255,107,53,0.4);">
                         <span th:text="${currentUser != null} ? ${currentUser.initials} : 'S'">S</span>
                     </div>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end mt-2"
-                    style="background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;min-width:210px;padding:0.5rem;box-shadow:0 12px 40px rgba(0,0,0,0.4);">
+                <ul class="dropdown-menu dropdown-menu-end mt-2" style="background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;min-width:210px;padding:0.5rem;">
                     <li style="padding:0.75rem 1rem;border-bottom:1px solid var(--border);">
-                        <div style="font-weight:600;color:var(--text-light);font-size:0.9rem;"
-                             th:text="${currentUser != null} ? ${currentUser.firstName} + ' ' + ${currentUser.lastName} : ''"></div>
-                        <div style="color:var(--gold);font-size:0.78rem;margin-top:1px;"
-                             th:text="${currentUser?.businessName}"></div>
-                        <div style="color:var(--text-muted);font-size:0.75rem;margin-top:1px;"
-                             th:text="${currentUser != null} ? ${currentUser.email} : ''"></div>
+                        <div style="font-weight:600;color:var(--text-light);font-size:0.9rem;" th:text="${currentUser?.firstName} + ' ' + ${currentUser?.lastName}"></div>
+                        <div style="color:var(--text-muted);font-size:0.75rem;" th:text="${currentUser?.email}"></div>
                     </li>
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
-                           th:href="@{/seller/profile}"
-                           style="color:var(--orange)!important;font-weight:600;">
-                            <i class="bi bi-person-circle"></i> My Profile
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
-                           th:href="@{/seller/products}">
-                            <i class="bi bi-box-seam" style="color:var(--orange);"></i> My Products
-                        </a>
-                    </li>
+                    <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2" th:href="@{/seller/profile}" style="color:var(--orange)!important;font-weight:600;"><i class="bi bi-person-circle"></i> My Profile</a></li>
                     <li><hr style="border-color:var(--border);margin:0.4rem 0;"></li>
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2"
-                           th:href="@{/auth/logout}" style="color:#ff8fa3!important;">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </a>
-                    </li>
+                    <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded-2" th:href="@{/auth/logout}" style="color:#ff8fa3!important;"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
                 </ul>
             </div>
         </div>
     </div>
 </nav>
 
-<!-- Sidebar -->
 <div class="sidebar">
     <a th:href="@{/seller/dashboard}" class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
     <a th:href="@{/seller/products}" class="sidebar-link"><i class="bi bi-box-seam"></i> My Products</a>
     <a th:href="@{/seller/products/add}" class="sidebar-link active"><i class="bi bi-plus-circle"></i> Add Product</a>
     <a th:href="@{/seller/low-stock}" class="sidebar-link"><i class="bi bi-exclamation-triangle"></i> Low Stock</a>
+    <a th:href="@{/seller/reviews}" class="sidebar-link"><i class="bi bi-star-half"></i> Reviews</a>
     <a th:href="@{/seller/notifications}" class="sidebar-link"><i class="bi bi-bell"></i> Notifications</a>
 </div>
 
 <div class="main">
     <div style="margin-bottom:2rem;">
         <h2>Add New Product</h2>
-        <p style="color:var(--text-muted);margin:0;font-size:0.9rem;">Fill in the details to list your product on RevShop</p>
+        <p style="color:var(--text-muted);margin:0;font-size:0.9rem;">Fill details then add variants — each variant gets its own stock, price &amp; image</p>
     </div>
-
-    <div th:if="${errorMessage}" class="alert-error-rev mb-4">
-        <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
-    </div>
+    <div th:if="${errorMessage}" class="alert-error-rev mb-4"><i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span></div>
 
     <form th:action="@{/seller/products/add}" th:object="${productDTO}"
-          method="post" enctype="multipart/form-data">
-        <div class="row g-4">
+          method="post" enctype="multipart/form-data" id="productForm">
+        <input type="hidden" id="variantsJson" name="variantsJson" value="[]"/>
 
-            <!-- Left Column -->
+        <div class="row g-4">
             <div class="col-lg-8">
                 <div class="form-card">
                     <h5 class="mb-4">Product Information</h5>
 
                     <div class="mb-3">
                         <label class="form-label">Product Name *</label>
-                        <input type="text" class="form-control" th:field="*{name}"
-                               placeholder="e.g. Premium Wireless Headphones"/>
-                        <div class="text-danger" th:if="${#fields.hasErrors('name')}"
-                             th:errors="*{name}"></div>
+                        <input type="text" class="form-control" th:field="*{name}" placeholder="e.g. Premium Wireless Headphones"/>
+                        <div class="text-danger" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" th:field="*{description}" rows="4"
-                                  placeholder="Describe your product in detail..."></textarea>
+                        <textarea class="form-control" th:field="*{description}" rows="4" placeholder="Describe your product..."></textarea>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label">Selling Price (₹) *</label>
-                            <input type="number" class="form-control" th:field="*{price}"
-                                   placeholder="0.00" step="0.01"/>
-                            <div class="text-danger" th:if="${#fields.hasErrors('price')}"
-                                 th:errors="*{price}"></div>
+                            <label class="form-label">MRP (₹) *</label>
+                            <input type="number" class="form-control" th:field="*{mrp}" id="mrpInput" placeholder="0.00" step="0.01" min="0"/>
+                            <div class="text-danger" th:if="${#fields.hasErrors('mrp')}" th:errors="*{mrp}"></div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">MRP (₹) *</label>
-                            <input type="number" class="form-control" th:field="*{mrp}"
-                                   placeholder="0.00" step="0.01"/>
-                            <div class="text-danger" th:if="${#fields.hasErrors('mrp')}"
-                                 th:errors="*{mrp}"></div>
+                            <label class="form-label">Base Price (₹) *</label>
+                            <input type="number" class="form-control" th:field="*{price}" id="priceInput" placeholder="0.00" step="0.01" min="0"/>
+                            <div class="text-danger" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
+                            <div class="price-warning" id="priceWarning"><i class="bi bi-exclamation-triangle-fill me-1"></i>Price must be less than MRP.</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Discount (%)</label>
-                            <input type="number" class="form-control" th:field="*{discountPercent}"
-                                   placeholder="0" min="0" max="100"/>
+                            <input type="number" class="form-control" th:field="*{discountPercent}" id="discountInput" min="0" max="100" readonly style="background:rgba(255,255,255,0.03)!important;cursor:not-allowed;"/>
+                            <div style="color:var(--text-muted);font-size:0.75rem;margin-top:0.3rem;">Auto-calculated</div>
                         </div>
                     </div>
 
                     <div class="row g-3 mt-1">
                         <div class="col-md-6">
+                            <label class="form-label">Category *</label>
+                            <select class="form-select" th:field="*{categoryId}" id="categorySelect">
+                                <option value="">-- Select Category --</option>
+                                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"
+                                        th:data-has-colors="${cat.hasColors}" th:data-has-sizes="${cat.hasSizes}"></option>
+                            </select>
+                            <div class="text-danger" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></div>
+                        </div>
+
+                        <!--
+                            FIX: Stock field wrapper.
+                            - In NON-variant mode: fully editable, user types stock directly.
+                            - In VARIANT mode: hidden (stock is the sum of variant rows, handled server-side).
+                            - We NO LONGER zero this out on every updateVariantVisibility() call —
+                              only zero it when the user switches FROM non-variant TO variant mode.
+                        -->
+                        <div class="col-md-6" id="stockFieldWrap">
                             <label class="form-label">Stock Quantity *</label>
                             <input type="number" class="form-control" th:field="*{stockQuantity}"
-                                   placeholder="0" min="0"/>
-                            <div class="text-danger" th:if="${#fields.hasErrors('stockQuantity')}"
-                                 th:errors="*{stockQuantity}"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Category *</label>
-                            <select class="form-select" th:field="*{categoryId}">
-                                <option value="">-- Select Category --</option>
-                                <option th:each="cat : ${categories}"
-                                        th:value="${cat.id}"
-                                        th:text="${cat.name}"></option>
-                            </select>
-                            <div class="text-danger" th:if="${#fields.hasErrors('categoryId')}"
-                                 th:errors="*{categoryId}"></div>
+                                   id="stockInput" placeholder="0" min="0"/>
+                            <div style="color:var(--text-muted);font-size:0.75rem;margin-top:0.3rem;">
+                                Units available for sale
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Variants section — shown only for categories with colors/sizes -->
+                    <div id="variantSection" style="display:none;">
+                        <div class="variant-section">
+                            <div class="variant-label"><i class="bi bi-grid-3x3-gap-fill"></i> Product Variants</div>
+                            <p style="color:var(--text-muted);font-size:0.81rem;margin-bottom:1rem;">
+                                Each row = one SKU. Buyers choose color → size → add to cart. Each variant has its own stock.
+                            </p>
+                            <div style="overflow-x:auto;">
+                                <table class="variants-table" id="variantsTable">
+                                    <thead>
+                                    <tr>
+                                        <th id="thColor" style="display:none;">Color</th>
+                                        <th id="thSize"  style="display:none;">Size</th>
+                                        <th>Stock *</th>
+                                        <th>Price Override (₹)</th>
+                                        <th>Variant Image</th>
+                                        <th>SKU Code</th>
+                                        <th></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="variantsTbody">
+                                    <tr id="noVariantsRow"><td colspan="7" class="no-v-msg"><i class="bi bi-plus-circle me-1"></i>No variants yet — click below</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn-add-variant" onclick="addVariantRow()">
+                                <i class="bi bi-plus-circle me-2"></i>Add Variant Row
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            <!-- Right Column - Image -->
             <div class="col-lg-4">
                 <div class="form-card">
-                    <h5 class="mb-4">Product Image</h5>
+                    <h5 class="mb-3">Main Product Image</h5>
+                    <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:0.8rem;">Fallback image when a variant has no image set.</p>
                     <div class="upload-area" onclick="document.getElementById('imageInput').click()">
-                        <input type="file" id="imageInput" name="image"
-                               accept="image/*" onchange="previewImage(event)"/>
+                        <input type="file" id="imageInput" name="image" accept="image/*" onchange="previewImage(event)"/>
                         <i class="bi bi-cloud-upload"></i>
-                        <p style="color:var(--text-muted);margin:0;font-size:0.88rem;">
-                            Click to upload image<br/>
-                            <span style="font-size:0.78rem;">PNG, JPG, WEBP up to 10MB</span>
-                        </p>
+                        <p style="color:var(--text-muted);margin:0;font-size:0.88rem;">Click to upload<br/><span style="font-size:0.78rem;">PNG, JPG, WEBP up to 10MB</span></p>
                         <img id="imagePreview" alt="Preview"/>
                     </div>
                 </div>
             </div>
 
-            <!-- Submit -->
             <div class="col-12">
                 <div class="d-flex gap-3">
                     <button type="submit" class="btn-submit">
@@ -218,26 +233,174 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function previewImage(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const preview = document.getElementById('imagePreview');
-        preview.src = URL.createObjectURL(file);
-        preview.style.display = 'block';
-    }
-    // Auto-calculate discount
-    const priceInput = document.querySelector('[name="price"]');
-    const mrpInput   = document.querySelector('[name="mrp"]');
-    const discInput  = document.querySelector('[name="discountPercent"]');
-    function calcDiscount() {
-        const price = parseFloat(priceInput.value);
-        const mrp   = parseFloat(mrpInput.value);
-        if (price && mrp && mrp > price) {
-            discInput.value = Math.round((mrp - price) / mrp * 100);
+    // ── Price / Discount ───────────────────────────────────────────────────────
+    const mrpInput      = document.getElementById('mrpInput');
+    const priceInput    = document.getElementById('priceInput');
+    const discountInput = document.getElementById('discountInput');
+    const priceWarning  = document.getElementById('priceWarning');
+
+    function calcDiscount(){
+        const p = parseFloat(priceInput.value), m = parseFloat(mrpInput.value);
+        if(!p || !m){ discountInput.value = 0; priceWarning.classList.remove('show'); return; }
+        if(p >= m){
+            discountInput.value = 0;
+            priceWarning.classList.add('show');
+            priceInput.style.borderColor = 'rgba(220,53,69,0.6)';
+        } else {
+            discountInput.value = Math.round((m - p) / m * 100);
+            priceWarning.classList.remove('show');
+            priceInput.style.borderColor = 'rgba(255,107,53,0.2)';
         }
     }
-    priceInput?.addEventListener('input', calcDiscount);
-    mrpInput?.addEventListener('input', calcDiscount);
+    mrpInput.addEventListener('input', calcDiscount);
+    priceInput.addEventListener('input', calcDiscount);
+
+    // ── Submit: validate then serialize ───────────────────────────────────────
+    document.getElementById('productForm').addEventListener('submit', function(e) {
+        const p = parseFloat(priceInput.value), m = parseFloat(mrpInput.value);
+        if(p && m && p >= m){
+            e.preventDefault();
+            priceWarning.classList.add('show');
+            priceInput.focus();
+            return;
+        }
+        serializeVariants();
+    });
+
+    // ── Category → toggle stock field vs variant table ─────────────────────────
+    const categorySelect = document.getElementById('categorySelect');
+    const variantSection = document.getElementById('variantSection');
+    const stockFieldWrap = document.getElementById('stockFieldWrap');
+    const stockInput     = document.getElementById('stockInput');
+
+    // Track previous mode so we only zero-out stock when SWITCHING TO variant mode
+    let wasVariantMode = false;
+    let hasColors = false, hasSizes = false;
+
+    function updateVariantVisibility(){
+        const opt = categorySelect.options[categorySelect.selectedIndex];
+        hasColors = opt && opt.dataset.hasColors === 'true';
+        hasSizes  = opt && opt.dataset.hasSizes  === 'true';
+        const useVariants = hasColors || hasSizes;
+
+        // FIX: Only zero out stock when TRANSITIONING into variant mode,
+        // not on every render (which was wiping user-entered stock on load).
+        if(useVariants && !wasVariantMode){
+            stockInput.value = 0;
+        }
+        wasVariantMode = useVariants;
+
+        // Show variant table OR plain stock field — never both
+        variantSection.style.display = useVariants ? '' : 'none';
+        stockFieldWrap.style.display = useVariants ? 'none' : '';
+
+        document.getElementById('thColor').style.display = hasColors ? '' : 'none';
+        document.getElementById('thSize').style.display  = hasSizes  ? '' : 'none';
+        document.querySelectorAll('.variant-row-tr').forEach(tr => {
+            const c = tr.querySelector('.td-color'), s = tr.querySelector('.td-size');
+            if(c) c.style.display = hasColors ? '' : 'none';
+            if(s) s.style.display = hasSizes  ? '' : 'none';
+        });
+    }
+    categorySelect.addEventListener('change', updateVariantVisibility);
+    updateVariantVisibility(); // run on load — wasVariantMode starts false so no zeroing
+
+    // ── Variant table ──────────────────────────────────────────────────────────
+    let rowIdx = 0;
+    const variantImages = {};
+
+    function addVariantRow(){
+        document.getElementById('noVariantsRow').style.display = 'none';
+        const idx   = rowIdx++;
+        const tbody = document.getElementById('variantsTbody');
+        const tr    = document.createElement('tr');
+        tr.className   = 'variant-row-tr';
+        tr.dataset.idx = idx;
+        tr.innerHTML = `
+          <td class="td-color" style="display:${hasColors ? '' : 'none'}">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="color-dot" id="dot_${idx}" style="background:#888;"></span>
+              <input type="text" class="form-control sm color-input" placeholder="e.g. Red"
+                     oninput="updateDot(this,${idx})" style="width:90px;"/>
+            </div>
+          </td>
+          <td class="td-size" style="display:${hasSizes ? '' : 'none'}">
+            <input type="text" class="form-control sm size-input" placeholder="e.g. M" style="width:72px;"/>
+          </td>
+          <td><input type="number" class="form-control sm stock-input" value="0" min="0" style="width:72px;"/></td>
+          <td>
+            <input type="number" class="form-control sm price-input" placeholder="—" step="0.01" min="0" style="width:90px;"/>
+            <div style="color:var(--text-muted);font-size:0.68rem;margin-top:1px;">blank = base</div>
+          </td>
+          <td>
+            <label class="vimg-label" for="vimg_${idx}">
+              <img id="vthumb_${idx}" class="vimg-thumb" alt=""/>
+              <span id="vtxt_${idx}"><i class="bi bi-image me-1"></i>Upload</span>
+              <input type="file" id="vimg_${idx}" accept="image/*" onchange="previewVImg(this,${idx})"/>
+            </label>
+          </td>
+          <td><input type="text" class="form-control sm sku-input" placeholder="Optional" style="width:100px;"/></td>
+          <td><button type="button" class="btn-rm" onclick="removeRow(this)"><i class="bi bi-trash"></i></button></td>`;
+        tbody.appendChild(tr);
+    }
+
+    function removeRow(btn){
+        const tr = btn.closest('tr');
+        delete variantImages[parseInt(tr.dataset.idx)];
+        tr.remove();
+        if(!document.querySelectorAll('.variant-row-tr').length)
+            document.getElementById('noVariantsRow').style.display = '';
+    }
+
+    function updateDot(input, idx){
+        const dot = document.getElementById('dot_' + idx);
+        if(!dot) return;
+        const tmp = document.createElement('div');
+        tmp.style.color = input.value;
+        document.body.appendChild(tmp);
+        const rgb = getComputedStyle(tmp).color;
+        document.body.removeChild(tmp);
+        dot.style.background = (rgb !== 'rgb(0, 0, 0)' || input.value.toLowerCase() === 'black') ? input.value : '#888';
+    }
+
+    function previewVImg(input, idx){
+        const file = input.files[0];
+        if(!file) return;
+        variantImages[idx] = file;
+        const th = document.getElementById('vthumb_' + idx), tx = document.getElementById('vtxt_' + idx);
+        th.src = URL.createObjectURL(file); th.style.display = 'block'; tx.style.display = 'none';
+    }
+
+    function serializeVariants(){
+        const rows = document.querySelectorAll('.variant-row-tr'), payload = [];
+        rows.forEach(tr => {
+            const ce  = tr.querySelector('.color-input'),
+                  se  = tr.querySelector('.size-input'),
+                  ste = tr.querySelector('.stock-input'),
+                  pe  = tr.querySelector('.price-input'),
+                  ske = tr.querySelector('.sku-input');
+            payload.push({
+                color:         ce  ? ce.value.trim()  || null : null,
+                size:          se  ? se.value.trim()  || null : null,
+                stockQuantity: ste ? (parseInt(ste.value, 10) || 0) : 0,
+                priceOverride: pe && pe.value.trim() ? parseFloat(pe.value) : null,
+                skuCode:       ske ? ske.value.trim() || null : null
+            });
+        });
+        document.getElementById('variantsJson').value = JSON.stringify(payload);
+
+        Object.entries(variantImages).forEach(([idx, file]) => {
+            const inp = document.createElement('input');
+            inp.type = 'file'; inp.name = 'variantImage_' + idx; inp.style.display = 'none';
+            const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files;
+            document.getElementById('productForm').appendChild(inp);
+        });
+    }
+
+    function previewImage(event){
+        const p = document.getElementById('imagePreview');
+        p.src = URL.createObjectURL(event.target.files[0]); p.style.display = 'block';
+    }
 </script>
 </body>
 </html>

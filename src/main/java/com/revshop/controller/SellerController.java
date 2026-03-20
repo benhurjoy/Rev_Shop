@@ -1,6 +1,10 @@
 package com.revshop.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.revshop.dto.ProductDTO;
+import com.revshop.dto.ProductVariantDTO;
+import com.revshop.dto.SellerReviewDTO;
 import com.revshop.dto.UserDTO;
 import com.revshop.entity.User;
 import com.revshop.exception.ResourceNotFoundException;
@@ -8,6 +12,7 @@ import com.revshop.repository.UserRepository;
 import com.revshop.service.CategoryService;
 import com.revshop.service.NotificationService;
 import com.revshop.service.ProductService;
+import com.revshop.service.ReviewService;
 import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,6 +34,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Controller
@@ -43,6 +51,10 @@ public class SellerController {
     @Autowired private NotificationService notificationService;
     @Autowired private UserRepository userRepository;
     @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private ReviewService reviewService;
+
+    // FIX: ObjectMapper for parsing variantsJson
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -74,7 +86,16 @@ public class SellerController {
         String email = userDetails.getUsername();
         logger.info("Seller dashboard accessed by: {}", email);
 
-        model.addAttribute("products", productService.getProductsBySeller(email));
+        List<ProductDTO> products = productService.getProductsBySeller(email);
+
+        double avgRating = products.stream()
+                .filter(p -> p.getAverageRating() != null && p.getAverageRating() > 0)
+                .mapToDouble(ProductDTO::getAverageRating)
+                .average()
+                .orElse(0.0);
+
+        model.addAttribute("products", products);
+        model.addAttribute("avgRating", avgRating);
         model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
         model.addAttribute("currentUser", getCurrentUserDTO(email));
         return "seller/dashboard";
@@ -112,6 +133,9 @@ public class SellerController {
             @Valid @ModelAttribute ProductDTO productDTO,
             BindingResult result,
             @RequestParam(value = "image", required = false) MultipartFile image,
+            // FIX: receive variantsJson and the map of variant images
+            @RequestParam(value = "variantsJson", required = false) String variantsJson,
+            @RequestParam Map<String, MultipartFile> allFiles,
             @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes,
             Model model) {
@@ -124,9 +148,28 @@ public class SellerController {
 
         String email = userDetails.getUsername();
         try {
+            // Save main product image
             if (image != null && !image.isEmpty()) {
                 productDTO.setImageUrl(saveImage(image));
             }
+
+            // FIX: Parse variantsJson into the DTO
+            if (variantsJson != null && !variantsJson.isBlank() && !variantsJson.equals("[]")) {
+                List<ProductVariantDTO> variants = objectMapper.readValue(
+                        variantsJson, new TypeReference<List<ProductVariantDTO>>() {});
+
+                // FIX: Save each variant's image and inject the URL back into the DTO
+                for (int i = 0; i < variants.size(); i++) {
+                    MultipartFile variantImg = allFiles.get("variantImage_" + i);
+                    if (variantImg != null && !variantImg.isEmpty()) {
+                        variants.get(i).setImageUrl(saveImage(variantImg));
+                    }
+                }
+
+                productDTO.setVariants(variants);
+                logger.info("Parsed {} variants for new product", variants.size());
+            }
+
             productService.addProduct(productDTO, email);
             redirectAttributes.addFlashAttribute("successMessage", "Product added successfully!");
             logger.info("Product added by seller: {}", email);
@@ -160,6 +203,9 @@ public class SellerController {
             @Valid @ModelAttribute ProductDTO productDTO,
             BindingResult result,
             @RequestParam(value = "image", required = false) MultipartFile image,
+            // FIX: receive variantsJson and the map of variant images
+            @RequestParam(value = "variantsJson", required = false) String variantsJson,
+            @RequestParam Map<String, MultipartFile> allFiles,
             @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes,
             Model model) {
@@ -172,9 +218,28 @@ public class SellerController {
 
         String email = userDetails.getUsername();
         try {
+            // Save main product image
             if (image != null && !image.isEmpty()) {
                 productDTO.setImageUrl(saveImage(image));
             }
+
+            // FIX: Parse variantsJson into the DTO
+            if (variantsJson != null && !variantsJson.isBlank() && !variantsJson.equals("[]")) {
+                List<ProductVariantDTO> variants = objectMapper.readValue(
+                        variantsJson, new TypeReference<List<ProductVariantDTO>>() {});
+
+                // FIX: Save each variant's image and inject the URL back into the DTO
+                for (int i = 0; i < variants.size(); i++) {
+                    MultipartFile variantImg = allFiles.get("variantImage_" + i);
+                    if (variantImg != null && !variantImg.isEmpty()) {
+                        variants.get(i).setImageUrl(saveImage(variantImg));
+                    }
+                }
+
+                productDTO.setVariants(variants);
+                logger.info("Parsed {} variants for product update: {}", variants.size(), productId);
+            }
+
             productService.updateProduct(productId, productDTO, email);
             redirectAttributes.addFlashAttribute("successMessage", "Product updated successfully!");
             logger.info("Product updated: {} by seller: {}", productId, email);
@@ -343,6 +408,42 @@ public class SellerController {
         model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
         model.addAttribute("currentUser", getCurrentUserDTO(email));
         return "seller/low-stock";
+    }
+
+    // ── Reviews ───────────────────────────────────────────────
+    @GetMapping("/reviews")
+    public String reviews(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) String product,
+            @RequestParam(required = false) Integer rating,
+            Model model) {
+
+        String email = userDetails.getUsername();
+        logger.info("Seller viewing reviews: {}", email);
+
+        List<SellerReviewDTO> reviews = reviewService.getReviewsBySeller(email, product, rating);
+
+        Map<Integer, Long> starCounts = new HashMap<>();
+        for (int i = 1; i <= 5; i++) {
+            int star = i;
+            starCounts.put(star, reviews.stream()
+                    .filter(r -> r.getRating() == star).count());
+        }
+
+        double avgRating = reviews.stream()
+                .mapToInt(SellerReviewDTO::getRating)
+                .average()
+                .orElse(0.0);
+
+        model.addAttribute("reviews", reviews);
+        model.addAttribute("totalReviews", reviews.size());
+        model.addAttribute("avgRating", avgRating);
+        model.addAttribute("starCounts", starCounts);
+        model.addAttribute("filterProduct", product);
+        model.addAttribute("filterRating", rating);
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(email));
+        model.addAttribute("currentUser", getCurrentUserDTO(email));
+        return "seller/reviews";
     }
 
     // ── Helper: Save Image ────────────────────────────────────

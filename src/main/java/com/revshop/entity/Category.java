@@ -25,6 +25,21 @@ public class Category {
     // Oracle VARCHAR2 max is 4000 chars — fine for description
     private String description;
 
+    // ── NEW: variant flags ─────────────────────────────────────
+    // Boolean (wrapper) so existing NULL rows don't throw on hydration.
+    // isHasColors() / isHasSizes() helper methods below default nulls to false.
+    @Column(name = "has_colors")
+    @Builder.Default
+    private Boolean hasColors = false;
+
+    @Column(name = "has_sizes")
+    @Builder.Default
+    private Boolean hasSizes = false;
+
+    public boolean isHasColors() { return Boolean.TRUE.equals(hasColors); }
+    public boolean isHasSizes()  { return Boolean.TRUE.equals(hasSizes);  }
+    // ──────────────────────────────────────────────────────────
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 

@@ -25,6 +25,7 @@ public class AdminService {
     @Autowired private ProductRepository productRepository;
     @Autowired private OrderRepository orderRepository;
     @Autowired private ReviewRepository reviewRepository;
+    @Autowired private ProductService productService; // ← ADDED
 
     public List<UserDTO> getAllUsers() {
         logger.info("Admin fetching all users");
@@ -67,8 +68,8 @@ public class AdminService {
             logger.warn("RemoveProduct failed - product not found: {}", productId);
             throw new ResourceNotFoundException("Product not found: " + productId);
         }
-        productRepository.deleteById(productId);
-        logger.info("Product removed successfully: {}", productId);
+        productService.deleteProduct(productId); // ← FIXED: soft delete instead of hard delete
+        logger.info("Product soft-deleted by admin: {}", productId);
     }
 
     @Transactional
@@ -95,7 +96,6 @@ public class AdminService {
         long totalOrders     = orderRepository.count();
         long totalReviews    = reviewRepository.count();
 
-        // Fixed: use count queries per status instead of fetching full entities
         long pendingOrders   = orderRepository.countByStatus(Order.OrderStatus.PENDING);
         long deliveredOrders = orderRepository.countByStatus(Order.OrderStatus.DELIVERED);
         long cancelledOrders = orderRepository.countByStatus(Order.OrderStatus.CANCELLED);

@@ -22,7 +22,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("SELECT COUNT(r) FROM Review r WHERE r.product = :product")
     Long countByProduct(@Param("product") Product product);
 
-    // ── Use these for template rendering (buyer name, product name accessed in views) ──
+    // ── Used by product detail page (buyer name, product name accessed in views) ──
 
     @Query("""
         SELECT r FROM Review r
@@ -39,4 +39,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
         WHERE r.buyer = :buyer
         """)
     List<Review> findByBuyerWithProduct(@Param("buyer") User buyer);
+
+    // ── NEW: all reviews across a seller's products (for seller reviews page) ──
+    @Query("""
+        SELECT r FROM Review r
+        JOIN FETCH r.product p
+        JOIN FETCH r.buyer b
+        WHERE p.seller = :seller
+        ORDER BY r.createdAt DESC
+        """)
+    List<Review> findByProduct_Seller(@Param("seller") User seller);
 }

@@ -25,7 +25,7 @@
         .rev-table tbody tr:hover{background:rgba(255,107,53,0.04);}
         .rev-table tbody td{padding:0.9rem 1rem;vertical-align:middle;border:none;}
         .section-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
-        .section-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+        .section-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.8rem;}
         .btn-sm-orange{background:linear-gradient(135deg,var(--orange),#e85d2b);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:0.8rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.2s;display:inline-flex;align-items:center;}
         .btn-sm-orange:hover{transform:translateY(-1px);color:white;}
         .btn-sm-danger{background:rgba(220,53,69,0.1);color:#ff8fa3;border:1px solid rgba(220,53,69,0.3);border-radius:8px;padding:5px 12px;font-size:0.8rem;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;}
@@ -43,6 +43,15 @@
         .dropdown-item{color:var(--text-muted);transition:all 0.2s;}
         .dropdown-item:hover{background:rgba(255,107,53,0.1)!important;color:var(--orange)!important;}
         .dropdown-toggle::after{display:none;}
+
+        /* ── Search input (same as admin) ── */
+        .search-input{background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,107,53,0.2);border-radius:10px;color:var(--text-light);padding:0.5rem 1rem;font-family:'DM Sans',sans-serif;outline:none;transition:all 0.3s;width:220px;}
+        .search-input:focus{border-color:var(--orange);}
+        .search-input::placeholder{color:var(--text-muted);}
+
+        /* ── No results row ── */
+        #noResults{display:none;text-align:center;padding:2rem;color:var(--text-muted);}
+
         @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;padding:1rem;}}
     </style>
 </head>
@@ -106,6 +115,9 @@
     <a th:href="@{/seller/products}" class="sidebar-link active"><i class="bi bi-box-seam"></i> My Products</a>
     <a th:href="@{/seller/products/add}" class="sidebar-link"><i class="bi bi-plus-circle"></i> Add Product</a>
     <a th:href="@{/seller/low-stock}" class="sidebar-link"><i class="bi bi-exclamation-triangle"></i> Low Stock</a>
+    <a th:href="@{/seller/reviews}" class="sidebar-link">
+        <i class="bi bi-star-half"></i> Reviews
+    </a>
     <a th:href="@{/seller/notifications}" class="sidebar-link"><i class="bi bi-bell"></i> Notifications</a>
 </div>
 
@@ -124,9 +136,17 @@
                 <span style="color:var(--text-muted);font-size:0.82rem;"
                       th:text="${products?.size() ?: 0} + ' products'"></span>
             </div>
-            <a th:href="@{/seller/products/add}" class="btn-sm-orange">
-                <i class="bi bi-plus me-1"></i>Add Product
-            </a>
+            <!-- Search + Add button -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <input type="text"
+                       class="search-input"
+                       id="productSearch"
+                       placeholder="Search products..."
+                       onkeyup="filterProducts()"/>
+                <a th:href="@{/seller/products/add}" class="btn-sm-orange">
+                    <i class="bi bi-plus me-1"></i>Add Product
+                </a>
+            </div>
         </div>
 
         <div th:if="${products == null or products.isEmpty()}" class="empty-state">
@@ -136,7 +156,7 @@
         </div>
 
         <div class="table-responsive" th:if="${products != null and !products.isEmpty()}">
-            <table class="table rev-table mb-0">
+            <table class="table rev-table mb-0" id="productTable">
                 <thead>
                 <tr>
                     <th>Product</th><th>Category</th><th>Price</th>
@@ -167,8 +187,8 @@
                              th:text="${p.discountPercent} + '% off'"></div>
                     </td>
                     <td>
-                        <span th:if="${p.stockQuantity > 5}"
-                              style="color:var(--text-light);"
+                        <span   th:if="${p.stockQuantity > 5}"
+                              style="color:var(--text-dark);"
                               th:text="${p.stockQuantity}"></span>
                         <span class="badge-low"
                               th:if="${p.stockQuantity > 0 and p.stockQuantity <= 5}"
@@ -187,42 +207,49 @@
                         <span style="color:var(--gold);">★</span>
                         <span style="font-size:0.85rem;" th:text="${p.averageRating ?: '—'}"></span>
                         <span style="color:var(--text-muted);font-size:0.75rem;"
-                              th:text="'(' + (p.totalReviews ?: 0) + ')'"></span>
+                              th:text="'(' + ${p.totalReviews ?: 0} + ')'"></span>
                     </td>
                     <td>
                         <div class="d-flex gap-2">
-
                             <!-- Edit -->
                             <a th:href="@{/seller/products/edit/{id}(id=${p.id})}"
                                class="btn-sm-orange">
                                 <i class="bi bi-pencil"></i>
                             </a>
-
-                            <!-- Toggle: data-id picked up by JS, no inline Thymeleaf in onclick -->
+                            <!-- Toggle -->
                             <button type="button"
                                     class="btn-sm-muted btn-toggle"
                                     th:data-id="${p.id}"
                                     th:title="${p.active} ? 'Hide product' : 'Show product'">
                                 <i th:class="${p.active} ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
                             </button>
-
-                            <!-- Delete: data-id and data-name picked up by JS -->
+                            <!-- Delete -->
                             <button type="button"
                                     class="btn-sm-danger btn-delete"
                                     th:data-id="${p.id}"
                                     th:data-name="${p.name}">
                                 <i class="bi bi-trash"></i>
                             </button>
-
                         </div>
                     </td>
                 </tr>
+
+                <!-- No results row (shown by JS when search yields nothing) -->
+                <tr id="noResults">
+                    <td colspan="7">
+                        <div style="text-align:center;padding:2rem;color:var(--text-muted);">
+                            <i class="bi bi-search" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:0.5rem;"></i>
+                            No products match your search.
+                        </div>
+                    </td>
+                </tr>
+
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Hidden forms outside the table, one pair per product -->
+    <!-- Hidden forms outside table -->
     <div th:each="p : ${products}" th:if="${products != null and !products.isEmpty()}">
         <form th:id="'toggleForm-' + ${p.id}"
               th:action="@{/seller/products/toggle/{id}(id=${p.id})}"
@@ -236,7 +263,23 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Toggle visibility
+    // ── Search filter ──────────────────────────────────────────
+    function filterProducts() {
+        const q = document.getElementById('productSearch').value.toLowerCase();
+        const rows = document.querySelectorAll('#productTable tbody tr:not(#noResults)');
+        let visibleCount = 0;
+
+        rows.forEach(function(row) {
+            const match = row.textContent.toLowerCase().includes(q);
+            row.style.display = match ? '' : 'none';
+            if (match) visibleCount++;
+        });
+
+        // Show "no results" row if nothing matches
+        document.getElementById('noResults').style.display = visibleCount === 0 ? '' : 'none';
+    }
+
+    // ── Toggle visibility ──────────────────────────────────────
     document.querySelectorAll('.btn-toggle').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var id = this.getAttribute('data-id');
@@ -244,7 +287,7 @@
         });
     });
 
-    // Delete with confirm
+    // ── Delete with confirm ────────────────────────────────────
     document.querySelectorAll('.btn-delete').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var id   = this.getAttribute('data-id');
